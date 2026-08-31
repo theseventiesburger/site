@@ -10,6 +10,7 @@ const poppins = Poppins({
 export const metadata = {
   title: "The Seventies Burger",
   description: "A opção mais deliciosa da cidade",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({ children }) {

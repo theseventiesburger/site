@@ -7,7 +7,7 @@ import { destravarAudio, iniciarSirene, pararSirene } from '@/lib/comanda/som';
 
 let proximoId = 1;
 
-export default function AlertasPedidos() {
+export default function AlertasPedidos({ cargo }) {
   const [supabase] = useState(() => criarClienteBrowser());
   const [alertas, setAlertas] = useState([]);
   const audioDestravadoRef = useRef(false);
@@ -56,10 +56,14 @@ export default function AlertasPedidos() {
       canal = supabase
         .channel('alertas-pedidos')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pedidos' }, (payload) => {
+          // Pedido novo é o garçom avisando — só interessa à cozinha.
+          if (cargo !== 'cozinha') return;
           const tipoLabel = TIPO_LABEL[payload.new.tipo] ?? payload.new.tipo;
           adicionarAlerta(`Novo pedido #${payload.new.numero} — ${tipoLabel}`);
         })
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'pedidos' }, (payload) => {
+          // Mudança de status é a cozinha avisando — só interessa ao garçom.
+          if (cargo !== 'garcom') return;
           if (payload.old.status === payload.new.status) return;
           const statusLabel = STATUS_LABEL[payload.new.status] ?? payload.new.status;
           adicionarAlerta(`Pedido #${payload.new.numero} → ${statusLabel}`);
@@ -74,7 +78,7 @@ export default function AlertasPedidos() {
       if (canal) supabase.removeChannel(canal);
       pararSirene();
     };
-  }, [supabase]);
+  }, [supabase, cargo]);
 
   if (alertas.length === 0) return null;
 

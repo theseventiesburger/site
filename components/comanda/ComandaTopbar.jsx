@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { sair } from '@/app/comanda/actions';
+import NotificacoesPush from '@/components/comanda/NotificacoesPush';
 
 const links = [
   { href: '/comanda', label: 'Comanda' },
@@ -12,7 +13,7 @@ const links = [
   { href: '/comanda/cozinha', label: 'Cozinha' },
 ];
 
-export default function ComandaTopbar({ email }) {
+export default function ComandaTopbar({ email, userId }) {
   const pathname = usePathname();
 
   return (
@@ -36,6 +37,7 @@ export default function ComandaTopbar({ email }) {
         </div>
 
         <div className="flex items-center gap-3 flex-shrink-0">
+          <NotificacoesPush userId={userId} />
           <span className="hidden sm:block text-gray-400 text-xs font-medium truncate max-w-[160px]">
             {email}
           </span>
