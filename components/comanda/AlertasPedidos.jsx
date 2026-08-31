@@ -70,15 +70,17 @@ export default function AlertasPedidos() {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-20 right-4 z-[100] flex flex-col gap-2 pointer-events-none max-w-[calc(100vw-2rem)]">
-      {toasts.map((toast) => (
-        <div
-          key={toast.id}
-          className="toast-pedido pointer-events-auto bg-sv-dark text-white font-bold text-sm px-4 py-3 rounded-xl shadow-2xl border border-white/10"
-        >
-          {toast.mensagem}
-        </div>
-      ))}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 pointer-events-none">
+      <div className="flex flex-col gap-3 items-center">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className="toast-pedido pointer-events-auto bg-sv-dark text-white font-black text-xl md:text-3xl px-8 py-6 md:px-12 md:py-8 rounded-3xl shadow-2xl border-2 border-sv-blue text-center uppercase tracking-wide"
+          >
+            {toast.mensagem}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
