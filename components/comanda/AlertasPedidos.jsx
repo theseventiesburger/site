@@ -3,20 +3,27 @@
 import { useEffect, useRef, useState } from 'react';
 import { criarClienteBrowser } from '@/lib/supabase/client';
 import { STATUS_LABEL, TIPO_LABEL } from '@/lib/comanda/constantes';
-import { destravarAudio, tocarBeep } from '@/lib/comanda/som';
+import { destravarAudio, iniciarSirene, pararSirene } from '@/lib/comanda/som';
 
 let proximoId = 1;
 
 export default function AlertasPedidos() {
   const [supabase] = useState(() => criarClienteBrowser());
-  const [toasts, setToasts] = useState([]);
+  const [alertas, setAlertas] = useState([]);
   const audioDestravadoRef = useRef(false);
+  const alertasRef = useRef([]);
 
-  // Som só pode tocar depois de uma interação do usuário na página.
+  useEffect(() => {
+    alertasRef.current = alertas;
+  }, [alertas]);
+
+  // Som só pode tocar depois de uma interação do usuário na página. Se já
+  // houver alertas pendentes nesse momento, a sirene começa assim que destrava.
   useEffect(() => {
     function destravar() {
       destravarAudio();
       audioDestravadoRef.current = true;
+      if (alertasRef.current.length > 0) iniciarSirene();
     }
     window.addEventListener('pointerdown', destravar, { once: true });
     window.addEventListener('keydown', destravar, { once: true });
@@ -26,13 +33,14 @@ export default function AlertasPedidos() {
     };
   }, []);
 
-  function mostrarToast(mensagem) {
-    const id = proximoId++;
-    setToasts((atual) => [...atual, { id, mensagem }]);
-    if (audioDestravadoRef.current) tocarBeep();
-    setTimeout(() => {
-      setToasts((atual) => atual.filter((t) => t.id !== id));
-    }, 5000);
+  function adicionarAlerta(mensagem) {
+    setAlertas((atual) => [...atual, { id: proximoId++, mensagem }]);
+    if (audioDestravadoRef.current) iniciarSirene();
+  }
+
+  function confirmarAlertas() {
+    setAlertas([]);
+    pararSirene();
   }
 
   useEffect(() => {
@@ -49,12 +57,12 @@ export default function AlertasPedidos() {
         .channel('alertas-pedidos')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pedidos' }, (payload) => {
           const tipoLabel = TIPO_LABEL[payload.new.tipo] ?? payload.new.tipo;
-          mostrarToast(`Novo pedido #${payload.new.numero} — ${tipoLabel}`);
+          adicionarAlerta(`Novo pedido #${payload.new.numero} — ${tipoLabel}`);
         })
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'pedidos' }, (payload) => {
           if (payload.old.status === payload.new.status) return;
           const statusLabel = STATUS_LABEL[payload.new.status] ?? payload.new.status;
-          mostrarToast(`Pedido #${payload.new.numero} → ${statusLabel}`);
+          adicionarAlerta(`Pedido #${payload.new.numero} → ${statusLabel}`);
         })
         .subscribe();
     }
@@ -64,22 +72,30 @@ export default function AlertasPedidos() {
     return () => {
       ativo = false;
       if (canal) supabase.removeChannel(canal);
+      pararSirene();
     };
   }, [supabase]);
 
-  if (toasts.length === 0) return null;
+  if (alertas.length === 0) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 pointer-events-none">
-      <div className="flex flex-col gap-3 items-center">
-        {toasts.map((toast) => (
-          <div
-            key={toast.id}
-            className="toast-pedido pointer-events-auto bg-sv-dark text-white font-black text-xl md:text-3xl px-8 py-6 md:px-12 md:py-8 rounded-3xl shadow-2xl border-2 border-sv-blue text-center uppercase tracking-wide"
-          >
-            {toast.mensagem}
-          </div>
-        ))}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/70">
+      <div className="toast-pedido bg-sv-dark text-white rounded-3xl shadow-2xl border-2 border-sv-red max-w-md w-full p-8 flex flex-col gap-6">
+        <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">
+          {alertas.map((alerta) => (
+            <p key={alerta.id} className="font-black text-lg md:text-xl uppercase tracking-wide text-center">
+              {alerta.mensagem}
+            </p>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={confirmarAlertas}
+          className="bg-sv-red hover:bg-sv-blue text-white font-black py-4 rounded-xl uppercase tracking-wider text-sm transition-colors duration-150"
+        >
+          Entendido
+        </button>
       </div>
     </div>
   );
