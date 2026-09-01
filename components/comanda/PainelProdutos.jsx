@@ -1,0 +1,105 @@
+'use client';
+
+import { useState } from 'react';
+import Image from 'next/image';
+import { criarClienteBrowser } from '@/lib/supabase/client';
+import { listarTodosProdutos, alternarAtivoProduto } from '@/lib/comanda/produtos';
+import { CATEGORIAS } from '@/lib/comanda/constantes';
+import { formatarBRL } from '@/lib/comanda/formato';
+import FormularioProduto from '@/components/comanda/FormularioProduto';
+
+const CATEGORIA_LABEL = Object.fromEntries(CATEGORIAS.map((c) => [c.id, c.label]));
+
+export default function PainelProdutos({ produtosIniciais }) {
+  const [supabase] = useState(() => criarClienteBrowser());
+  const [produtos, setProdutos] = useState(produtosIniciais);
+  const [produtoEmEdicao, setProdutoEmEdicao] = useState(undefined); // undefined = fechado, null = criar, objeto = editar
+
+  async function recarregar() {
+    const dados = await listarTodosProdutos(supabase);
+    setProdutos(dados);
+    setProdutoEmEdicao(undefined);
+  }
+
+  async function toggleAtivo(produto) {
+    setProdutos((atual) =>
+      atual.map((p) => (p.id === produto.id ? { ...p, ativo: !p.ativo } : p))
+    );
+    try {
+      await alternarAtivoProduto(supabase, produto.id, !produto.ativo);
+    } catch (err) {
+      console.error(err);
+      recarregar();
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <p className="text-gray-500 text-sm font-medium">{produtos.length} produtos cadastrados</p>
+        <button
+          type="button"
+          onClick={() => setProdutoEmEdicao(null)}
+          className="bg-sv-blue hover:bg-sv-red text-white font-black px-6 py-3 rounded-xl uppercase tracking-wider text-xs transition-colors duration-150"
+        >
+          + Novo Produto
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {produtos.map((produto) => (
+          <div
+            key={produto.id}
+            className={`bg-white rounded-2xl shadow-md border p-4 flex gap-4 ${
+              produto.ativo ? 'border-gray-100' : 'border-gray-200 opacity-60'
+            }`}
+          >
+            <div className="w-20 h-20 relative rounded-xl overflow-hidden bg-[#F7F7F7] flex-shrink-0">
+              <Image src={produto.imagem} alt={produto.nome} fill className="object-contain" />
+            </div>
+
+            <div className="flex-1 min-w-0 flex flex-col justify-between">
+              <div>
+                <p className="font-black text-sv-dark text-sm uppercase tracking-tight truncate">
+                  {produto.nome}
+                </p>
+                <p className="text-gray-400 text-xs font-bold">
+                  {CATEGORIA_LABEL[produto.categoria] ?? produto.categoria} · {formatarBRL(produto.preco)}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setProdutoEmEdicao(produto)}
+                  className="text-[10px] font-black uppercase tracking-wider text-sv-blue hover:text-sv-red"
+                >
+                  Editar
+                </button>
+                <span className="text-gray-300">·</span>
+                <button
+                  type="button"
+                  onClick={() => toggleAtivo(produto)}
+                  className={`text-[10px] font-black uppercase tracking-wider ${
+                    produto.ativo ? 'text-gray-400 hover:text-sv-red' : 'text-green-600 hover:text-green-700'
+                  }`}
+                >
+                  {produto.ativo ? 'Desativar' : 'Ativar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {produtoEmEdicao !== undefined && (
+        <FormularioProduto
+          supabase={supabase}
+          produto={produtoEmEdicao}
+          onFechar={() => setProdutoEmEdicao(undefined)}
+          onSalvo={recarregar}
+        />
+      )}
+    </div>
+  );
+}

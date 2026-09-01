@@ -11,6 +11,7 @@ const links = [
   { href: '/comanda/novo/delivery', label: 'Novo Delivery' },
   { href: '/comanda/novo/pdv', label: 'Novo PDV' },
   { href: '/comanda/cozinha', label: 'Cozinha' },
+  { href: '/comanda/produtos', label: 'Produtos' },
 ];
 
 export default function ComandaTopbar({ email, userId }) {
