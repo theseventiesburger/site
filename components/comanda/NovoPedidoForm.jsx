@@ -14,7 +14,7 @@ const CAMPOS_INICIAIS = {
   pdv: { clienteNome: '', formaPagamento: null },
 };
 
-export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais }) {
+export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, categorias }) {
   const router = useRouter();
   const [supabase] = useState(() => criarClienteBrowser());
   const [itens, setItens] = useState([]);
@@ -128,7 +128,12 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais }) {
           <CamposPedido tipo={tipo} campos={campos} onChange={setCampos} mesas={mesas} />
         </div>
 
-        <SeletorProdutos produtos={produtos} adicionaisDisponiveis={adicionais} onAdicionar={adicionarProduto} />
+        <SeletorProdutos
+          produtos={produtos}
+          categorias={categorias}
+          adicionaisDisponiveis={adicionais}
+          onAdicionar={adicionarProduto}
+        />
       </div>
 
       <div className="flex flex-col gap-4">

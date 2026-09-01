@@ -2,19 +2,16 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { CATEGORIAS } from '@/lib/comanda/constantes';
 import { criarProduto, atualizarProduto, enviarImagemProduto } from '@/lib/comanda/produtos';
 import SeletorAdicionaisProduto from '@/components/comanda/SeletorAdicionaisProduto';
 
-const categoriasSelecionaveis = CATEGORIAS.filter((c) => c.id !== 'todos');
-
-export default function FormularioProduto({ supabase, produto, onFechar, onSalvo }) {
+export default function FormularioProduto({ supabase, produto, categorias, onFechar, onSalvo }) {
   const modoEdicao = Boolean(produto);
 
   const [nome, setNome] = useState(produto?.nome ?? '');
   const [descricao, setDescricao] = useState(produto?.descricao ?? '');
   const [preco, setPreco] = useState(produto?.preco ?? '');
-  const [categoria, setCategoria] = useState(produto?.categoria ?? categoriasSelecionaveis[0].id);
+  const [categoriaId, setCategoriaId] = useState(produto?.categoria_id ?? categorias[0]?.id ?? '');
   const [tag, setTag] = useState(produto?.tag ?? '');
   const [ativo, setAtivo] = useState(produto?.ativo ?? true);
   const [arquivoImagem, setArquivoImagem] = useState(null);
@@ -31,7 +28,7 @@ export default function FormularioProduto({ supabase, produto, onFechar, onSalvo
 
   async function salvar(e) {
     e.preventDefault();
-    if (!nome || !preco || !categoria) {
+    if (!nome || !preco || !categoriaId) {
       setErro('Preencha nome, preço e categoria.');
       return;
     }
@@ -49,7 +46,7 @@ export default function FormularioProduto({ supabase, produto, onFechar, onSalvo
         nome,
         descricao,
         preco: Number(preco),
-        categoria,
+        categoriaId,
         tag,
         ativo,
         imagem,
@@ -132,12 +129,12 @@ export default function FormularioProduto({ supabase, produto, onFechar, onSalvo
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Categoria</label>
             <select
-              value={categoria}
-              onChange={(e) => setCategoria(e.target.value)}
+              value={categoriaId}
+              onChange={(e) => setCategoriaId(e.target.value)}
               className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
             >
-              {categoriasSelecionaveis.map((c) => (
-                <option key={c.id} value={c.id}>{c.label}</option>
+              {categorias.map((c) => (
+                <option key={c.id} value={c.id}>{c.emoji ? `${c.emoji} ` : ''}{c.nome}</option>
               ))}
             </select>
           </div>

@@ -1,18 +1,22 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { CATEGORIAS } from '@/lib/comanda/constantes';
 import { formatarBRL } from '@/lib/comanda/formato';
 
-export default function SeletorProdutos({ produtos, adicionaisDisponiveis = [], onAdicionar }) {
+export default function SeletorProdutos({ produtos, categorias = [], adicionaisDisponiveis = [], onAdicionar }) {
   const [categoriaAtiva, setCategoriaAtiva] = useState('todos');
   const [busca, setBusca] = useState('');
   const [produtoEmSelecao, setProdutoEmSelecao] = useState(null);
   const [selecionados, setSelecionados] = useState([]);
 
+  const categoriasComTodos = useMemo(
+    () => [{ id: 'todos', nome: 'Todos', emoji: '🍔' }, ...categorias],
+    [categorias]
+  );
+
   const produtosFiltrados = useMemo(() => {
     return produtos.filter((p) => {
-      const bateCategoria = categoriaAtiva === 'todos' || p.categoria === categoriaAtiva;
+      const bateCategoria = categoriaAtiva === 'todos' || p.categoria_id === categoriaAtiva;
       const bateBusca = p.nome.toLowerCase().includes(busca.trim().toLowerCase());
       return bateCategoria && bateBusca;
     });
@@ -59,7 +63,7 @@ export default function SeletorProdutos({ produtos, adicionaisDisponiveis = [], 
       />
 
       <div className="flex gap-2 overflow-x-auto pb-1">
-        {CATEGORIAS.map((cat) => {
+        {categoriasComTodos.map((cat) => {
           const ativa = categoriaAtiva === cat.id;
           return (
             <button
@@ -73,7 +77,7 @@ export default function SeletorProdutos({ produtos, adicionaisDisponiveis = [], 
               }`}
             >
               <span>{cat.emoji}</span>
-              {cat.label}
+              {cat.nome}
             </button>
           );
         })}

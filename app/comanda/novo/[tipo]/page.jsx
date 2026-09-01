@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import NovoPedidoForm from "@/components/comanda/NovoPedidoForm";
 import { TIPOS_PEDIDO, TIPO_LABEL } from "@/lib/comanda/constantes";
+import { listarAdicionaisAtivosPorProdutos } from "@/lib/comanda/adicionais";
 import { criarClienteServidor } from "@/lib/supabase/server";
 
 export default async function NovoPedidoPage({ params }) {
@@ -12,23 +13,16 @@ export default async function NovoPedidoPage({ params }) {
 
   const supabase = await criarClienteServidor();
 
-  const [{ data: produtos }, { data: mesas }] = await Promise.all([
+  const [{ data: produtos }, { data: mesas }, { data: categorias }] = await Promise.all([
     supabase.from("produtos").select("*").eq("ativo", true).order("ordem", { ascending: true }),
     tipo === "mesa"
       ? supabase.from("mesas").select("*").eq("ativa", true).order("numero", { ascending: true })
       : Promise.resolve({ data: [] }),
+    supabase.from("categorias").select("*").eq("ativo", true).order("ordem", { ascending: true }),
   ]);
 
   const produtoIds = (produtos ?? []).map((p) => p.id);
-  const { data: adicionais } =
-    produtoIds.length > 0
-      ? await supabase
-          .from("adicionais")
-          .select("*")
-          .in("produto_id", produtoIds)
-          .eq("ativo", true)
-          .order("ordem", { ascending: true })
-      : { data: [] };
+  const adicionais = await listarAdicionaisAtivosPorProdutos(supabase, produtoIds);
 
   return (
     <section className="w-full max-w-6xl mx-auto px-6 py-10 flex-1">
@@ -41,7 +35,13 @@ export default async function NovoPedidoPage({ params }) {
         </h1>
       </div>
 
-      <NovoPedidoForm tipo={tipo} produtos={produtos ?? []} mesas={mesas ?? []} adicionais={adicionais ?? []} />
+      <NovoPedidoForm
+        tipo={tipo}
+        produtos={produtos ?? []}
+        mesas={mesas ?? []}
+        adicionais={adicionais}
+        categorias={categorias ?? []}
+      />
     </section>
   );
 }

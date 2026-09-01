@@ -1,20 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { CATEGORIAS } from '@/lib/comanda/constantes';
 import { formatarBRL } from '@/lib/comanda/formato';
 import GoogleRatingBadge from '@/components/GoogleRatingBadge';
 
-export default function CardapioInterativo({ produtos }) {
+export default function CardapioInterativo({ produtos, categorias = [] }) {
   const [categoriaAtiva, setCategoriaAtiva] = useState('todos');
   const [produtoEmDestaque, setProdutoEmDestaque] = useState(null);
+
+  const categoriasComTodos = useMemo(
+    () => [{ id: 'todos', nome: 'Todos', emoji: '🍔' }, ...categorias],
+    [categorias]
+  );
 
   const produtosFiltrados =
     categoriaAtiva === 'todos'
       ? produtos
-      : produtos.filter((p) => p.categoria === categoriaAtiva);
+      : produtos.filter((p) => p.categoria_id === categoriaAtiva);
 
   return (
     <section className="w-full bg-[#F7F7F7] min-h-screen">
@@ -57,7 +61,7 @@ export default function CardapioInterativo({ produtos }) {
       {/* ── Filtro de Categorias ─────────────────────────────────────────────── */}
       <div className="max-w-7xl mx-auto px-4 md:px-6 pt-10">
         <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide snap-x">
-          {CATEGORIAS.map((cat) => {
+          {categoriasComTodos.map((cat) => {
             const ativa = categoriaAtiva === cat.id;
             return (
               <button
@@ -72,7 +76,7 @@ export default function CardapioInterativo({ produtos }) {
                 `}
               >
                 <span>{cat.emoji}</span>
-                {cat.label}
+                {cat.nome}
               </button>
             );
           })}
@@ -83,7 +87,7 @@ export default function CardapioInterativo({ produtos }) {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-3xl md:text-4xl font-black text-sv-dark uppercase tracking-tighter">
-              {CATEGORIAS.find((c) => c.id === categoriaAtiva)?.label ?? 'Todos'}
+              {categoriasComTodos.find((c) => c.id === categoriaAtiva)?.nome ?? 'Todos'}
             </h2>
             <p className="text-gray-400 text-sm font-medium mt-1">
               {produtosFiltrados.length} {produtosFiltrados.length === 1 ? 'item' : 'itens'} encontrados

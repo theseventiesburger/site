@@ -3,11 +3,11 @@ import { criarClienteServidor } from "@/lib/supabase/server";
 
 export default async function CardapioPage() {
   const supabase = await criarClienteServidor();
-  const { data: produtos } = await supabase
-    .from("produtos")
-    .select("*")
-    .eq("ativo", true)
-    .order("ordem", { ascending: true });
 
-  return <CardapioInterativo produtos={produtos ?? []} />;
+  const [{ data: produtos }, { data: categorias }] = await Promise.all([
+    supabase.from("produtos").select("*").eq("ativo", true).order("ordem", { ascending: true }),
+    supabase.from("categorias").select("*").eq("ativo", true).order("ordem", { ascending: true }),
+  ]);
+
+  return <CardapioInterativo produtos={produtos ?? []} categorias={categorias ?? []} />;
 }

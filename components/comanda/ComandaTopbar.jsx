@@ -13,6 +13,7 @@ const links = [
   { href: '/comanda/cozinha', label: 'Cozinha' },
   { href: '/comanda/produtos', label: 'Produtos' },
   { href: '/comanda/adicionais', label: 'Adicionais' },
+  { href: '/comanda/categorias', label: 'Categorias' },
 ];
 
 export default function ComandaTopbar({ email, userId }) {

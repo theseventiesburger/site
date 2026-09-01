@@ -4,13 +4,10 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { criarClienteBrowser } from '@/lib/supabase/client';
 import { listarTodosProdutos, alternarAtivoProduto } from '@/lib/comanda/produtos';
-import { CATEGORIAS } from '@/lib/comanda/constantes';
 import { formatarBRL } from '@/lib/comanda/formato';
 import FormularioProduto from '@/components/comanda/FormularioProduto';
 
-const CATEGORIA_LABEL = Object.fromEntries(CATEGORIAS.map((c) => [c.id, c.label]));
-
-export default function PainelProdutos({ produtosIniciais }) {
+export default function PainelProdutos({ produtosIniciais, categorias }) {
   const [supabase] = useState(() => criarClienteBrowser());
   const [produtos, setProdutos] = useState(produtosIniciais);
   const [produtoEmEdicao, setProdutoEmEdicao] = useState(undefined); // undefined = fechado, null = criar, objeto = editar
@@ -64,7 +61,7 @@ export default function PainelProdutos({ produtosIniciais }) {
                   {produto.nome}
                 </p>
                 <p className="text-gray-400 text-xs font-bold">
-                  {CATEGORIA_LABEL[produto.categoria] ?? produto.categoria} · {formatarBRL(produto.preco)}
+                  {produto.categorias?.nome ?? 'Sem categoria'} · {formatarBRL(produto.preco)}
                 </p>
               </div>
 
@@ -96,6 +93,7 @@ export default function PainelProdutos({ produtosIniciais }) {
         <FormularioProduto
           supabase={supabase}
           produto={produtoEmEdicao}
+          categorias={categorias}
           onFechar={() => setProdutoEmEdicao(undefined)}
           onSalvo={recarregar}
         />

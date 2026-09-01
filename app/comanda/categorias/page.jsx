@@ -1,13 +1,12 @@
-import PainelProdutos from "@/components/comanda/PainelProdutos";
+import PainelCategoriasGlobal from "@/components/comanda/PainelCategoriasGlobal";
 import { criarClienteServidor } from "@/lib/supabase/server";
 
-export default async function ProdutosPage() {
+export default async function CategoriasPage() {
   const supabase = await criarClienteServidor();
-
-  const [{ data: produtos }, { data: categorias }] = await Promise.all([
-    supabase.from("produtos").select("*, categorias(id, nome, emoji)").order("ordem", { ascending: true }),
-    supabase.from("categorias").select("*").order("ordem", { ascending: true }),
-  ]);
+  const { data: categorias } = await supabase
+    .from("categorias")
+    .select("*")
+    .order("ordem", { ascending: true });
 
   return (
     <section className="w-full max-w-6xl mx-auto px-6 py-10 flex-1">
@@ -16,11 +15,14 @@ export default async function ProdutosPage() {
           Comanda Eletrônica
         </span>
         <h1 className="text-3xl md:text-4xl font-black text-sv-dark uppercase tracking-tighter leading-none">
-          Produtos
+          Categorias
         </h1>
+        <p className="text-gray-500 text-sm font-medium mt-2">
+          Usadas pra organizar o cardápio e o seletor de produtos.
+        </p>
       </div>
 
-      <PainelProdutos produtosIniciais={produtos ?? []} categorias={categorias ?? []} />
+      <PainelCategoriasGlobal categoriasIniciais={categorias ?? []} />
     </section>
   );
 }
