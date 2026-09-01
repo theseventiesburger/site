@@ -9,6 +9,7 @@ import GoogleRatingBadge from '@/components/GoogleRatingBadge';
 
 export default function CardapioInterativo({ produtos }) {
   const [categoriaAtiva, setCategoriaAtiva] = useState('todos');
+  const [produtoEmDestaque, setProdutoEmDestaque] = useState(null);
 
   const produtosFiltrados =
     categoriaAtiva === 'todos'
@@ -98,21 +99,22 @@ export default function CardapioInterativo({ produtos }) {
               key={produto.id}
               className="bg-white rounded-3xl overflow-hidden shadow-md border border-gray-100 flex flex-col transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 group"
             >
-              <div className="relative w-full h-52 bg-[#F7F7F7] flex items-center justify-center overflow-hidden">
+              <div
+                className="relative w-full h-52 bg-[#F7F7F7] overflow-hidden cursor-pointer"
+                onClick={() => setProdutoEmDestaque(produto)}
+              >
                 {produto.tag && (
                   <span className="absolute top-3 left-3 bg-sv-dark text-white text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider z-10">
                     {produto.tag}
                   </span>
                 )}
-                <div className="w-40 h-40 relative transform transition-transform duration-500 group-hover:scale-110">
-                  <Image
-                    src={produto.imagem}
-                    alt={produto.nome}
-                    fill
-                    sizes="160px"
-                    className="object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.15)]"
-                  />
-                </div>
+                <Image
+                  src={produto.imagem}
+                  alt={produto.nome}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-110"
+                />
               </div>
 
               <div className="p-5 flex flex-col flex-grow">
@@ -163,6 +165,40 @@ export default function CardapioInterativo({ produtos }) {
           Chamar no WhatsApp
         </a>
       </div>
+
+      {/* ── Foto em destaque ────────────────────────────────────────────────── */}
+      {produtoEmDestaque && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center px-4 py-10"
+          onClick={() => setProdutoEmDestaque(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setProdutoEmDestaque(null)}
+            aria-label="Fechar"
+            className="absolute top-6 right-6 text-white text-3xl font-black hover:text-sv-red transition-colors duration-150"
+          >
+            ✕
+          </button>
+
+          <div className="relative w-full max-w-2xl h-[65vh]">
+            <Image
+              src={produtoEmDestaque.imagem}
+              alt={produtoEmDestaque.nome}
+              fill
+              sizes="100vw"
+              className="object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.7)]"
+            />
+          </div>
+
+          <div className="absolute bottom-10 left-0 right-0 text-center px-6">
+            <p className="text-white font-black text-2xl md:text-3xl uppercase tracking-tight">
+              {produtoEmDestaque.nome}
+            </p>
+            <p className="text-sv-blue font-black text-lg mt-1">{formatarBRL(produtoEmDestaque.preco)}</p>
+          </div>
+        </div>
+      )}
 
     </section>
   );
