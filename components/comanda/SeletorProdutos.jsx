@@ -4,9 +4,11 @@ import { useMemo, useState } from 'react';
 import { CATEGORIAS } from '@/lib/comanda/constantes';
 import { formatarBRL } from '@/lib/comanda/formato';
 
-export default function SeletorProdutos({ produtos, onAdicionar }) {
+export default function SeletorProdutos({ produtos, adicionaisDisponiveis = [], onAdicionar }) {
   const [categoriaAtiva, setCategoriaAtiva] = useState('todos');
   const [busca, setBusca] = useState('');
+  const [produtoEmSelecao, setProdutoEmSelecao] = useState(null);
+  const [selecionados, setSelecionados] = useState([]);
 
   const produtosFiltrados = useMemo(() => {
     return produtos.filter((p) => {
@@ -15,6 +17,36 @@ export default function SeletorProdutos({ produtos, onAdicionar }) {
       return bateCategoria && bateBusca;
     });
   }, [produtos, categoriaAtiva, busca]);
+
+  function clicarProduto(produto) {
+    const adicionaisDoProduto = adicionaisDisponiveis.filter((a) => a.produto_id === produto.id);
+
+    if (adicionaisDoProduto.length === 0) {
+      onAdicionar(produto, []);
+      return;
+    }
+
+    setProdutoEmSelecao(produto);
+    setSelecionados([]);
+  }
+
+  function toggleSelecionado(adicional) {
+    setSelecionados((atual) =>
+      atual.some((a) => a.id === adicional.id)
+        ? atual.filter((a) => a.id !== adicional.id)
+        : [...atual, adicional]
+    );
+  }
+
+  function confirmarSelecao() {
+    onAdicionar(produtoEmSelecao, selecionados);
+    setProdutoEmSelecao(null);
+    setSelecionados([]);
+  }
+
+  const adicionaisDoProdutoEmSelecao = produtoEmSelecao
+    ? adicionaisDisponiveis.filter((a) => a.produto_id === produtoEmSelecao.id)
+    : [];
 
   return (
     <div className="bg-white rounded-3xl shadow-md border border-gray-100 p-6 flex flex-col gap-4">
@@ -52,7 +84,7 @@ export default function SeletorProdutos({ produtos, onAdicionar }) {
           <button
             key={produto.id}
             type="button"
-            onClick={() => onAdicionar(produto)}
+            onClick={() => clicarProduto(produto)}
             className="flex items-center justify-between gap-3 p-4 bg-[#F7F7F7] rounded-2xl border border-gray-100 hover:border-sv-blue transition-colors duration-150 text-left group"
           >
             <div className="min-w-0">
@@ -73,6 +105,53 @@ export default function SeletorProdutos({ produtos, onAdicionar }) {
           </p>
         )}
       </div>
+
+      {produtoEmSelecao && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 flex flex-col gap-4">
+            <div>
+              <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Adicionar</p>
+              <h3 className="text-xl font-black text-sv-dark uppercase tracking-tight">
+                {produtoEmSelecao.nome}
+              </h3>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              {adicionaisDoProdutoEmSelecao.map((adicional) => (
+                <label
+                  key={adicional.id}
+                  className="flex items-center gap-2 text-sm font-medium text-sv-dark p-2.5 rounded-xl bg-[#F7F7F7] border border-gray-100"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selecionados.some((a) => a.id === adicional.id)}
+                    onChange={() => toggleSelecionado(adicional)}
+                  />
+                  <span className="flex-1">{adicional.nome}</span>
+                  <span className="text-gray-400">+{formatarBRL(adicional.preco)}</span>
+                </label>
+              ))}
+            </div>
+
+            <div className="flex gap-3 mt-2">
+              <button
+                type="button"
+                onClick={() => setProdutoEmSelecao(null)}
+                className="flex-1 py-3 rounded-xl border border-gray-200 text-sv-dark font-black uppercase tracking-wider text-xs"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={confirmarSelecao}
+                className="flex-1 py-3 rounded-xl bg-sv-blue hover:bg-sv-red text-white font-black uppercase tracking-wider text-xs transition-colors duration-150"
+              >
+                Adicionar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

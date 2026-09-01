@@ -24,12 +24,16 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais }) {
   const [erro, setErro] = useState(null);
   const [sucesso, setSucesso] = useState(null);
 
-  function adicionarProduto(produto) {
+  function adicionarProduto(produto, adicionaisSelecionados = []) {
     setSucesso(null);
     setItens((atual) => {
-      const existente = atual.find(
-        (i) => i.produtoId === produto.id && !i.observacao && i.adicionaisSelecionados.length === 0
-      );
+      const existente =
+        adicionaisSelecionados.length === 0
+          ? atual.find(
+              (i) => i.produtoId === produto.id && !i.observacao && i.adicionaisSelecionados.length === 0
+            )
+          : null;
+
       if (existente) {
         return atual.map((i) =>
           i === existente ? { ...i, quantidade: i.quantidade + 1 } : i
@@ -43,7 +47,7 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais }) {
           precoUnitario: Number(produto.preco),
           quantidade: 1,
           observacao: '',
-          adicionaisSelecionados: [],
+          adicionaisSelecionados,
         },
       ];
     });
@@ -124,7 +128,7 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais }) {
           <CamposPedido tipo={tipo} campos={campos} onChange={setCampos} mesas={mesas} />
         </div>
 
-        <SeletorProdutos produtos={produtos} onAdicionar={adicionarProduto} />
+        <SeletorProdutos produtos={produtos} adicionaisDisponiveis={adicionais} onAdicionar={adicionarProduto} />
       </div>
 
       <div className="flex flex-col gap-4">
