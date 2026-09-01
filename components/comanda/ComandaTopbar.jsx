@@ -14,6 +14,7 @@ const links = [
   { href: '/comanda/produtos', label: 'Produtos' },
   { href: '/comanda/adicionais', label: 'Adicionais' },
   { href: '/comanda/categorias', label: 'Categorias' },
+  { href: '/comanda/relatorio', label: 'Relatório' },
 ];
 
 export default function ComandaTopbar({ email, userId }) {
