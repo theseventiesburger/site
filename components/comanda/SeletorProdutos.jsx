@@ -52,6 +52,26 @@ export default function SeletorProdutos({ produtos, categorias = [], adicionaisD
     ? adicionaisDisponiveis.filter((a) => a.produto_id === produtoEmSelecao.id)
     : [];
 
+  const gruposAdicionais = useMemo(() => {
+    const porCategoria = new Map();
+    const semCategoria = [];
+
+    for (const adicional of adicionaisDoProdutoEmSelecao) {
+      const cat = adicional.categorias_adicionais;
+      if (!cat) {
+        semCategoria.push(adicional);
+        continue;
+      }
+      if (!porCategoria.has(cat.id)) porCategoria.set(cat.id, { categoria: cat, itens: [] });
+      porCategoria.get(cat.id).itens.push(adicional);
+    }
+
+    const grupos = [...porCategoria.values()];
+    if (semCategoria.length > 0) grupos.push({ categoria: null, itens: semCategoria });
+    return grupos;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [produtoEmSelecao, adicionaisDisponiveis]);
+
   return (
     <div className="bg-white rounded-3xl shadow-md border border-gray-100 p-6 flex flex-col gap-4">
       <input
@@ -120,20 +140,27 @@ export default function SeletorProdutos({ produtos, categorias = [], adicionaisD
               </h3>
             </div>
 
-            <div className="flex flex-col gap-2">
-              {adicionaisDoProdutoEmSelecao.map((adicional) => (
-                <label
-                  key={adicional.id}
-                  className="flex items-center gap-2 text-sm font-medium text-sv-dark p-2.5 rounded-xl bg-[#F7F7F7] border border-gray-100"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selecionados.some((a) => a.id === adicional.id)}
-                    onChange={() => toggleSelecionado(adicional)}
-                  />
-                  <span className="flex-1">{adicional.nome}</span>
-                  <span className="text-gray-400">+{formatarBRL(adicional.preco)}</span>
-                </label>
+            <div className="flex flex-col gap-3 max-h-[50vh] overflow-y-auto pr-1">
+              {gruposAdicionais.map(({ categoria, itens }) => (
+                <div key={categoria?.id ?? 'sem-categoria'} className="flex flex-col gap-1.5">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    {categoria ? `${categoria.emoji ?? ''} ${categoria.nome}` : 'Outros'}
+                  </p>
+                  {itens.map((adicional) => (
+                    <label
+                      key={adicional.id}
+                      className="flex items-center gap-2 text-sm font-medium text-sv-dark p-2.5 rounded-xl bg-[#F7F7F7] border border-gray-100"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selecionados.some((a) => a.id === adicional.id)}
+                        onChange={() => toggleSelecionado(adicional)}
+                      />
+                      <span className="flex-1">{adicional.nome}</span>
+                      <span className="text-gray-400">+{formatarBRL(adicional.preco)}</span>
+                    </label>
+                  ))}
+                </div>
               ))}
             </div>
 

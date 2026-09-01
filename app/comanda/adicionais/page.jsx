@@ -3,10 +3,11 @@ import { criarClienteServidor } from "@/lib/supabase/server";
 
 export default async function AdicionaisPage() {
   const supabase = await criarClienteServidor();
-  const { data: adicionais } = await supabase
-    .from("adicionais")
-    .select("*")
-    .order("ordem", { ascending: true });
+
+  const [{ data: adicionais }, { data: categorias }] = await Promise.all([
+    supabase.from("adicionais").select("*, categorias_adicionais(id, nome, emoji)").order("ordem", { ascending: true }),
+    supabase.from("categorias_adicionais").select("*").order("ordem", { ascending: true }),
+  ]);
 
   return (
     <section className="w-full max-w-6xl mx-auto px-6 py-10 flex-1">
@@ -22,7 +23,7 @@ export default async function AdicionaisPage() {
         </p>
       </div>
 
-      <PainelAdicionaisGlobal adicionaisIniciais={adicionais ?? []} />
+      <PainelAdicionaisGlobal adicionaisIniciais={adicionais ?? []} categoriasIniciais={categorias ?? []} />
     </section>
   );
 }
