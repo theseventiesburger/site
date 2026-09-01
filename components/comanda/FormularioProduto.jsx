@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { criarProduto, atualizarProduto, enviarImagemProduto } from '@/lib/comanda/produtos';
-import SeletorAdicionaisProduto from '@/components/comanda/SeletorAdicionaisProduto';
+import { parsePrecoInput } from '@/lib/comanda/formato';
 
 export default function FormularioProduto({ supabase, produto, categorias, onFechar, onSalvo }) {
   const modoEdicao = Boolean(produto);
@@ -45,7 +45,7 @@ export default function FormularioProduto({ supabase, produto, categorias, onFec
       const dados = {
         nome,
         descricao,
-        preco: Number(preco),
+        preco: parsePrecoInput(preco),
         categoriaId,
         tag,
         ativo,
@@ -116,11 +116,11 @@ export default function FormularioProduto({ supabase, produto, categorias, onFec
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Preço (R$)</label>
             <input
-              type="number"
-              min="0"
-              step="0.01"
+              type="text"
+              inputMode="decimal"
               value={preco}
               onChange={(e) => setPreco(e.target.value)}
+              placeholder="34,90"
               required
               className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
             />
@@ -154,8 +154,6 @@ export default function FormularioProduto({ supabase, produto, categorias, onFec
           <input type="checkbox" checked={ativo} onChange={(e) => setAtivo(e.target.checked)} />
           Ativo (visível no cardápio e na comanda)
         </label>
-
-        {modoEdicao && <SeletorAdicionaisProduto supabase={supabase} produtoId={produto.id} />}
 
         {erro && (
           <p className="text-sv-red text-xs font-bold bg-sv-red/5 border border-sv-red/20 rounded-xl px-4 py-3">

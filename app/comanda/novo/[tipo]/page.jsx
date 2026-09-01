@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import NovoPedidoForm from "@/components/comanda/NovoPedidoForm";
 import { TIPOS_PEDIDO, TIPO_LABEL } from "@/lib/comanda/constantes";
-import { listarAdicionaisAtivosPorProdutos } from "@/lib/comanda/adicionais";
+import { listarAdicionaisAtivos } from "@/lib/comanda/adicionais";
 import { criarClienteServidor } from "@/lib/supabase/server";
 
 export default async function NovoPedidoPage({ params }) {
@@ -21,8 +21,7 @@ export default async function NovoPedidoPage({ params }) {
     supabase.from("categorias").select("*").eq("ativo", true).order("ordem", { ascending: true }),
   ]);
 
-  const produtoIds = (produtos ?? []).map((p) => p.id);
-  const adicionais = await listarAdicionaisAtivosPorProdutos(supabase, produtoIds);
+  const adicionais = await listarAdicionaisAtivos(supabase);
 
   return (
     <section className="w-full max-w-6xl mx-auto px-6 py-10 flex-1">

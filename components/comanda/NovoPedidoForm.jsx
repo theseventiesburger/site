@@ -128,12 +128,7 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
           <CamposPedido tipo={tipo} campos={campos} onChange={setCampos} mesas={mesas} />
         </div>
 
-        <SeletorProdutos
-          produtos={produtos}
-          categorias={categorias}
-          adicionaisDisponiveis={adicionais}
-          onAdicionar={adicionarProduto}
-        />
+        <SeletorProdutos produtos={produtos} categorias={categorias} onAdicionar={adicionarProduto} />
       </div>
 
       <div className="flex flex-col gap-4">

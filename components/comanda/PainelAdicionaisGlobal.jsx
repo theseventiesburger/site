@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { formatarBRL } from '@/lib/comanda/formato';
+import { formatarBRL, parsePrecoInput } from '@/lib/comanda/formato';
 import { criarAdicional, atualizarAdicional, alternarAtivoAdicional, listarTodosAdicionais } from '@/lib/comanda/adicionais';
 import { criarClienteBrowser } from '@/lib/supabase/client';
 import PainelCategoriasAdicionais from '@/components/comanda/PainelCategoriasAdicionais';
@@ -40,7 +40,7 @@ export default function PainelAdicionaisGlobal({ adicionaisIniciais, categoriasI
     if (!novoNome || !novoPreco) return;
 
     try {
-      await criarAdicional(supabase, { nome: novoNome, preco: Number(novoPreco), categoriaId: novaCategoria || null });
+      await criarAdicional(supabase, { nome: novoNome, preco: parsePrecoInput(novoPreco), categoriaId: novaCategoria || null });
       setNovoNome('');
       setNovoPreco('');
       setNovaCategoria('');
@@ -63,7 +63,7 @@ export default function PainelAdicionaisGlobal({ adicionaisIniciais, categoriasI
     try {
       await atualizarAdicional(supabase, id, {
         nome: nomeEdicao,
-        preco: Number(precoEdicao),
+        preco: parsePrecoInput(precoEdicao),
         categoriaId: categoriaEdicao || null,
       });
       setEmEdicaoId(null);
@@ -109,11 +109,11 @@ export default function PainelAdicionaisGlobal({ adicionaisIniciais, categoriasI
                     className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium"
                   />
                   <input
-                    type="number"
-                    min="0"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
                     value={precoEdicao}
                     onChange={(e) => setPrecoEdicao(e.target.value)}
+                    placeholder="1,50"
                     className="w-24 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium"
                   />
                   <select
@@ -173,12 +173,11 @@ export default function PainelAdicionaisGlobal({ adicionaisIniciais, categoriasI
           className="flex-1 min-w-[140px] px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium"
         />
         <input
-          type="number"
-          min="0"
-          step="0.01"
+          type="text"
+          inputMode="decimal"
           value={novoPreco}
           onChange={(e) => setNovoPreco(e.target.value)}
-          placeholder="R$"
+          placeholder="1,50"
           className="w-24 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium"
         />
         <select

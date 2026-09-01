@@ -57,8 +57,6 @@ export default function CarrinhoComanda({
       ) : (
         <div className="flex flex-col gap-3 max-h-[360px] overflow-y-auto pr-1">
           {itens.map((item, idx) => {
-            const adicionaisDoProduto = adicionaisDisponiveis.filter((a) => a.produto_id === item.produtoId);
-
             return (
               <div key={idx} className="flex flex-col gap-2 p-3 bg-[#F7F7F7] rounded-xl border border-gray-100">
                 <div className="flex items-start justify-between gap-2">
@@ -98,9 +96,9 @@ export default function CarrinhoComanda({
                   </span>
                 </div>
 
-                {adicionaisDoProduto.length > 0 && (
+                {adicionaisDisponiveis.length > 0 && (
                   <div className="flex flex-col gap-2 pt-1">
-                    {agruparPorCategoria(adicionaisDoProduto).map(({ categoria, itens }) => (
+                    {agruparPorCategoria(adicionaisDisponiveis).map(({ categoria, itens }) => (
                       <div key={categoria?.id ?? 'sem-categoria'} className="flex flex-col gap-1">
                         <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
                           {categoria ? `${categoria.emoji ?? ''} ${categoria.nome}` : 'Outros'}
