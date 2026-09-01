@@ -52,6 +52,9 @@ export default function Menu() {
           <Link href="/clube" className="text-[#1A1A1A] font-extrabold text-xl tracking-wide transition-all duration-200 hover:text-[#0026E6]">
             Clube
           </Link>
+          <Link href="/contato" className="text-[#1A1A1A] font-extrabold text-xl tracking-wide transition-all duration-200 hover:text-[#0026E6]">
+            Contato
+          </Link>
 
           {/* Dropdown Delivery */}
           <div className="relative" ref={dropdownRef}>

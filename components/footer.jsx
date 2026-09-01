@@ -10,7 +10,8 @@ export default function Footer() {
     { label: "Cardápio", href: "/cardapio" },
     { label: "App", href: "/appseventies" },
     { label: "Clube", href: "/clube" },
-    { label: "Delivery", href: "/delivery" }
+    { label: "Delivery", href: "/delivery" },
+    { label: "Contato", href: "/contato" }
   ];
 
   const linksLegais = [
