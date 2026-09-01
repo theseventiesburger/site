@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { CATEGORIAS } from '@/lib/comanda/constantes';
 import { formatarBRL } from '@/lib/comanda/formato';
+import GoogleRatingBadge from '@/components/GoogleRatingBadge';
 
 export default function CardapioInterativo({ produtos }) {
   const [categoriaAtiva, setCategoriaAtiva] = useState('todos');
@@ -41,6 +42,8 @@ export default function CardapioInterativo({ produtos }) {
           <p className="text-gray-400 font-medium mt-4 max-w-sm text-sm md:text-base">
             Ingredientes selecionados, receitas da casa e muito sabor em cada mordida.
           </p>
+
+          <GoogleRatingBadge className="mt-5 self-start" />
         </div>
 
         <div className="absolute -bottom-1 left-0 right-0">

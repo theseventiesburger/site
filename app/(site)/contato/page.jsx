@@ -134,8 +134,16 @@ export default function ContatoPage() {
               <h3 className="text-lg font-black text-sv-dark uppercase tracking-wide">Onde estamos</h3>
             </div>
             <p className="text-gray-500 text-sm font-medium leading-relaxed">
-              [Endereço da loja — rua, número, bairro, cidade e CEP]
+              R. Wenceslau Braz, 167 — Centro, São Lourenço - MG, 37470-000
             </p>
+            <a
+              href="https://www.google.com/maps/search/?api=1&query=The+Seventies+Artesanal+Burger+R.+Wenceslau+Braz+167+S%C3%A3o+Louren%C3%A7o+MG"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block mt-3 text-xs font-black uppercase tracking-wider text-sv-blue hover:text-sv-red transition-colors duration-150"
+            >
+              Ver no mapa →
+            </a>
           </div>
 
           {/* Horário */}

@@ -1,6 +1,7 @@
 // components/Footer.jsx
 import Image from 'next/image';
 import Link from 'next/link';
+import GoogleRatingBadge from '@/components/GoogleRatingBadge';
 
 export default function Footer() {
   const linksNavegacao = [
@@ -30,6 +31,8 @@ export default function Footer() {
             className="object-contain"
           />
         </div>
+
+        <GoogleRatingBadge className="mb-8" />
 
         <nav className="flex flex-wrap justify-center gap-x-8 gap-y-4 mb-8">
           {linksNavegacao.map((link, idx) => (

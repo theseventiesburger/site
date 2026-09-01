@@ -1,4 +1,5 @@
 import HeroSlider from '@/components/HeroSlider';
+import GoogleRatingBadge from '@/components/GoogleRatingBadge';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -34,7 +35,11 @@ export default function HomePage() {
     <section className="w-full bg-[#F7F7F7]">
       <HeroSlider />
 
-      <div className="max-w-7xl mx-auto px-6 pt-24">
+      <div className="w-full flex justify-center -mt-7 relative z-10">
+        <GoogleRatingBadge />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 pt-16">
 
         <div className="flex flex-col items-center justify-center text-center mb-16 space-y-4">
           <h3 className="text-4xl md:text-5xl font-black text-sv-dark tracking-tighter uppercase">
