@@ -169,12 +169,12 @@ export default function AppPage() {
                 </div>
                 <div className="my-auto space-y-4 text-center">
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Cupom Ativo 🎫</p>
-                  <h5 className="text-lg font-black tracking-tight leading-tight text-white">BATATA RÚSTICA GRÁTIS</h5>
+                  <h5 className="text-lg font-black tracking-tight leading-tight text-white">DESCONTOS EM PRODUTOS</h5>
                   <div className="w-full h-36 relative my-2">
                     <Image src="/hb2.png" alt="Burger no App" fill className="object-contain drop-shadow-[0_10px_10px_rgba(0,0,0,0.6)]" />
                   </div>
                   <p className="text-[10px] text-gray-400 px-2 leading-relaxed">
-                    Na primeira compra pelo app. Válido por tempo limitado.
+                    Descontos exclusivos em produtos selecionados, direto pelo app.
                   </p>
                 </div>
                 <div className="w-full bg-sv-blue text-white text-center py-3 rounded-xl font-black text-xs uppercase tracking-wider shadow-md">
@@ -255,7 +255,7 @@ export default function AppPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {[
             { titulo: 'Combo New Castle', desc: 'Burger + Batata + Refri', preco: 'R$ 49,90', original: 'R$ 61,70', emoji: '🔥' },
-            { titulo: 'Batata Rústica Grátis', desc: 'Na primeira compra pelo app', preco: 'GRÁTIS', original: 'R$ 12,90', emoji: '🎁' },
+            { titulo: 'Desconto no App', desc: 'Descontos exclusivos em produtos selecionados', preco: 'App Exclusivo', original: '', emoji: '📲' },
             { titulo: 'Milk Shake Duplo', desc: '2 shakes 400ml à escolha', preco: 'R$ 29,90', original: 'R$ 39,80', emoji: '🥛' },
           ].map((c, i) => (
             <div key={i} className="bg-white rounded-3xl p-6 border border-gray-100 shadow-md flex flex-col gap-3 transition-all duration-300 hover:shadow-2xl hover:-translate-y-2">
@@ -313,10 +313,10 @@ export default function AppPage() {
         <div className="relative z-10 max-w-xl mx-auto">
           <p className="text-red-200 text-xs font-black uppercase tracking-widest mb-4">Pronto para começar?</p>
           <h3 className="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-tight mb-6">
-            Baixe agora e ganhe sua <span className="underline decoration-wavy">batata grátis!</span>
+            Baixe agora e <span className="underline decoration-wavy">tenha descontos!</span>
           </h3>
           <p className="text-red-100 font-medium text-base mb-10 max-w-sm mx-auto">
-            Na primeira compra pelo app, uma Batata Rústica P é por nossa conta.
+            Descontos exclusivos em produtos selecionados, direto pelo app.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <a href="https://www.apple.com/br/app-store/" target="_blank" rel="noopener noreferrer"

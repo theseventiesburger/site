@@ -195,7 +195,7 @@ export default function HomePage() {
 
                 <div className="my-auto space-y-4 text-center">
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Cupom Ativo 🎫</p>
-                  <h5 className="text-xl font-black tracking-tight leading-tight text-white">GANHE 1 BATATA RÚSTICA</h5>
+                  <h5 className="text-xl font-black tracking-tight leading-tight text-white">TENHA DESCONTOS EM PRODUTOS</h5>
 
                   <div className="w-full h-40 relative my-2 transform scale-110">
                     <Image
@@ -207,7 +207,7 @@ export default function HomePage() {
                   </div>
 
                   <p className="text-[10px] text-gray-400 px-2 leading-relaxed">
-                    Na primeira compra pelo aplicativo. Válido por tempo limitado.
+                    Descontos exclusivos em produtos selecionados, direto pelo aplicativo.
                   </p>
                 </div>
 

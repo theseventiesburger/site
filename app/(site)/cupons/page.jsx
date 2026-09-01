@@ -81,13 +81,13 @@ const cupons = [
   },
   {
     id: 7,
-    titulo: 'Batata Rústica Grátis',
-    descricao: 'Ganhe uma Batata Rústica P na compra de qualquer burger',
-    preco: 'GRÁTIS',
-    precoOriginal: 'R$ 12,90',
+    titulo: 'Desconto no App',
+    descricao: 'Tenha descontos exclusivos em produtos selecionados, direto pelo aplicativo',
+    preco: 'App Exclusivo',
+    precoOriginal: '',
     imagem: '/hb2.png',
     categoria: 'combos',
-    codigo: 'BATATA0',
+    codigo: 'DESCONTOAPP',
     destaque: true,
   },
   {

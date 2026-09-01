@@ -345,7 +345,7 @@ export default function ClubePage() {
             Baixe o app e comece <br /> a <span className="underline decoration-wavy">pontuar agora!</span>
           </h3>
           <p className="text-red-100 font-medium text-base mb-10 max-w-sm mx-auto">
-            Cadastro gratuito. Na primeira compra pelo app, uma Batata Rústica P é por nossa conta.
+            Cadastro gratuito. Tenha descontos exclusivos em produtos selecionados, direto pelo app.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <a href="https://www.apple.com/br/app-store/" target="_blank" rel="noopener noreferrer"
