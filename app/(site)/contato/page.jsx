@@ -26,9 +26,8 @@ const redes = [
 ];
 
 const horarios = [
-  { dia: 'Segunda a Quinta', hora: '[horário]' },
-  { dia: 'Sexta e Sábado', hora: '[horário]' },
-  { dia: 'Domingo', hora: '[horário]' },
+  { dia: 'Quinta a Terça', hora: '19h às 00h' },
+  { dia: 'Quarta-feira', hora: 'Fechado' },
 ];
 
 export default function ContatoPage() {

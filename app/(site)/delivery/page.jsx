@@ -159,7 +159,7 @@ export default function DeliveryPage() {
               <h3 className="text-lg font-black text-sv-dark uppercase tracking-wide">Horário de entrega</h3>
             </div>
             <p className="text-gray-500 text-sm font-medium leading-relaxed">
-              [Horário de funcionamento do delivery]
+              Quinta a terça, das 19h à meia-noite. Quarta-feira não abrimos.
             </p>
           </div>
         </div>
