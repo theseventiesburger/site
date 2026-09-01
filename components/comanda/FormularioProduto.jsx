@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { CATEGORIAS } from '@/lib/comanda/constantes';
 import { criarProduto, atualizarProduto, enviarImagemProduto } from '@/lib/comanda/produtos';
+import PainelAdicionais from '@/components/comanda/PainelAdicionais';
 
 const categoriasSelecionaveis = CATEGORIAS.filter((c) => c.id !== 'todos');
 
@@ -156,6 +157,8 @@ export default function FormularioProduto({ supabase, produto, onFechar, onSalvo
           <input type="checkbox" checked={ativo} onChange={(e) => setAtivo(e.target.checked)} />
           Ativo (visível no cardápio e na comanda)
         </label>
+
+        {modoEdicao && <PainelAdicionais supabase={supabase} produtoId={produto.id} />}
 
         {erro && (
           <p className="text-sv-red text-xs font-bold bg-sv-red/5 border border-sv-red/20 rounded-xl px-4 py-3">

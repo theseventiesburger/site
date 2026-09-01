@@ -19,6 +19,17 @@ export default async function NovoPedidoPage({ params }) {
       : Promise.resolve({ data: [] }),
   ]);
 
+  const produtoIds = (produtos ?? []).map((p) => p.id);
+  const { data: adicionais } =
+    produtoIds.length > 0
+      ? await supabase
+          .from("adicionais")
+          .select("*")
+          .in("produto_id", produtoIds)
+          .eq("ativo", true)
+          .order("ordem", { ascending: true })
+      : { data: [] };
+
   return (
     <section className="w-full max-w-6xl mx-auto px-6 py-10 flex-1">
       <div className="mb-8">
@@ -30,7 +41,7 @@ export default async function NovoPedidoPage({ params }) {
         </h1>
       </div>
 
-      <NovoPedidoForm tipo={tipo} produtos={produtos ?? []} mesas={mesas ?? []} />
+      <NovoPedidoForm tipo={tipo} produtos={produtos ?? []} mesas={mesas ?? []} adicionais={adicionais ?? []} />
     </section>
   );
 }

@@ -14,7 +14,7 @@ const CAMPOS_INICIAIS = {
   pdv: { clienteNome: '', formaPagamento: null },
 };
 
-export default function NovoPedidoForm({ tipo, produtos, mesas }) {
+export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais }) {
   const router = useRouter();
   const [supabase] = useState(() => criarClienteBrowser());
   const [itens, setItens] = useState([]);
@@ -27,7 +27,9 @@ export default function NovoPedidoForm({ tipo, produtos, mesas }) {
   function adicionarProduto(produto) {
     setSucesso(null);
     setItens((atual) => {
-      const existente = atual.find((i) => i.produtoId === produto.id && !i.observacao);
+      const existente = atual.find(
+        (i) => i.produtoId === produto.id && !i.observacao && i.adicionaisSelecionados.length === 0
+      );
       if (existente) {
         return atual.map((i) =>
           i === existente ? { ...i, quantidade: i.quantidade + 1 } : i
@@ -35,7 +37,14 @@ export default function NovoPedidoForm({ tipo, produtos, mesas }) {
       }
       return [
         ...atual,
-        { produtoId: produto.id, nome: produto.nome, precoUnitario: Number(produto.preco), quantidade: 1, observacao: '' },
+        {
+          produtoId: produto.id,
+          nome: produto.nome,
+          precoUnitario: Number(produto.preco),
+          quantidade: 1,
+          observacao: '',
+          adicionaisSelecionados: [],
+        },
       ];
     });
   }
@@ -46,6 +55,10 @@ export default function NovoPedidoForm({ tipo, produtos, mesas }) {
 
   function atualizarObservacao(idx, observacao) {
     setItens((atual) => atual.map((item, i) => (i === idx ? { ...item, observacao } : item)));
+  }
+
+  function atualizarAdicionaisItem(idx, adicionaisSelecionados) {
+    setItens((atual) => atual.map((item, i) => (i === idx ? { ...item, adicionaisSelecionados } : item)));
   }
 
   function removerItem(idx) {
@@ -117,9 +130,11 @@ export default function NovoPedidoForm({ tipo, produtos, mesas }) {
       <div className="flex flex-col gap-4">
         <CarrinhoComanda
           itens={itens}
+          adicionaisDisponiveis={adicionais}
           taxaEntrega={tipo === 'delivery' ? Number(campos.taxaEntrega) || 0 : 0}
           onQuantidade={atualizarQuantidade}
           onObservacao={atualizarObservacao}
+          onAdicionais={atualizarAdicionaisItem}
           onRemover={removerItem}
         />
 

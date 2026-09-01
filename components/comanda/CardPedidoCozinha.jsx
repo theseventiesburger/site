@@ -38,6 +38,11 @@ export default function CardPedidoCozinha({ pedido, onAvancar, onCancelar, onTog
           <li key={item.id} className="text-xs">
             <span className="font-black text-sv-dark">{item.quantidade}x</span>{' '}
             <span className="text-sv-dark font-medium">{item.nome_produto}</span>
+            {(item.itens_pedido_adicionais ?? []).map((adicional) => (
+              <span key={adicional.id} className="block text-sv-blue font-bold pl-4">
+                + {adicional.nome_adicional}
+              </span>
+            ))}
             {item.observacao && (
               <span className="block text-gray-400 font-medium pl-4">— {item.observacao}</span>
             )}

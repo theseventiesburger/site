@@ -5,7 +5,7 @@ export default async function CozinhaPage() {
   const supabase = await criarClienteServidor();
   const { data: pedidos } = await supabase
     .from("pedidos")
-    .select("*, itens_pedido(*)")
+    .select("*, itens_pedido(*, itens_pedido_adicionais(*))")
     .not("status", "in", "(entregue,cancelado)")
     .order("created_at", { ascending: true });
 
