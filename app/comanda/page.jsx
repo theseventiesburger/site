@@ -9,6 +9,12 @@ export default async function ComandaHubPage() {
     .select("tipo")
     .not("status", "in", "(entregue,cancelado)");
 
+  const { count: totalAguardandoPagamento } = await supabase
+    .from("pedidos")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "entregue")
+    .eq("pago", false);
+
   const contarPorTipo = (tipo) =>
     (pedidosAbertos ?? []).filter((p) => p.tipo === tipo).length;
 
@@ -26,17 +32,30 @@ export default async function ComandaHubPage() {
           </h1>
         </div>
 
-        <Link
-          href="/comanda/cozinha"
-          className="inline-flex items-center gap-2 bg-sv-dark text-white font-black px-6 py-3.5 rounded-xl uppercase tracking-wider text-xs transition-all duration-200 hover:bg-sv-red hover:scale-105 shadow-md"
-        >
-          🍳 Ver Cozinha
-          {totalAbertos > 0 && (
-            <span className="bg-white text-sv-dark rounded-full px-2 py-0.5 text-[11px]">
-              {totalAbertos}
-            </span>
-          )}
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/comanda/abertos"
+            className="inline-flex items-center gap-2 bg-white text-sv-dark border border-gray-200 font-black px-6 py-3.5 rounded-xl uppercase tracking-wider text-xs transition-all duration-200 hover:border-sv-blue hover:text-sv-blue hover:scale-105 shadow-md"
+          >
+            💰 Pedidos Abertos
+            {totalAguardandoPagamento > 0 && (
+              <span className="bg-sv-red text-white rounded-full px-2 py-0.5 text-[11px]">
+                {totalAguardandoPagamento}
+              </span>
+            )}
+          </Link>
+          <Link
+            href="/comanda/cozinha"
+            className="inline-flex items-center gap-2 bg-sv-dark text-white font-black px-6 py-3.5 rounded-xl uppercase tracking-wider text-xs transition-all duration-200 hover:bg-sv-red hover:scale-105 shadow-md"
+          >
+            🍳 Ver Cozinha
+            {totalAbertos > 0 && (
+              <span className="bg-white text-sv-dark rounded-full px-2 py-0.5 text-[11px]">
+                {totalAbertos}
+              </span>
+            )}
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

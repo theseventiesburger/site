@@ -8,7 +8,7 @@ import {
   atualizarPagamentoPedido,
   atualizarStatusPedido,
   buscarPedidoPorId,
-  definirPagamentoMesa,
+  definirPagamentoPedido,
 } from '@/lib/comanda/pedidos';
 import { tocarAvisoTempo } from '@/lib/comanda/som';
 import { minutosDecorridos } from '@/lib/comanda/formato';
@@ -137,7 +137,7 @@ export default function PainelCozinha({ pedidosIniciais }) {
       )
     );
     try {
-      await definirPagamentoMesa(supabase, pedidoId, formaPagamento);
+      await definirPagamentoPedido(supabase, pedidoId, formaPagamento);
     } catch (err) {
       console.error(err);
     }
