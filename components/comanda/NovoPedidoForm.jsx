@@ -31,6 +31,7 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
   const [campos, setCampos] = useState(CAMPOS_INICIAIS[tipo]);
   const [clienteSelecionado, setClienteSelecionado] = useState(null);
   const [observacoes, setObservacoes] = useState('');
+  const [cupomCodigo, setCupomCodigo] = useState(null);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState(null);
   const [sucesso, setSucesso] = useState(null);
@@ -139,6 +140,7 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
         taxaEntrega: tipo === 'delivery' ? Number(campos.taxaEntrega) || 0 : 0,
         formaPagamento: campos.formaPagamento || null,
         observacoes: observacoes || null,
+        cupomCodigo,
         itens,
       });
 
@@ -153,9 +155,10 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
       setCampos(CAMPOS_INICIAIS[tipo]);
       setClienteSelecionado(null);
       setObservacoes('');
+      setCupomCodigo(null);
       router.refresh();
     } catch (err) {
-      setErro('Não foi possível enviar o pedido. Tente novamente.');
+      setErro(err?.message || 'Não foi possível enviar o pedido. Tente novamente.');
       console.error(err);
     } finally {
       setEnviando(false);
@@ -181,6 +184,8 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
 
       <div className="flex flex-col gap-4 min-w-0">
         <CarrinhoComanda
+          key={sucesso ?? 'novo'}
+          supabase={supabase}
           itens={itens}
           tipoPedido={tipo}
           adicionaisDisponiveis={adicionais}
@@ -190,6 +195,7 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
           onPontoCarne={atualizarPontoCarne}
           onAdicionais={atualizarAdicionaisItem}
           onRemover={removerItem}
+          onCupomAplicado={setCupomCodigo}
         />
 
         <textarea

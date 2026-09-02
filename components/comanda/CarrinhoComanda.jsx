@@ -1,7 +1,28 @@
 'use client';
 
+import { useState } from 'react';
 import { formatarBRL } from '@/lib/comanda/formato';
 import { PONTOS_CARNE, PONTO_CARNE_LABEL } from '@/lib/comanda/constantes';
+import { buscarCupomPorCodigo } from '@/lib/comanda/cupons';
+
+function validarCupom(cupom, subtotal) {
+  const hoje = new Date().toISOString().slice(0, 10);
+  if (!cupom) return 'Cupom não encontrado.';
+  if (!cupom.ativo) return 'Cupom inativo.';
+  if (cupom.valido_de && hoje < cupom.valido_de) return 'Cupom ainda não é válido.';
+  if (cupom.valido_ate && hoje > cupom.valido_ate) return 'Cupom expirado.';
+  if (cupom.limite_uso && cupom.usos_realizados >= cupom.limite_uso) return 'Cupom atingiu o limite de usos.';
+  if (Number(cupom.valor_minimo_pedido) > subtotal) {
+    return `Pedido mínimo de ${formatarBRL(cupom.valor_minimo_pedido)} para esse cupom.`;
+  }
+  return null;
+}
+
+function calcularDesconto(cupom, subtotal, taxaEntrega) {
+  if (!cupom) return 0;
+  if (cupom.tipo_desconto === 'percentual') return Math.round(subtotal * (cupom.valor / 100) * 100) / 100;
+  return Math.min(Number(cupom.valor), subtotal + taxaEntrega);
+}
 
 function categoriaGratuitaAgora(categoria, tipoPedido) {
   return Boolean(categoria?.gratuita_tipos?.includes(tipoPedido));
@@ -39,6 +60,7 @@ function agruparPorCategoria(adicionais) {
 }
 
 export default function CarrinhoComanda({
+  supabase,
   itens,
   tipoPedido,
   adicionaisDisponiveis = [],
@@ -48,9 +70,52 @@ export default function CarrinhoComanda({
   onPontoCarne,
   onAdicionais,
   onRemover,
+  onCupomAplicado,
 }) {
   const subtotal = itens.reduce((soma, item) => soma + precoComAdicionais(item, tipoPedido) * item.quantidade, 0);
-  const total = subtotal + (taxaEntrega || 0);
+
+  const [cupomInput, setCupomInput] = useState('');
+  const [cupomAplicado, setCupomAplicado] = useState(null);
+  const [erroCupom, setErroCupom] = useState(null);
+  const [verificandoCupom, setVerificandoCupom] = useState(false);
+
+  // Recalculado a cada render em vez de sincronizado por efeito: se o
+  // carrinho mudar depois do cupom aplicado (item removido, por exemplo) e
+  // o pedido mínimo deixar de valer, o desconto zera sozinho sem precisar
+  // de um useEffect reagindo ao subtotal.
+  const avisoCupomInvalido = cupomAplicado ? validarCupom(cupomAplicado, subtotal) : null;
+  const cupomValido = avisoCupomInvalido ? null : cupomAplicado;
+
+  async function aplicarCupom() {
+    if (!cupomInput.trim()) return;
+    setVerificandoCupom(true);
+    setErroCupom(null);
+    try {
+      const cupom = await buscarCupomPorCodigo(supabase, cupomInput.trim());
+      const mensagem = validarCupom(cupom, subtotal);
+      if (mensagem) {
+        setErroCupom(mensagem);
+        return;
+      }
+      setCupomAplicado(cupom);
+      onCupomAplicado?.(cupom.codigo);
+    } catch (err) {
+      console.error(err);
+      setErroCupom('Não foi possível verificar o cupom.');
+    } finally {
+      setVerificandoCupom(false);
+    }
+  }
+
+  function removerCupom() {
+    setCupomAplicado(null);
+    setCupomInput('');
+    setErroCupom(null);
+    onCupomAplicado?.(null);
+  }
+
+  const desconto = calcularDesconto(cupomValido, subtotal, taxaEntrega || 0);
+  const total = subtotal + (taxaEntrega || 0) - desconto;
 
   function toggleAdicional(idx, item, adicional) {
     const jaSelecionado = (item.adicionaisSelecionados ?? []).some((a) => a.id === adicional.id);
@@ -206,6 +271,49 @@ export default function CarrinhoComanda({
         </div>
       )}
 
+      {cupomAplicado ? (
+        <div
+          className={`flex flex-col gap-1 px-4 py-3 rounded-xl border-2 border-dashed ${
+            avisoCupomInvalido ? 'border-amber-300 bg-amber-50' : 'border-green-400 bg-green-50'
+          }`}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className={`text-xs font-black uppercase tracking-widest ${avisoCupomInvalido ? 'text-amber-700' : 'text-green-700'}`}>
+              {avisoCupomInvalido ? '⚠' : '✓'} {cupomAplicado.codigo}
+            </span>
+            <button
+              type="button"
+              onClick={removerCupom}
+              className={`text-[10px] font-black uppercase ${avisoCupomInvalido ? 'text-amber-700' : 'text-green-700'} hover:text-sv-red`}
+            >
+              Remover
+            </button>
+          </div>
+          {avisoCupomInvalido && <p className="text-amber-700 text-[11px] font-bold">{avisoCupomInvalido}</p>}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={cupomInput}
+              onChange={(e) => setCupomInput(e.target.value.toUpperCase())}
+              placeholder="Código do cupom"
+              className="flex-1 min-w-0 px-3 py-2.5 rounded-xl border border-gray-200 text-sm font-black uppercase tracking-wider focus:outline-none focus:border-sv-blue"
+            />
+            <button
+              type="button"
+              onClick={aplicarCupom}
+              disabled={verificandoCupom || !cupomInput.trim()}
+              className="flex-shrink-0 bg-sv-dark text-white font-black px-4 py-2.5 rounded-xl uppercase tracking-wider text-[11px] hover:bg-sv-blue transition-colors duration-150 disabled:opacity-40"
+            >
+              {verificandoCupom ? '...' : 'Aplicar'}
+            </button>
+          </div>
+          {erroCupom && <p className="text-sv-red text-xs font-bold">{erroCupom}</p>}
+        </div>
+      )}
+
       <div className="pt-4 border-t border-gray-100 flex flex-col gap-1.5">
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-500 font-medium">Subtotal</span>
@@ -215,6 +323,12 @@ export default function CarrinhoComanda({
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-500 font-medium">Taxa de entrega</span>
             <span className="font-bold text-sv-dark">{formatarBRL(taxaEntrega)}</span>
+          </div>
+        )}
+        {desconto > 0 && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-green-700 font-medium">Desconto</span>
+            <span className="font-bold text-green-700">-{formatarBRL(desconto)}</span>
           </div>
         )}
         <div className="flex items-center justify-between mt-1">
