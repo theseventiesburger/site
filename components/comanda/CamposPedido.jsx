@@ -4,7 +4,7 @@ import { FORMAS_PAGAMENTO, FORMA_PAGAMENTO_LABEL } from '@/lib/comanda/constante
 import { formatarBRL, formatarTelefone } from '@/lib/comanda/formato';
 
 const campoClasse =
-  'w-full px-4 py-3 rounded-xl border border-gray-200 text-sv-dark font-medium text-sm focus:outline-none focus:border-sv-blue transition-colors duration-150';
+  'w-full min-w-0 px-4 py-3 rounded-xl border border-gray-200 text-sv-dark font-medium text-sm focus:outline-none focus:border-sv-blue transition-colors duration-150';
 const labelClasse = 'text-xs font-black text-gray-400 uppercase tracking-widest';
 
 export default function CamposPedido({ tipo, campos, onChange, mesas, bairros = [] }) {
@@ -25,7 +25,7 @@ export default function CamposPedido({ tipo, campos, onChange, mesas, bairros = 
 
   if (tipo === 'mesa') {
     return (
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 min-w-0">
         <label className={labelClasse} htmlFor="mesa">Mesa</label>
         <select
           id="mesa"
@@ -47,8 +47,8 @@ export default function CamposPedido({ tipo, campos, onChange, mesas, bairros = 
 
   if (tipo === 'delivery') {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
+        <div className="flex flex-col gap-2 min-w-0">
           <label className={labelClasse} htmlFor="clienteNome">Nome do cliente</label>
           <input
             id="clienteNome"
@@ -58,7 +58,7 @@ export default function CamposPedido({ tipo, campos, onChange, mesas, bairros = 
             required
           />
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 min-w-0">
           <label className={labelClasse} htmlFor="clienteTelefone">Telefone</label>
           <input
             id="clienteTelefone"
@@ -68,7 +68,7 @@ export default function CamposPedido({ tipo, campos, onChange, mesas, bairros = 
             placeholder="(35) 99277-6777"
           />
         </div>
-        <div className="flex flex-col gap-2 sm:col-span-2">
+        <div className="flex flex-col gap-2 min-w-0 sm:col-span-2">
           <label className={labelClasse} htmlFor="endereco">Endereço (rua e número)</label>
           <input
             id="endereco"
@@ -78,7 +78,7 @@ export default function CamposPedido({ tipo, campos, onChange, mesas, bairros = 
             required
           />
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 min-w-0">
           <label className={labelClasse} htmlFor="bairro">Bairro</label>
           <select
             id="bairro"
@@ -92,7 +92,7 @@ export default function CamposPedido({ tipo, campos, onChange, mesas, bairros = 
             ))}
           </select>
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 min-w-0">
           <label className={labelClasse} htmlFor="cidade">Cidade</label>
           <input
             id="cidade"
@@ -101,7 +101,7 @@ export default function CamposPedido({ tipo, campos, onChange, mesas, bairros = 
             onChange={(e) => set('cidade', e.target.value)}
           />
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 min-w-0">
           <label className={labelClasse} htmlFor="estado">UF</label>
           <input
             id="estado"
@@ -111,7 +111,7 @@ export default function CamposPedido({ tipo, campos, onChange, mesas, bairros = 
             maxLength={2}
           />
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 min-w-0">
           <label className={labelClasse} htmlFor="taxaEntrega">Taxa de entrega (R$)</label>
           <input
             id="taxaEntrega"
@@ -130,7 +130,7 @@ export default function CamposPedido({ tipo, campos, onChange, mesas, bairros = 
   // pdv
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 min-w-0">
         <label className={labelClasse} htmlFor="clienteNome">Nome do cliente (opcional)</label>
         <input
           id="clienteNome"
@@ -139,7 +139,7 @@ export default function CamposPedido({ tipo, campos, onChange, mesas, bairros = 
           onChange={(e) => set('clienteNome', e.target.value)}
         />
       </div>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 min-w-0">
         <label className={labelClasse} htmlFor="formaPagamento">Forma de pagamento</label>
         <select
           id="formaPagamento"

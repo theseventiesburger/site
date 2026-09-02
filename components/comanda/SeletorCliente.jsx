@@ -86,7 +86,7 @@ export default function SeletorCliente({ supabase, clienteSelecionado, onSelecio
 
   if (clienteSelecionado) {
     return (
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 min-w-0">
         <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Cliente</label>
         <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-sv-blue/30 bg-sv-blue/5">
           <span className="font-bold text-sv-dark text-sm flex-1 truncate">{clienteSelecionado.nome}</span>
@@ -99,7 +99,7 @@ export default function SeletorCliente({ supabase, clienteSelecionado, onSelecio
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 min-w-0">
       <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Cliente (opcional)</label>
       <div className="relative">
         <input
@@ -139,21 +139,21 @@ export default function SeletorCliente({ supabase, clienteSelecionado, onSelecio
       </button>
 
       {mostrarForm && (
-        <div className="flex flex-col gap-2 p-4 bg-[#F7F7F7] rounded-xl border border-gray-100">
+        <div className="flex flex-col gap-2 p-4 bg-[#F7F7F7] rounded-xl border border-gray-100 min-w-0">
           <input
             value={novoNome}
             onChange={(e) => setNovoNome(e.target.value)}
             onKeyDown={bloquearEnter}
             placeholder="Nome *"
-            className="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium"
+            className="w-full min-w-0 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium"
           />
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 min-w-0">
             <input
               value={novoTelefone}
               onChange={(e) => setNovoTelefone(formatarTelefone(e.target.value))}
               onKeyDown={bloquearEnter}
               placeholder="(35) 99277-6777"
-              className="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium"
+              className="w-full min-w-0 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium"
             />
             <input
               value={novoNascimento}
@@ -162,21 +162,21 @@ export default function SeletorCliente({ supabase, clienteSelecionado, onSelecio
               placeholder="dd/mm/aaaa"
               inputMode="numeric"
               maxLength={10}
-              className="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium"
+              className="w-full min-w-0 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium"
             />
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 min-w-0">
             <input
               value={novoEndereco}
               onChange={(e) => setNovoEndereco(e.target.value)}
               onKeyDown={bloquearEnter}
               placeholder="Endereço"
-              className="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium"
+              className="w-full min-w-0 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium"
             />
             <select
               value={novoBairroId}
               onChange={(e) => setNovoBairroId(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium"
+              className="w-full min-w-0 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium"
             >
               <option value="">Bairro</option>
               {bairros.map((b) => (

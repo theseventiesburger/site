@@ -153,7 +153,7 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
   return (
     <form onSubmit={enviarPedido} className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
       <div className="flex flex-col gap-6 min-w-0">
-        <div className="bg-white rounded-3xl shadow-md border border-gray-100 p-6 flex flex-col gap-5">
+        <div className="bg-white rounded-3xl shadow-md border border-gray-100 p-6 flex flex-col gap-5 min-w-0">
           <SeletorCliente
             supabase={supabase}
             clienteSelecionado={clienteSelecionado}
