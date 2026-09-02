@@ -6,12 +6,15 @@ import { formatarBRL, formatarHora, tempoDecorrido } from '@/lib/comanda/formato
 export default function CardPedidoCozinha({ pedido, onAvancar, onCancelar, onTogglePago }) {
   const proximoStatus = PROXIMO_STATUS[pedido.status];
   const itens = pedido.itens_pedido ?? [];
+  // Na mesa, o garçom reconhece o pedido pelo número da mesa mais rápido
+  // que pelo número do pedido — então é a mesa que fica em destaque.
+  const destaque = pedido.tipo === 'mesa' ? `Mesa ${pedido.mesa_id}` : `#${pedido.numero}`;
 
   return (
     <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="font-black text-sv-dark text-lg">#{pedido.numero}</p>
+          <p className="font-black text-sv-dark text-lg">{destaque}</p>
           <div className="flex items-center gap-2 mt-1">
             <BadgeTipo tipo={pedido.tipo} />
             <BadgeStatus status={pedido.status} />
@@ -24,7 +27,7 @@ export default function CardPedidoCozinha({ pedido, onAvancar, onCancelar, onTog
       </div>
 
       <div className="text-sm font-bold text-sv-dark">
-        {pedido.tipo === 'mesa' && `Mesa ${pedido.mesa_id}`}
+        {pedido.tipo === 'mesa' && `Pedido #${pedido.numero}`}
         {pedido.tipo === 'delivery' && (pedido.cliente_nome || 'Cliente sem nome')}
         {pedido.tipo === 'pdv' && (pedido.cliente_nome || 'Balcão')}
       </div>
