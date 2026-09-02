@@ -11,6 +11,7 @@ export default function FormularioProduto({ supabase, produto, categorias, onFec
   const [nome, setNome] = useState(produto?.nome ?? '');
   const [descricao, setDescricao] = useState(produto?.descricao ?? '');
   const [preco, setPreco] = useState(produto?.preco ?? '');
+  const [precoPromocional, setPrecoPromocional] = useState(produto?.preco_promocional ?? '');
   const [categoriaId, setCategoriaId] = useState(produto?.categoria_id ?? categorias[0]?.id ?? '');
   const [tag, setTag] = useState(produto?.tag ?? '');
   const [ativo, setAtivo] = useState(produto?.ativo ?? true);
@@ -33,6 +34,14 @@ export default function FormularioProduto({ supabase, produto, categorias, onFec
       return;
     }
 
+    const precoNumero = parsePrecoInput(preco);
+    const precoPromocionalNumero = precoPromocional ? parsePrecoInput(precoPromocional) : null;
+
+    if (precoPromocionalNumero !== null && precoPromocionalNumero >= precoNumero) {
+      setErro('O preço promocional precisa ser menor que o preço normal.');
+      return;
+    }
+
     setEnviando(true);
     setErro(null);
 
@@ -45,7 +54,8 @@ export default function FormularioProduto({ supabase, produto, categorias, onFec
       const dados = {
         nome,
         descricao,
-        preco: parsePrecoInput(preco),
+        preco: precoNumero,
+        precoPromocional: precoPromocionalNumero,
         categoriaId,
         tag,
         ativo,
@@ -138,6 +148,21 @@ export default function FormularioProduto({ supabase, produto, categorias, onFec
               ))}
             </select>
           </div>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Preço promocional (opcional)</label>
+          <input
+            type="text"
+            inputMode="decimal"
+            value={precoPromocional}
+            onChange={(e) => setPrecoPromocional(e.target.value)}
+            placeholder="29,90"
+            className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
+          />
+          <p className="text-gray-400 text-[11px] font-medium">
+            Preenchido, o produto entra em promoção: preço riscado no cardápio e destaque no slider da home.
+          </p>
         </div>
 
         <div className="flex flex-col gap-1.5">

@@ -2,8 +2,17 @@ import HeroSlider from '@/components/HeroSlider';
 import GoogleRatingBadge from '@/components/GoogleRatingBadge';
 import Image from 'next/image';
 import Link from 'next/link';
+import { criarClienteServidor } from '@/lib/supabase/server';
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await criarClienteServidor();
+  const { data: produtosPromocao } = await supabase
+    .from('produtos')
+    .select('*')
+    .eq('ativo', true)
+    .not('preco_promocional', 'is', null)
+    .order('ordem', { ascending: true });
+
   const campeoes = [
     {
       id: "new-castle",
@@ -61,7 +70,7 @@ export default function HomePage() {
 
   return (
     <section className="w-full bg-[#F7F7F7]">
-      <HeroSlider />
+      <HeroSlider produtosPromocao={produtosPromocao ?? []} />
 
       <div className="w-full flex justify-center -mt-7 relative z-10">
         <GoogleRatingBadge />

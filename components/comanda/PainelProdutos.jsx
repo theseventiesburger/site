@@ -57,11 +57,26 @@ export default function PainelProdutos({ produtosIniciais, categorias }) {
 
             <div className="flex-1 min-w-0 flex flex-col justify-between">
               <div>
-                <p className="font-black text-sv-dark text-sm uppercase tracking-tight truncate">
-                  {produto.nome}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="font-black text-sv-dark text-sm uppercase tracking-tight truncate">
+                    {produto.nome}
+                  </p>
+                  {produto.preco_promocional && (
+                    <span className="flex-shrink-0 bg-sv-red/10 text-sv-red text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
+                      Promo
+                    </span>
+                  )}
+                </div>
                 <p className="text-gray-400 text-xs font-bold">
-                  {produto.categorias?.nome ?? 'Sem categoria'} · {formatarBRL(produto.preco)}
+                  {produto.categorias?.nome ?? 'Sem categoria'} ·{' '}
+                  {produto.preco_promocional ? (
+                    <>
+                      <span className="line-through">{formatarBRL(produto.preco)}</span>{' '}
+                      <span className="text-sv-red">{formatarBRL(produto.preco_promocional)}</span>
+                    </>
+                  ) : (
+                    formatarBRL(produto.preco)
+                  )}
                 </p>
               </div>
 

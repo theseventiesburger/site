@@ -112,6 +112,11 @@ export default function CardapioInterativo({ produtos, categorias = [] }) {
                     {produto.tag}
                   </span>
                 )}
+                {produto.preco_promocional && (
+                  <span className="absolute top-3 right-3 bg-sv-red text-white text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider z-10">
+                    Promoção
+                  </span>
+                )}
                 <Image
                   src={produto.imagem}
                   alt={produto.nome}
@@ -132,7 +137,14 @@ export default function CardapioInterativo({ produtos, categorias = [] }) {
                 <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between">
                   <div className="flex flex-col">
                     <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Preço</span>
-                    <span className="text-2xl font-black text-sv-dark">{formatarBRL(produto.preco)}</span>
+                    {produto.preco_promocional ? (
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-sm font-bold text-gray-400 line-through">{formatarBRL(produto.preco)}</span>
+                        <span className="text-2xl font-black text-sv-red">{formatarBRL(produto.preco_promocional)}</span>
+                      </div>
+                    ) : (
+                      <span className="text-2xl font-black text-sv-dark">{formatarBRL(produto.preco)}</span>
+                    )}
                   </div>
 
                   <Link
@@ -199,7 +211,14 @@ export default function CardapioInterativo({ produtos, categorias = [] }) {
             <p className="text-white font-black text-2xl md:text-3xl uppercase tracking-tight">
               {produtoEmDestaque.nome}
             </p>
-            <p className="text-sv-blue font-black text-lg mt-1">{formatarBRL(produtoEmDestaque.preco)}</p>
+            {produtoEmDestaque.preco_promocional ? (
+              <p className="font-black text-lg mt-1">
+                <span className="text-gray-400 line-through mr-2">{formatarBRL(produtoEmDestaque.preco)}</span>
+                <span className="text-sv-red">{formatarBRL(produtoEmDestaque.preco_promocional)}</span>
+              </p>
+            ) : (
+              <p className="text-sv-blue font-black text-lg mt-1">{formatarBRL(produtoEmDestaque.preco)}</p>
+            )}
           </div>
         </div>
       )}
