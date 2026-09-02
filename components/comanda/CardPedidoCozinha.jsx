@@ -1,15 +1,19 @@
 import BadgeStatus from '@/components/comanda/BadgeStatus';
 import BadgeTipo from '@/components/comanda/BadgeTipo';
-import { PROXIMO_STATUS, STATUS_LABEL, PONTO_CARNE_LABEL } from '@/lib/comanda/constantes';
+import { PROXIMO_STATUS, STATUS_LABEL, PONTO_CARNE_LABEL, FORMAS_PAGAMENTO, FORMA_PAGAMENTO_LABEL } from '@/lib/comanda/constantes';
 import { formatarBRL, formatarHora, tempoDecorrido, minutosDecorridos } from '@/lib/comanda/formato';
 
-export default function CardPedidoCozinha({ pedido, onAvancar, onCancelar, onTogglePago }) {
+export default function CardPedidoCozinha({ pedido, onAvancar, onCancelar, onTogglePago, onPagarMesa }) {
   const proximoStatus = PROXIMO_STATUS[pedido.status];
   const itens = pedido.itens_pedido ?? [];
   // Na mesa, o garçom reconhece o pedido pelo número da mesa mais rápido
   // que pelo número do pedido — então é a mesa que fica em destaque.
   const destaque = pedido.tipo === 'mesa' ? `Mesa ${pedido.mesa_id}` : `#${pedido.numero}`;
   const minutosPassados = minutosDecorridos(pedido.created_at);
+  // Mesa só define forma de pagamento na hora de fechar a conta — sem isso
+  // registrado, não deixa avançar pro status final.
+  const faltaPagamento = pedido.tipo === 'mesa' && !(pedido.pago && pedido.forma_pagamento);
+  const bloqueadoPorPagamento = faltaPagamento && proximoStatus === 'entregue';
 
   return (
     <div
@@ -75,27 +79,62 @@ export default function CardPedidoCozinha({ pedido, onAvancar, onCancelar, onTog
         </p>
       )}
 
-      <div className="flex items-center justify-between border-t border-gray-100 pt-3">
+      <div className="flex items-center justify-between border-t border-gray-100 pt-3 gap-2">
         <span className="font-black text-sv-dark">{formatarBRL(pedido.total)}</span>
-        <button
-          type="button"
-          onClick={() => onTogglePago(pedido.id, !pedido.pago)}
-          className={`text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider transition-colors duration-150 ${
-            pedido.pago ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-          }`}
-        >
-          {pedido.pago ? 'Pago' : 'Marcar pago'}
-        </button>
+
+        {pedido.tipo === 'mesa' ? (
+          pedido.pago && pedido.forma_pagamento ? (
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider bg-green-100 text-green-700">
+                Pago · {FORMA_PAGAMENTO_LABEL[pedido.forma_pagamento] ?? pedido.forma_pagamento}
+              </span>
+              <button
+                type="button"
+                onClick={() => onPagarMesa(pedido.id, null)}
+                className="text-[10px] font-black uppercase text-gray-400 hover:text-sv-red transition-colors duration-150"
+              >
+                Trocar
+              </button>
+            </div>
+          ) : (
+            <select
+              value=""
+              onChange={(e) => onPagarMesa(pedido.id, e.target.value)}
+              className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-full border border-amber-300 bg-amber-50 text-amber-700"
+            >
+              <option value="" disabled>Forma de pagamento</option>
+              {FORMAS_PAGAMENTO.map((f) => (
+                <option key={f} value={f}>{FORMA_PAGAMENTO_LABEL[f]}</option>
+              ))}
+            </select>
+          )
+        ) : (
+          <button
+            type="button"
+            onClick={() => onTogglePago(pedido.id, !pedido.pago)}
+            className={`text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider transition-colors duration-150 ${
+              pedido.pago ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+            }`}
+          >
+            {pedido.pago ? 'Pago' : 'Marcar pago'}
+          </button>
+        )}
       </div>
 
       <div className="flex items-center gap-2 pt-1">
         {proximoStatus && (
           <button
             type="button"
-            onClick={() => onAvancar(pedido.id, proximoStatus)}
-            className="flex-1 bg-sv-dark text-white font-black py-3 rounded-xl uppercase tracking-wider text-xs transition-all duration-150 hover:bg-sv-blue"
+            onClick={() => !bloqueadoPorPagamento && onAvancar(pedido.id, proximoStatus)}
+            disabled={bloqueadoPorPagamento}
+            title={bloqueadoPorPagamento ? 'Registre a forma de pagamento antes de finalizar a mesa' : undefined}
+            className={`flex-1 font-black py-3 rounded-xl uppercase tracking-wider text-xs transition-all duration-150 ${
+              bloqueadoPorPagamento
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                : 'bg-sv-dark text-white hover:bg-sv-blue'
+            }`}
           >
-            {STATUS_LABEL[proximoStatus]}
+            {bloqueadoPorPagamento ? 'Falta o pagamento' : STATUS_LABEL[proximoStatus]}
           </button>
         )}
         {pedido.status !== 'cancelado' && pedido.status !== 'entregue' && (

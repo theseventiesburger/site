@@ -4,7 +4,12 @@ import { useEffect, useRef, useState } from 'react';
 import CardPedidoCozinha from '@/components/comanda/CardPedidoCozinha';
 import EstadoVazio from '@/components/comanda/EstadoVazio';
 import { criarClienteBrowser } from '@/lib/supabase/client';
-import { atualizarPagamentoPedido, atualizarStatusPedido, buscarPedidoPorId } from '@/lib/comanda/pedidos';
+import {
+  atualizarPagamentoPedido,
+  atualizarStatusPedido,
+  buscarPedidoPorId,
+  definirPagamentoMesa,
+} from '@/lib/comanda/pedidos';
 import { tocarAvisoTempo } from '@/lib/comanda/som';
 import { minutosDecorridos } from '@/lib/comanda/formato';
 
@@ -92,6 +97,13 @@ export default function PainelCozinha({ pedidosIniciais }) {
   }, [supabase]);
 
   async function avancarStatus(pedidoId, novoStatus) {
+    // Mesa não fecha (não sai da cozinha) sem ter registrado o pagamento —
+    // sem isso o valor da conta se perde de vista.
+    const pedido = pedidosRef.current.find((p) => p.id === pedidoId);
+    if (pedido?.tipo === 'mesa' && novoStatus === 'entregue' && !(pedido.pago && pedido.forma_pagamento)) {
+      return;
+    }
+
     setPedidos((atual) => atual.map((p) => (p.id === pedidoId ? { ...p, status: novoStatus } : p)));
     try {
       await atualizarStatusPedido(supabase, pedidoId, novoStatus);
@@ -113,6 +125,19 @@ export default function PainelCozinha({ pedidosIniciais }) {
     setPedidos((atual) => atual.map((p) => (p.id === pedidoId ? { ...p, pago } : p)));
     try {
       await atualizarPagamentoPedido(supabase, pedidoId, pago);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function pagarMesa(pedidoId, formaPagamento) {
+    setPedidos((atual) =>
+      atual.map((p) =>
+        p.id === pedidoId ? { ...p, pago: Boolean(formaPagamento), forma_pagamento: formaPagamento || null } : p
+      )
+    );
+    try {
+      await definirPagamentoMesa(supabase, pedidoId, formaPagamento);
     } catch (err) {
       console.error(err);
     }
@@ -149,6 +174,7 @@ export default function PainelCozinha({ pedidosIniciais }) {
                     onAvancar={avancarStatus}
                     onCancelar={cancelarPedido}
                     onTogglePago={togglePago}
+                    onPagarMesa={pagarMesa}
                   />
                 ))}
               </div>
