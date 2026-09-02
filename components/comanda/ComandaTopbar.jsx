@@ -29,6 +29,7 @@ const ITENS_MENU = [
       { href: '/comanda/clientes', label: 'Clientes' },
       { href: '/comanda/bairros', label: 'Bairros' },
       { href: '/comanda/cupons', label: 'Cupons' },
+      { href: '/comanda/estoque', label: 'Estoque' },
     ],
   },
   { tipo: 'link', href: '/comanda/relatorio', label: 'Relatório' },

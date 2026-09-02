@@ -6,11 +6,13 @@ import { criarClienteBrowser } from '@/lib/supabase/client';
 import { listarTodosProdutos, alternarAtivoProduto } from '@/lib/comanda/produtos';
 import { formatarBRL } from '@/lib/comanda/formato';
 import FormularioProduto from '@/components/comanda/FormularioProduto';
+import FormularioReceita from '@/components/comanda/FormularioReceita';
 
-export default function PainelProdutos({ produtosIniciais, categorias }) {
+export default function PainelProdutos({ produtosIniciais, categorias, insumos = [] }) {
   const [supabase] = useState(() => criarClienteBrowser());
   const [produtos, setProdutos] = useState(produtosIniciais);
   const [produtoEmEdicao, setProdutoEmEdicao] = useState(undefined); // undefined = fechado, null = criar, objeto = editar
+  const [produtoComReceita, setProdutoComReceita] = useState(null);
 
   async function recarregar() {
     const dados = await listarTodosProdutos(supabase);
@@ -98,6 +100,14 @@ export default function PainelProdutos({ produtosIniciais, categorias }) {
                 >
                   {produto.ativo ? 'Desativar' : 'Ativar'}
                 </button>
+                <span className="text-gray-300">·</span>
+                <button
+                  type="button"
+                  onClick={() => setProdutoComReceita(produto)}
+                  className="text-[10px] font-black uppercase tracking-wider text-sv-blue hover:text-sv-red"
+                >
+                  Ficha técnica
+                </button>
               </div>
             </div>
           </div>
@@ -111,6 +121,17 @@ export default function PainelProdutos({ produtosIniciais, categorias }) {
           categorias={categorias}
           onFechar={() => setProdutoEmEdicao(undefined)}
           onSalvo={recarregar}
+        />
+      )}
+
+      {produtoComReceita && (
+        <FormularioReceita
+          supabase={supabase}
+          tipo="produto"
+          itemId={produtoComReceita.id}
+          itemNome={produtoComReceita.nome}
+          insumos={insumos}
+          onFechar={() => setProdutoComReceita(null)}
         />
       )}
     </div>

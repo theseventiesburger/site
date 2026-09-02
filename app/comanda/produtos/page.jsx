@@ -4,9 +4,10 @@ import { criarClienteServidor } from "@/lib/supabase/server";
 export default async function ProdutosPage() {
   const supabase = await criarClienteServidor();
 
-  const [{ data: produtos }, { data: categorias }] = await Promise.all([
+  const [{ data: produtos }, { data: categorias }, { data: insumos }] = await Promise.all([
     supabase.from("produtos").select("*, categorias(id, nome, emoji)").order("ordem", { ascending: true }),
     supabase.from("categorias").select("*").order("ordem", { ascending: true }),
+    supabase.from("insumos").select("*").eq("ativo", true).order("nome", { ascending: true }),
   ]);
 
   return (
@@ -20,7 +21,7 @@ export default async function ProdutosPage() {
         </h1>
       </div>
 
-      <PainelProdutos produtosIniciais={produtos ?? []} categorias={categorias ?? []} />
+      <PainelProdutos produtosIniciais={produtos ?? []} categorias={categorias ?? []} insumos={insumos ?? []} />
     </section>
   );
 }

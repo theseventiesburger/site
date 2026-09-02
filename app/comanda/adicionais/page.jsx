@@ -4,9 +4,10 @@ import { criarClienteServidor } from "@/lib/supabase/server";
 export default async function AdicionaisPage() {
   const supabase = await criarClienteServidor();
 
-  const [{ data: adicionais }, { data: categorias }] = await Promise.all([
+  const [{ data: adicionais }, { data: categorias }, { data: insumos }] = await Promise.all([
     supabase.from("adicionais").select("*, categorias_adicionais(id, nome, emoji)").order("ordem", { ascending: true }),
     supabase.from("categorias_adicionais").select("*").order("ordem", { ascending: true }),
+    supabase.from("insumos").select("*").eq("ativo", true).order("nome", { ascending: true }),
   ]);
 
   return (
@@ -23,7 +24,7 @@ export default async function AdicionaisPage() {
         </p>
       </div>
 
-      <PainelAdicionaisGlobal adicionaisIniciais={adicionais ?? []} categoriasIniciais={categorias ?? []} />
+      <PainelAdicionaisGlobal adicionaisIniciais={adicionais ?? []} categoriasIniciais={categorias ?? []} insumos={insumos ?? []} />
     </section>
   );
 }

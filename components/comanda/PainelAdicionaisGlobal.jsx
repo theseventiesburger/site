@@ -5,11 +5,13 @@ import { formatarBRL, parsePrecoInput } from '@/lib/comanda/formato';
 import { criarAdicional, atualizarAdicional, alternarAtivoAdicional, listarTodosAdicionais } from '@/lib/comanda/adicionais';
 import { criarClienteBrowser } from '@/lib/supabase/client';
 import PainelCategoriasAdicionais from '@/components/comanda/PainelCategoriasAdicionais';
+import FormularioReceita from '@/components/comanda/FormularioReceita';
 
-export default function PainelAdicionaisGlobal({ adicionaisIniciais, categoriasIniciais }) {
+export default function PainelAdicionaisGlobal({ adicionaisIniciais, categoriasIniciais, insumos = [] }) {
   const [supabase] = useState(() => criarClienteBrowser());
   const [adicionais, setAdicionais] = useState(adicionaisIniciais);
   const [categorias, setCategorias] = useState(categoriasIniciais);
+  const [adicionalComReceita, setAdicionalComReceita] = useState(null);
   const [emEdicaoId, setEmEdicaoId] = useState(null);
   const [nomeEdicao, setNomeEdicao] = useState('');
   const [precoEdicao, setPrecoEdicao] = useState('');
@@ -152,6 +154,13 @@ export default function PainelAdicionaisGlobal({ adicionaisIniciais, categoriasI
                   >
                     {adicional.ativo ? 'Desativar' : 'Ativar'}
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setAdicionalComReceita(adicional)}
+                    className="text-xs font-black uppercase text-sv-blue"
+                  >
+                    Ficha técnica
+                  </button>
                 </>
               )}
             </div>
@@ -202,6 +211,17 @@ export default function PainelAdicionaisGlobal({ adicionaisIniciais, categoriasI
         <p className="text-sv-red text-xs font-bold bg-sv-red/5 border border-sv-red/20 rounded-xl px-4 py-3">
           {erro}
         </p>
+      )}
+
+      {adicionalComReceita && (
+        <FormularioReceita
+          supabase={supabase}
+          tipo="adicional"
+          itemId={adicionalComReceita.id}
+          itemNome={adicionalComReceita.nome}
+          insumos={insumos}
+          onFechar={() => setAdicionalComReceita(null)}
+        />
       )}
     </div>
   );
