@@ -18,6 +18,7 @@ export default function SeletorCliente({ supabase, clienteSelecionado, onSelecio
   const [novoNome, setNovoNome] = useState('');
   const [novoTelefone, setNovoTelefone] = useState('');
   const [novoEndereco, setNovoEndereco] = useState('');
+  const [novoPontoReferencia, setNovoPontoReferencia] = useState('');
   const [novoBairroId, setNovoBairroId] = useState('');
   const [novoNascimento, setNovoNascimento] = useState('');
   const [salvando, setSalvando] = useState(false);
@@ -66,6 +67,7 @@ export default function SeletorCliente({ supabase, clienteSelecionado, onSelecio
         nome: novoNome,
         telefone: novoTelefone,
         endereco: novoEndereco,
+        pontoReferencia: novoPontoReferencia,
         bairroId: novoBairroId || null,
         dataNascimento: dataDigitadaParaISO(novoNascimento),
       });
@@ -74,6 +76,7 @@ export default function SeletorCliente({ supabase, clienteSelecionado, onSelecio
       setNovoNome('');
       setNovoTelefone('');
       setNovoEndereco('');
+      setNovoPontoReferencia('');
       setNovoBairroId('');
       setNovoNascimento('');
     } catch (err) {
@@ -90,6 +93,11 @@ export default function SeletorCliente({ supabase, clienteSelecionado, onSelecio
         <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Cliente</label>
         <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-sv-blue/30 bg-sv-blue/5">
           <span className="font-bold text-sv-dark text-sm flex-1 truncate">{clienteSelecionado.nome}</span>
+          {clienteSelecionado.codigo && (
+            <span className="font-mono text-[10px] font-black text-sv-blue bg-white px-2 py-1 rounded-lg tracking-wider flex-shrink-0">
+              {clienteSelecionado.codigo}
+            </span>
+          )}
           <button type="button" onClick={onLimpar} className="text-xs font-black uppercase text-sv-red">
             Trocar
           </button>
@@ -122,7 +130,14 @@ export default function SeletorCliente({ supabase, clienteSelecionado, onSelecio
                 onClick={() => selecionar(cliente)}
                 className="w-full text-left px-4 py-3 hover:bg-[#F7F7F7] transition-colors duration-150 border-b border-gray-50 last:border-0"
               >
-                <p className="font-bold text-sv-dark text-sm truncate">{cliente.nome}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-bold text-sv-dark text-sm truncate flex-1">{cliente.nome}</p>
+                  {cliente.codigo && (
+                    <span className="font-mono text-[9px] font-black text-sv-blue bg-sv-blue/10 px-1.5 py-0.5 rounded flex-shrink-0">
+                      {cliente.codigo}
+                    </span>
+                  )}
+                </div>
                 {cliente.telefone && <p className="text-gray-400 text-xs font-medium">{cliente.telefone}</p>}
               </button>
             ))}
@@ -173,17 +188,24 @@ export default function SeletorCliente({ supabase, clienteSelecionado, onSelecio
               placeholder="Endereço"
               className="w-full min-w-0 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium"
             />
-            <select
-              value={novoBairroId}
-              onChange={(e) => setNovoBairroId(e.target.value)}
+            <input
+              value={novoPontoReferencia}
+              onChange={(e) => setNovoPontoReferencia(e.target.value)}
+              onKeyDown={bloquearEnter}
+              placeholder="Ponto de referência"
               className="w-full min-w-0 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium"
-            >
-              <option value="">Bairro</option>
-              {bairros.map((b) => (
-                <option key={b.id} value={b.id}>{b.nome}</option>
-              ))}
-            </select>
+            />
           </div>
+          <select
+            value={novoBairroId}
+            onChange={(e) => setNovoBairroId(e.target.value)}
+            className="w-full min-w-0 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium"
+          >
+            <option value="">Bairro</option>
+            {bairros.map((b) => (
+              <option key={b.id} value={b.id}>{b.nome}</option>
+            ))}
+          </select>
           {erro && <p className="text-sv-red text-xs font-bold">{erro}</p>}
           <button
             type="button"

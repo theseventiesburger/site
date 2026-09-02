@@ -32,14 +32,22 @@ export default async function RelatorioClientePage({ params }) {
         >
           ← Clientes
         </Link>
-        <h1 className="text-3xl md:text-4xl font-black text-sv-dark uppercase tracking-tighter leading-none">
-          {cliente.nome}
-        </h1>
+        <div className="flex items-center gap-3 flex-wrap">
+          <h1 className="text-3xl md:text-4xl font-black text-sv-dark uppercase tracking-tighter leading-none">
+            {cliente.nome}
+          </h1>
+          {cliente.codigo && (
+            <span className="font-mono text-xs font-black text-sv-blue bg-sv-blue/10 px-2.5 py-1 rounded-lg tracking-wider">
+              {cliente.codigo}
+            </span>
+          )}
+        </div>
         <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm text-gray-500 font-medium">
           {cliente.telefone && <span>{cliente.telefone}</span>}
           {(cliente.endereco || cliente.bairros?.nome) && (
             <span>{[cliente.endereco, cliente.bairros?.nome, cliente.cidade, cliente.estado].filter(Boolean).join(', ')}</span>
           )}
+          {cliente.ponto_referencia && <span>Ref: {cliente.ponto_referencia}</span>}
           {cliente.data_nascimento && <span>Nasc. {formatarDataNascimento(cliente.data_nascimento)}</span>}
         </div>
       </div>

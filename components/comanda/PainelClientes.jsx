@@ -17,7 +17,10 @@ export default function PainelClientes({ clientesIniciais, bairros }) {
     const termo = busca.trim().toLowerCase();
     if (!termo) return clientes;
     return clientes.filter(
-      (c) => c.nome.toLowerCase().includes(termo) || (c.telefone ?? '').includes(termo)
+      (c) =>
+        c.nome.toLowerCase().includes(termo) ||
+        (c.telefone ?? '').includes(termo) ||
+        (c.codigo ?? '').toLowerCase().includes(termo)
     );
   }, [clientes, busca]);
 
@@ -54,11 +57,19 @@ export default function PainelClientes({ clientesIniciais, bairros }) {
                 {cliente.pedidos?.[0]?.count ?? 0} pedidos
               </span>
             </div>
+            {cliente.codigo && (
+              <span className="self-start font-mono text-[10px] font-black text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded tracking-wider">
+                {cliente.codigo}
+              </span>
+            )}
             {cliente.telefone && <p className="text-gray-500 text-xs font-bold">{cliente.telefone}</p>}
             {(cliente.endereco || cliente.bairros?.nome) && (
               <p className="text-gray-400 text-xs font-medium truncate">
                 {[cliente.endereco, cliente.bairros?.nome, cliente.cidade].filter(Boolean).join(' — ')}
               </p>
+            )}
+            {cliente.ponto_referencia && (
+              <p className="text-gray-400 text-xs font-medium truncate">Ref: {cliente.ponto_referencia}</p>
             )}
             {cliente.data_nascimento && (
               <p className="text-gray-400 text-xs font-medium">Nasc. {formatarDataNascimento(cliente.data_nascimento)}</p>

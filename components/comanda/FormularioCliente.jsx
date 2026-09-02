@@ -14,6 +14,7 @@ export default function FormularioCliente({ supabase, cliente, bairros, onFechar
   const [telefone, setTelefone] = useState(formatarTelefone(cliente?.telefone ?? ''));
   const [dataNascimento, setDataNascimento] = useState(isoParaDataDigitada(cliente?.data_nascimento));
   const [endereco, setEndereco] = useState(cliente?.endereco ?? '');
+  const [pontoReferencia, setPontoReferencia] = useState(cliente?.ponto_referencia ?? '');
   const [bairroId, setBairroId] = useState(cliente?.bairro_id ?? '');
   const [cidade, setCidade] = useState(cliente?.cidade ?? '');
   const [estado, setEstado] = useState(cliente?.estado ?? '');
@@ -35,6 +36,7 @@ export default function FormularioCliente({ supabase, cliente, bairros, onFechar
         nome,
         telefone,
         endereco,
+        pontoReferencia,
         bairroId: bairroId || null,
         cidade,
         estado,
@@ -60,9 +62,16 @@ export default function FormularioCliente({ supabase, cliente, bairros, onFechar
         onSubmit={salvar}
         className="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-6 md:p-8 flex flex-col gap-4 my-auto"
       >
-        <h2 className="text-xl font-black text-sv-dark uppercase tracking-tight">
-          {modoEdicao ? 'Editar cliente' : 'Novo cliente'}
-        </h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-xl font-black text-sv-dark uppercase tracking-tight">
+            {modoEdicao ? 'Editar cliente' : 'Novo cliente'}
+          </h2>
+          {modoEdicao && cliente.codigo && (
+            <span className="font-mono text-xs font-black text-sv-blue bg-sv-blue/10 px-2.5 py-1 rounded-lg tracking-wider flex-shrink-0">
+              {cliente.codigo}
+            </span>
+          )}
+        </div>
 
         <div className="flex flex-col gap-1.5 min-w-0">
           <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Nome</label>
@@ -93,9 +102,21 @@ export default function FormularioCliente({ supabase, cliente, bairros, onFechar
           </div>
         </div>
 
-        <div className="flex flex-col gap-1.5 min-w-0">
-          <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Endereço (rua e número)</label>
-          <input value={endereco} onChange={(e) => setEndereco(e.target.value)} className={campoClasse} />
+        <div className="grid grid-cols-2 gap-4 min-w-0">
+          <div className="flex flex-col gap-1.5 min-w-0">
+            <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Endereço (rua e número)</label>
+            <input value={endereco} onChange={(e) => setEndereco(e.target.value)} className={campoClasse} />
+          </div>
+
+          <div className="flex flex-col gap-1.5 min-w-0">
+            <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Ponto de referência</label>
+            <input
+              value={pontoReferencia}
+              onChange={(e) => setPontoReferencia(e.target.value)}
+              placeholder="Ex: perto da padaria"
+              className={campoClasse}
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-[1fr_1fr_5rem] gap-4 min-w-0">

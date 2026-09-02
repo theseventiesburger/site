@@ -68,7 +68,7 @@ export default function CamposPedido({ tipo, campos, onChange, mesas, bairros = 
             placeholder="(35) 99277-6777"
           />
         </div>
-        <div className="flex flex-col gap-2 min-w-0 sm:col-span-2">
+        <div className="flex flex-col gap-2 min-w-0">
           <label className={labelClasse} htmlFor="endereco">Endereço (rua e número)</label>
           <input
             id="endereco"
@@ -76,6 +76,16 @@ export default function CamposPedido({ tipo, campos, onChange, mesas, bairros = 
             value={campos.endereco ?? ''}
             onChange={(e) => set('endereco', e.target.value)}
             required
+          />
+        </div>
+        <div className="flex flex-col gap-2 min-w-0">
+          <label className={labelClasse} htmlFor="pontoReferencia">Ponto de referência</label>
+          <input
+            id="pontoReferencia"
+            className={campoClasse}
+            value={campos.pontoReferencia ?? ''}
+            onChange={(e) => set('pontoReferencia', e.target.value)}
+            placeholder="Ex: perto da padaria"
           />
         </div>
         <div className="flex flex-col gap-2 min-w-0">
@@ -129,7 +139,7 @@ export default function CamposPedido({ tipo, campos, onChange, mesas, bairros = 
 
   // pdv
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0">
       <div className="flex flex-col gap-2 min-w-0">
         <label className={labelClasse} htmlFor="clienteNome">Nome do cliente (opcional)</label>
         <input
