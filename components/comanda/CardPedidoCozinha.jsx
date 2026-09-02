@@ -1,7 +1,7 @@
 import BadgeStatus from '@/components/comanda/BadgeStatus';
 import BadgeTipo from '@/components/comanda/BadgeTipo';
-import { PROXIMO_STATUS, STATUS_LABEL } from '@/lib/comanda/constantes';
-import { formatarBRL, formatarHora, tempoDecorrido } from '@/lib/comanda/formato';
+import { PROXIMO_STATUS, STATUS_LABEL, PONTO_CARNE_LABEL } from '@/lib/comanda/constantes';
+import { formatarBRL, formatarHora, tempoDecorrido, minutosDecorridos } from '@/lib/comanda/formato';
 
 export default function CardPedidoCozinha({ pedido, onAvancar, onCancelar, onTogglePago }) {
   const proximoStatus = PROXIMO_STATUS[pedido.status];
@@ -9,9 +9,14 @@ export default function CardPedidoCozinha({ pedido, onAvancar, onCancelar, onTog
   // Na mesa, o garçom reconhece o pedido pelo número da mesa mais rápido
   // que pelo número do pedido — então é a mesa que fica em destaque.
   const destaque = pedido.tipo === 'mesa' ? `Mesa ${pedido.mesa_id}` : `#${pedido.numero}`;
+  const minutosPassados = minutosDecorridos(pedido.created_at);
 
   return (
-    <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 flex flex-col gap-3">
+    <div
+      className={`bg-white rounded-2xl shadow-md border p-5 flex flex-col gap-3 ${
+        minutosPassados >= 30 ? 'border-sv-red' : 'border-gray-100'
+      }`}
+    >
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-black text-sv-dark text-lg">{destaque}</p>
@@ -22,7 +27,13 @@ export default function CardPedidoCozinha({ pedido, onAvancar, onCancelar, onTog
         </div>
         <div className="text-right flex-shrink-0">
           <p className="text-[11px] text-gray-400 font-bold">{formatarHora(pedido.created_at)}</p>
-          <p className="text-[11px] text-gray-400 font-medium">há {tempoDecorrido(pedido.created_at)}</p>
+          <p
+            className={`text-[11px] font-medium ${
+              minutosPassados >= 30 ? 'text-sv-red font-black' : minutosPassados >= 15 ? 'text-amber-600 font-bold' : 'text-gray-400'
+            }`}
+          >
+            {minutosPassados >= 15 ? '⏰ ' : ''}há {tempoDecorrido(pedido.created_at)}
+          </p>
         </div>
       </div>
 
@@ -41,6 +52,11 @@ export default function CardPedidoCozinha({ pedido, onAvancar, onCancelar, onTog
           <li key={item.id} className="text-xs">
             <span className="font-black text-sv-dark">{item.quantidade}x</span>{' '}
             <span className="text-sv-dark font-medium">{item.nome_produto}</span>
+            {item.ponto_carne && (
+              <span className="block text-sv-red font-black pl-4 uppercase tracking-wide">
+                🔥 {PONTO_CARNE_LABEL[item.ponto_carne] ?? item.ponto_carne}
+              </span>
+            )}
             {(item.itens_pedido_adicionais ?? []).map((adicional) => (
               <span key={adicional.id} className="block text-sv-blue font-bold pl-4">
                 + {adicional.nome_adicional}

@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import CardPedidoCozinha from '@/components/comanda/CardPedidoCozinha';
 import EstadoVazio from '@/components/comanda/EstadoVazio';
 import { criarClienteBrowser } from '@/lib/supabase/client';
 import { atualizarPagamentoPedido, atualizarStatusPedido, buscarPedidoPorId } from '@/lib/comanda/pedidos';
+import { tocarAvisoTempo } from '@/lib/comanda/som';
+import { minutosDecorridos } from '@/lib/comanda/formato';
 
 const COLUNAS = [
   { status: 'recebido', titulo: 'Recebido' },
@@ -12,10 +14,46 @@ const COLUNAS = [
   { status: 'pronto', titulo: 'Pronto' },
 ];
 
+const INTERVALO_AVISO_MIN = 15;
+
 export default function PainelCozinha({ pedidosIniciais }) {
   const [supabase] = useState(() => criarClienteBrowser());
   const [pedidos, setPedidos] = useState(pedidosIniciais);
   const [conectado, setConectado] = useState(false);
+  const [, forcarAtualizacaoRelogio] = useState(0);
+
+  const pedidosRef = useRef(pedidos);
+  useEffect(() => {
+    pedidosRef.current = pedidos;
+  }, [pedidos]);
+
+  // Maior múltiplo de 15min já avisado por pedido — evita repetir o aviso
+  // a cada tick, só toca de novo quando cruza o próximo múltiplo.
+  const avisadosRef = useRef({});
+
+  useEffect(() => {
+    const intervalo = setInterval(() => {
+      let precisaAvisar = false;
+
+      for (const pedido of pedidosRef.current) {
+        if (pedido.status === 'entregue' || pedido.status === 'cancelado') continue;
+
+        const minutos = minutosDecorridos(pedido.created_at);
+        const marco = Math.floor(minutos / INTERVALO_AVISO_MIN) * INTERVALO_AVISO_MIN;
+
+        if (marco >= INTERVALO_AVISO_MIN && (avisadosRef.current[pedido.id] ?? 0) < marco) {
+          avisadosRef.current[pedido.id] = marco;
+          precisaAvisar = true;
+        }
+      }
+
+      if (precisaAvisar) tocarAvisoTempo();
+      // Força atualizar o "há X min" na tela mesmo sem evento novo do realtime.
+      forcarAtualizacaoRelogio((n) => n + 1);
+    }, 20000);
+
+    return () => clearInterval(intervalo);
+  }, []);
 
   useEffect(() => {
     let canal;

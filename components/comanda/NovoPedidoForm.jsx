@@ -41,7 +41,11 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
       const existente =
         adicionaisSelecionados.length === 0
           ? atual.find(
-              (i) => i.produtoId === produto.id && !i.observacao && i.adicionaisSelecionados.length === 0
+              (i) =>
+                i.produtoId === produto.id &&
+                !i.observacao &&
+                !i.pontoCarne &&
+                i.adicionaisSelecionados.length === 0
             )
           : null;
 
@@ -58,6 +62,7 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
           precoUnitario: Number(produto.preco),
           quantidade: 1,
           observacao: '',
+          pontoCarne: '',
           adicionaisSelecionados,
         },
       ];
@@ -70,6 +75,10 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
 
   function atualizarObservacao(idx, observacao) {
     setItens((atual) => atual.map((item, i) => (i === idx ? { ...item, observacao } : item)));
+  }
+
+  function atualizarPontoCarne(idx, pontoCarne) {
+    setItens((atual) => atual.map((item, i) => (i === idx ? { ...item, pontoCarne } : item)));
   }
 
   function atualizarAdicionaisItem(idx, adicionaisSelecionados) {
@@ -178,6 +187,7 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
           taxaEntrega={tipo === 'delivery' ? Number(campos.taxaEntrega) || 0 : 0}
           onQuantidade={atualizarQuantidade}
           onObservacao={atualizarObservacao}
+          onPontoCarne={atualizarPontoCarne}
           onAdicionais={atualizarAdicionaisItem}
           onRemover={removerItem}
         />
