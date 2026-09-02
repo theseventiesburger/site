@@ -134,6 +134,7 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
       <div className="flex flex-col gap-4 min-w-0">
         <CarrinhoComanda
           itens={itens}
+          tipoPedido={tipo}
           adicionaisDisponiveis={adicionais}
           taxaEntrega={tipo === 'delivery' ? Number(campos.taxaEntrega) || 0 : 0}
           onQuantidade={atualizarQuantidade}

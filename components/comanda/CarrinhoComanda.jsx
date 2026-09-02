@@ -2,12 +2,19 @@
 
 import { formatarBRL } from '@/lib/comanda/formato';
 
-function precoAdicional(adicional) {
-  return adicional.categorias_adicionais?.gratuita ? 0 : Number(adicional.preco);
+function categoriaGratuitaAgora(categoria, tipoPedido) {
+  return Boolean(categoria?.gratuita_tipos?.includes(tipoPedido));
 }
 
-function precoComAdicionais(item) {
-  const somaAdicionais = (item.adicionaisSelecionados ?? []).reduce((soma, a) => soma + precoAdicional(a), 0);
+function precoAdicional(adicional, tipoPedido) {
+  return categoriaGratuitaAgora(adicional.categorias_adicionais, tipoPedido) ? 0 : Number(adicional.preco);
+}
+
+function precoComAdicionais(item, tipoPedido) {
+  const somaAdicionais = (item.adicionaisSelecionados ?? []).reduce(
+    (soma, a) => soma + precoAdicional(a, tipoPedido),
+    0
+  );
   return Number(item.precoUnitario) + somaAdicionais;
 }
 
@@ -32,6 +39,7 @@ function agruparPorCategoria(adicionais) {
 
 export default function CarrinhoComanda({
   itens,
+  tipoPedido,
   adicionaisDisponiveis = [],
   taxaEntrega = 0,
   onQuantidade,
@@ -39,7 +47,7 @@ export default function CarrinhoComanda({
   onAdicionais,
   onRemover,
 }) {
-  const subtotal = itens.reduce((soma, item) => soma + precoComAdicionais(item) * item.quantidade, 0);
+  const subtotal = itens.reduce((soma, item) => soma + precoComAdicionais(item, tipoPedido) * item.quantidade, 0);
   const total = subtotal + (taxaEntrega || 0);
 
   function toggleAdicional(idx, item, adicional) {
@@ -103,14 +111,14 @@ export default function CarrinhoComanda({
                     +
                   </button>
                   <span className="ml-auto font-black text-sm text-sv-dark">
-                    {formatarBRL(precoComAdicionais(item) * item.quantidade)}
+                    {formatarBRL(precoComAdicionais(item, tipoPedido) * item.quantidade)}
                   </span>
                 </div>
 
                 {adicionaisDisponiveis.length > 0 && (
                   <div className="flex flex-col gap-2 pt-1">
                     {agruparPorCategoria(adicionaisDisponiveis).map(({ categoria, itens }) => {
-                      if (categoria?.gratuita) {
+                      if (categoriaGratuitaAgora(categoria, tipoPedido)) {
                         const selecionadoId = (item.adicionaisSelecionados ?? []).find(
                           (a) => a.categoria_id === categoria.id
                         )?.id ?? '';

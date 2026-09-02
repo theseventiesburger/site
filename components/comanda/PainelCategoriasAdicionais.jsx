@@ -7,15 +7,20 @@ import {
   alternarAtivoCategoriaAdicional,
   listarCategoriasAdicionais,
 } from '@/lib/comanda/categoriasAdicionais';
+import { TIPOS_PEDIDO, TIPO_LABEL } from '@/lib/comanda/constantes';
+
+function alternarTipo(lista, tipo) {
+  return lista.includes(tipo) ? lista.filter((t) => t !== tipo) : [...lista, tipo];
+}
 
 export default function PainelCategoriasAdicionais({ supabase, categorias, onMudou }) {
   const [emEdicaoId, setEmEdicaoId] = useState(null);
   const [nomeEdicao, setNomeEdicao] = useState('');
   const [emojiEdicao, setEmojiEdicao] = useState('');
-  const [gratuitaEdicao, setGratuitaEdicao] = useState(false);
+  const [gratuitaTiposEdicao, setGratuitaTiposEdicao] = useState([]);
   const [novoNome, setNovoNome] = useState('');
   const [novoEmoji, setNovoEmoji] = useState('');
-  const [novaGratuita, setNovaGratuita] = useState(false);
+  const [novaGratuitaTipos, setNovaGratuitaTipos] = useState([]);
   const [erro, setErro] = useState(null);
 
   async function recarregar() {
@@ -27,10 +32,10 @@ export default function PainelCategoriasAdicionais({ supabase, categorias, onMud
     if (!novoNome) return;
 
     try {
-      await criarCategoriaAdicional(supabase, { nome: novoNome, emoji: novoEmoji, gratuita: novaGratuita });
+      await criarCategoriaAdicional(supabase, { nome: novoNome, emoji: novoEmoji, gratuitaTipos: novaGratuitaTipos });
       setNovoNome('');
       setNovoEmoji('');
-      setNovaGratuita(false);
+      setNovaGratuitaTipos([]);
       setErro(null);
       await recarregar();
     } catch (err) {
@@ -43,12 +48,12 @@ export default function PainelCategoriasAdicionais({ supabase, categorias, onMud
     setEmEdicaoId(categoria.id);
     setNomeEdicao(categoria.nome);
     setEmojiEdicao(categoria.emoji ?? '');
-    setGratuitaEdicao(categoria.gratuita ?? false);
+    setGratuitaTiposEdicao(categoria.gratuita_tipos ?? []);
   }
 
   async function salvarEdicao(id) {
     try {
-      await atualizarCategoriaAdicional(supabase, id, { nome: nomeEdicao, emoji: emojiEdicao, gratuita: gratuitaEdicao });
+      await atualizarCategoriaAdicional(supabase, id, { nome: nomeEdicao, emoji: emojiEdicao, gratuitaTipos: gratuitaTiposEdicao });
       setEmEdicaoId(null);
       await recarregar();
     } catch (err) {
@@ -90,14 +95,19 @@ export default function PainelCategoriasAdicionais({ supabase, categorias, onMud
                   onChange={(e) => setNomeEdicao(e.target.value)}
                   className="w-28 px-2 py-1 rounded-lg border border-gray-200"
                 />
-                <label className="flex items-center gap-1 text-[10px] font-bold text-gray-500 whitespace-nowrap">
-                  <input
-                    type="checkbox"
-                    checked={gratuitaEdicao}
-                    onChange={(e) => setGratuitaEdicao(e.target.checked)}
-                  />
-                  Grátis (troca)
-                </label>
+                <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 whitespace-nowrap">
+                  <span>Grátis em:</span>
+                  {TIPOS_PEDIDO.map((tipoPedido) => (
+                    <label key={tipoPedido} className="flex items-center gap-1">
+                      <input
+                        type="checkbox"
+                        checked={gratuitaTiposEdicao.includes(tipoPedido)}
+                        onChange={() => setGratuitaTiposEdicao((atual) => alternarTipo(atual, tipoPedido))}
+                      />
+                      {TIPO_LABEL[tipoPedido]}
+                    </label>
+                  ))}
+                </div>
                 <button type="button" onClick={() => salvarEdicao(categoria.id)} className="font-black uppercase text-sv-blue">
                   Salvar
                 </button>
@@ -106,9 +116,9 @@ export default function PainelCategoriasAdicionais({ supabase, categorias, onMud
               <>
                 <span>{categoria.emoji || '🏷️'}</span>
                 <span className="font-bold text-sv-dark">{categoria.nome}</span>
-                {categoria.gratuita && (
+                {(categoria.gratuita_tipos ?? []).length > 0 && (
                   <span className="px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 text-[9px] font-black uppercase tracking-wider">
-                    Grátis
+                    Grátis: {categoria.gratuita_tipos.map((t) => TIPO_LABEL[t] ?? t).join(', ')}
                   </span>
                 )}
                 <button type="button" onClick={() => iniciarEdicao(categoria)} className="font-black uppercase text-sv-blue">
@@ -140,14 +150,19 @@ export default function PainelCategoriasAdicionais({ supabase, categorias, onMud
           placeholder="Ex: Pães"
           className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium"
         />
-        <label className="flex items-center gap-1.5 text-[11px] font-bold text-gray-500 whitespace-nowrap flex-shrink-0">
-          <input
-            type="checkbox"
-            checked={novaGratuita}
-            onChange={(e) => setNovaGratuita(e.target.checked)}
-          />
-          Grátis (troca)
-        </label>
+        <div className="flex items-center gap-2 text-[11px] font-bold text-gray-500 whitespace-nowrap flex-shrink-0">
+          <span>Grátis em:</span>
+          {TIPOS_PEDIDO.map((tipoPedido) => (
+            <label key={tipoPedido} className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={novaGratuitaTipos.includes(tipoPedido)}
+                onChange={() => setNovaGratuitaTipos((atual) => alternarTipo(atual, tipoPedido))}
+              />
+              {TIPO_LABEL[tipoPedido]}
+            </label>
+          ))}
+        </div>
         <button
           type="submit"
           className="bg-sv-dark text-white text-[10px] font-black uppercase px-3 py-2 rounded-lg flex-shrink-0"
