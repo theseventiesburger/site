@@ -26,6 +26,7 @@ const ITENS_MENU = [
       { href: '/comanda/produtos', label: 'Produtos' },
       { href: '/comanda/adicionais', label: 'Adicionais' },
       { href: '/comanda/categorias', label: 'Categorias' },
+      { href: '/comanda/clientes', label: 'Clientes' },
     ],
   },
 ];

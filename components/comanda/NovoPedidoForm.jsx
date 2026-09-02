@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import SeletorProdutos from '@/components/comanda/SeletorProdutos';
 import CarrinhoComanda from '@/components/comanda/CarrinhoComanda';
 import CamposPedido from '@/components/comanda/CamposPedido';
+import SeletorCliente from '@/components/comanda/SeletorCliente';
 import { criarClienteBrowser } from '@/lib/supabase/client';
 import { criarPedido } from '@/lib/comanda/pedidos';
 
@@ -19,6 +20,7 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
   const [supabase] = useState(() => criarClienteBrowser());
   const [itens, setItens] = useState([]);
   const [campos, setCampos] = useState(CAMPOS_INICIAIS[tipo]);
+  const [clienteSelecionado, setClienteSelecionado] = useState(null);
   const [observacoes, setObservacoes] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState(null);
@@ -69,6 +71,16 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
     setItens((atual) => atual.filter((_, i) => i !== idx));
   }
 
+  function selecionarCliente(cliente) {
+    setClienteSelecionado(cliente);
+    setCampos((atual) => ({
+      ...atual,
+      clienteNome: atual.clienteNome || cliente.nome,
+      clienteTelefone: atual.clienteTelefone || cliente.telefone || '',
+      endereco: atual.endereco || cliente.endereco || '',
+    }));
+  }
+
   function validar() {
     if (itens.length === 0) return 'Adicione pelo menos um item ao pedido.';
     if (tipo === 'mesa' && !campos.mesa) return 'Selecione a mesa.';
@@ -93,6 +105,7 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
       const pedidoId = await criarPedido(supabase, {
         tipo,
         mesa: tipo === 'mesa' ? campos.mesa : null,
+        clienteId: clienteSelecionado?.id || null,
         clienteNome: campos.clienteNome || null,
         clienteTelefone: campos.clienteTelefone || null,
         endereco: campos.endereco || null,
@@ -111,6 +124,7 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
       setSucesso(pedidoCriado?.numero ?? null);
       setItens([]);
       setCampos(CAMPOS_INICIAIS[tipo]);
+      setClienteSelecionado(null);
       setObservacoes('');
       router.refresh();
     } catch (err) {
@@ -124,7 +138,13 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
   return (
     <form onSubmit={enviarPedido} className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
       <div className="flex flex-col gap-6 min-w-0">
-        <div className="bg-white rounded-3xl shadow-md border border-gray-100 p-6">
+        <div className="bg-white rounded-3xl shadow-md border border-gray-100 p-6 flex flex-col gap-5">
+          <SeletorCliente
+            supabase={supabase}
+            clienteSelecionado={clienteSelecionado}
+            onSelecionar={selecionarCliente}
+            onLimpar={() => setClienteSelecionado(null)}
+          />
           <CamposPedido tipo={tipo} campos={campos} onChange={setCampos} mesas={mesas} />
         </div>
 
