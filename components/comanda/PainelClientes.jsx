@@ -53,9 +53,14 @@ export default function PainelClientes({ clientesIniciais, bairros }) {
           <div key={cliente.id} className="bg-white rounded-2xl shadow-md border border-gray-100 p-4 flex flex-col gap-2">
             <div className="flex items-start justify-between gap-2">
               <p className="font-black text-sv-dark text-sm uppercase tracking-tight truncate">{cliente.nome}</p>
-              <span className="flex-shrink-0 bg-sv-blue/10 text-sv-blue text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full">
-                {cliente.pedidos?.[0]?.count ?? 0} pedidos
-              </span>
+              <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                <span className="bg-sv-blue/10 text-sv-blue text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full">
+                  {cliente.pedidos?.[0]?.count ?? 0} pedidos
+                </span>
+                <span className="bg-amber-100 text-amber-700 text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full">
+                  ⭐ {cliente.pontos_saldo ?? 0} pts
+                </span>
+              </div>
             </div>
             {cliente.codigo && (
               <span className="self-start font-mono text-[10px] font-black text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded tracking-wider">

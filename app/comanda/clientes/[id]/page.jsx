@@ -52,10 +52,11 @@ export default async function RelatorioClientePage({ params }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
         <CartaoResumo titulo="Pedidos feitos" valor={totalPedidos} />
         <CartaoResumo titulo="Total gasto" valor={formatarBRL(totalGasto)} />
         <CartaoResumo titulo="Ticket médio" valor={formatarBRL(ticketMedio)} />
+        <CartaoResumo titulo="Pontos de fidelidade" valor={`⭐ ${cliente.pontos_saldo ?? 0}`} />
       </div>
 
       <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 overflow-x-auto">
