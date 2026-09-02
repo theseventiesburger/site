@@ -19,9 +19,6 @@ const ITENS_MENU = [
       { href: '/comanda/abertos', label: 'Pedidos Abertos' },
     ],
   },
-  { tipo: 'link', href: '/comanda/cozinha', label: 'Cozinha' },
-  { tipo: 'link', href: '/comanda/relatorio', label: 'Relatório' },
-  { tipo: 'link', href: '/comanda/auditoria', label: 'Auditoria' },
   {
     tipo: 'menu',
     label: 'Cadastros',
@@ -34,6 +31,9 @@ const ITENS_MENU = [
       { href: '/comanda/cupons', label: 'Cupons' },
     ],
   },
+  { tipo: 'link', href: '/comanda/relatorio', label: 'Relatório' },
+  { tipo: 'link', href: '/comanda/auditoria', label: 'Auditoria' },
+  { tipo: 'link', href: '/comanda/cozinha', label: 'Cozinha' },
 ];
 
 export default function ComandaTopbar({ email, userId }) {
