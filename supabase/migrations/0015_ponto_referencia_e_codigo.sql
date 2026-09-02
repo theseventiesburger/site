@@ -28,11 +28,27 @@ begin
 end;
 $$;
 
--- default é volátil (random()) — o Postgres reescreve a tabela gerando um
--- código diferente pra cada cliente já cadastrado, igual já acontece com
--- gen_random_uuid() nos ids.
-alter table clientes add column codigo text unique default gerar_codigo_cliente();
+-- Coluna sem default primeiro (mudança só de catálogo, sem reescrever a
+-- tabela) — usar DEFAULT com uma função que consulta a própria clientes
+-- durante um ALTER TABLE com rewrite trava lendo a tabela pela metade.
+alter table clientes add column codigo text;
+
+-- Preenche uma linha de cada vez, já com a tabela estável (fora de
+-- qualquer rewrite), então a consulta de unicidade dentro da função lê
+-- normalmente.
+do $$
+declare
+  r record;
+begin
+  for r in select id from clientes where codigo is null loop
+    update clientes set codigo = gerar_codigo_cliente() where id = r.id;
+  end loop;
+end $$;
+
+-- Só agora vira default (pros próximos cadastros) e obrigatório/único.
+alter table clientes alter column codigo set default gerar_codigo_cliente();
 alter table clientes alter column codigo set not null;
+alter table clientes add constraint clientes_codigo_key unique (codigo);
 
 -- criar_pedido: aceita o ponto de referência do endereço de entrega.
 create or replace function criar_pedido(
