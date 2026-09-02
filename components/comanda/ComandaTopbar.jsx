@@ -7,14 +7,16 @@ import { sair } from '@/app/comanda/actions';
 import NotificacoesPush from '@/components/comanda/NotificacoesPush';
 
 const ITENS_MENU = [
-  { tipo: 'link', href: '/comanda', label: 'Comanda' },
+  { tipo: 'link', href: '/comanda', label: 'Início' },
   {
     tipo: 'menu',
     label: 'Vendas',
     itens: [
+      { href: '/comanda/vendas', label: 'Visão Geral' },
       { href: '/comanda/novo/mesa', label: 'Nova Mesa' },
       { href: '/comanda/novo/delivery', label: 'Novo Delivery' },
       { href: '/comanda/novo/pdv', label: 'Novo PDV' },
+      { href: '/comanda/abertos', label: 'Pedidos Abertos' },
     ],
   },
   { tipo: 'link', href: '/comanda/cozinha', label: 'Cozinha' },
