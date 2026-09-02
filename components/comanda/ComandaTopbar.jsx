@@ -32,17 +32,79 @@ const ITENS_MENU = [
 
 export default function ComandaTopbar({ email, userId }) {
   const pathname = usePathname();
+  const [menuMobileAberto, setMenuMobileAberto] = useState(false);
+  const mobileRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickFora(e) {
+      if (mobileRef.current && !mobileRef.current.contains(e.target)) setMenuMobileAberto(false);
+    }
+    document.addEventListener('mousedown', handleClickFora);
+    return () => document.removeEventListener('mousedown', handleClickFora);
+  }, []);
 
   return (
-    <nav className="w-full h-16 bg-sv-dark border-b border-white/10 flex items-center px-4 md:px-6 sticky top-0 z-50">
+    <nav className="relative w-full h-16 bg-sv-dark border-b border-white/10 flex items-center px-4 md:px-6 sticky top-0 z-50">
       <div className="w-full flex items-center justify-between gap-4">
-        <div className="flex items-center gap-1 overflow-x-auto">
+        <div className="hidden md:flex items-center gap-1">
           {ITENS_MENU.map((item) =>
             item.tipo === 'link' ? (
               <NavLink key={item.href} href={item.href} label={item.label} ativo={pathname === item.href} />
             ) : (
               <NavMenu key={item.label} label={item.label} itens={item.itens} pathname={pathname} />
             )
+          )}
+        </div>
+
+        <div className="md:hidden flex items-center" ref={mobileRef}>
+          <button
+            type="button"
+            onClick={() => setMenuMobileAberto((v) => !v)}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 text-xs font-black uppercase tracking-wider"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+            Menu
+          </button>
+
+          {menuMobileAberto && (
+            <div className="absolute top-full left-0 right-0 bg-sv-dark border-b border-white/10 shadow-2xl flex flex-col p-3 gap-0.5 max-h-[calc(100vh-4rem)] overflow-y-auto">
+              {ITENS_MENU.map((item) =>
+                item.tipo === 'link' ? (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMenuMobileAberto(false)}
+                    className={`px-3.5 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider ${
+                      pathname === item.href ? 'bg-sv-blue text-white' : 'text-gray-300 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                ) : (
+                  <div key={item.label} className="flex flex-col gap-0.5 mt-1.5 first:mt-0">
+                    <span className="px-3.5 py-1 text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                      {item.label}
+                    </span>
+                    {item.itens.map((sub) => (
+                      <Link
+                        key={sub.href}
+                        href={sub.href}
+                        onClick={() => setMenuMobileAberto(false)}
+                        className={`px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider ${
+                          pathname === sub.href ? 'bg-sv-blue text-white' : 'text-gray-300 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        {sub.label}
+                      </Link>
+                    ))}
+                  </div>
+                )
+              )}
+            </div>
           )}
         </div>
 
