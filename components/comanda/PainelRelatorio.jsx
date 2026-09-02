@@ -3,7 +3,15 @@
 import { useMemo, useState } from 'react';
 import { criarClienteBrowser } from '@/lib/supabase/client';
 import { listarPedidosPeriodo } from '@/lib/comanda/relatorio';
-import { formatarBRL, formatarDataHora, dataHojeSP, dataAtrasSP } from '@/lib/comanda/formato';
+import {
+  formatarBRL,
+  formatarDataHora,
+  formatarDataDigitada,
+  dataDigitadaParaISO,
+  isoParaDataDigitada,
+  dataHojeSP,
+  dataAtrasSP,
+} from '@/lib/comanda/formato';
 import { TIPO_LABEL, STATUS_LABEL, STATUS_COR, FORMA_PAGAMENTO_LABEL } from '@/lib/comanda/constantes';
 
 const FILTROS_RAPIDOS = [
@@ -16,8 +24,8 @@ const FILTROS_RAPIDOS = [
 export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
   const [supabase] = useState(() => criarClienteBrowser());
   const [pedidos, setPedidos] = useState(pedidosIniciais);
-  const [dataInicio, setDataInicio] = useState(dataInicial);
-  const [dataFim, setDataFim] = useState(dataInicial);
+  const [textoInicio, setTextoInicio] = useState(isoParaDataDigitada(dataInicial));
+  const [textoFim, setTextoFim] = useState(isoParaDataDigitada(dataInicial));
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState(null);
 
@@ -27,8 +35,8 @@ export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
     try {
       const dados = await listarPedidosPeriodo(supabase, { inicio, fim });
       setPedidos(dados);
-      setDataInicio(inicio);
-      setDataFim(fim);
+      setTextoInicio(isoParaDataDigitada(inicio));
+      setTextoFim(isoParaDataDigitada(fim));
     } catch (err) {
       console.error(err);
       setErro('Não foi possível carregar o relatório. Tente novamente.');
@@ -38,8 +46,21 @@ export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
   }
 
   function aplicarPeriodoManual() {
-    if (!dataInicio || !dataFim) return;
-    buscar(dataInicio, dataFim);
+    const inicio = dataDigitadaParaISO(textoInicio);
+    const fim = dataDigitadaParaISO(textoFim);
+    if (!inicio || !fim) {
+      setErro('Preencha as duas datas no formato dd/mm/aaaa.');
+      return;
+    }
+    if (inicio > fim) {
+      setErro('A data inicial não pode ser depois da data final.');
+      return;
+    }
+    if (fim > dataHojeSP()) {
+      setErro('A data final não pode ser no futuro.');
+      return;
+    }
+    buscar(inicio, fim);
   }
 
   const resumo = useMemo(() => {
@@ -101,22 +122,25 @@ export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">De</label>
             <input
-              type="date"
-              value={dataInicio}
-              max={dataFim}
-              onChange={(e) => setDataInicio(e.target.value)}
-              className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
+              type="text"
+              inputMode="numeric"
+              maxLength={10}
+              placeholder="dd/mm/aaaa"
+              value={textoInicio}
+              onChange={(e) => setTextoInicio(formatarDataDigitada(e.target.value))}
+              className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue w-[130px]"
             />
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Até</label>
             <input
-              type="date"
-              value={dataFim}
-              min={dataInicio}
-              max={dataHojeSP()}
-              onChange={(e) => setDataFim(e.target.value)}
-              className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
+              type="text"
+              inputMode="numeric"
+              maxLength={10}
+              placeholder="dd/mm/aaaa"
+              value={textoFim}
+              onChange={(e) => setTextoFim(formatarDataDigitada(e.target.value))}
+              className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue w-[130px]"
             />
           </div>
           <button
