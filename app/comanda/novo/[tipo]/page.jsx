@@ -13,12 +13,13 @@ export default async function NovoPedidoPage({ params }) {
 
   const supabase = await criarClienteServidor();
 
-  const [{ data: produtos }, { data: mesas }, { data: categorias }] = await Promise.all([
+  const [{ data: produtos }, { data: mesas }, { data: categorias }, { data: bairros }] = await Promise.all([
     supabase.from("produtos").select("*").eq("ativo", true).order("ordem", { ascending: true }),
     tipo === "mesa"
       ? supabase.from("mesas").select("*").eq("ativa", true).order("numero", { ascending: true })
       : Promise.resolve({ data: [] }),
     supabase.from("categorias").select("*").eq("ativo", true).order("ordem", { ascending: true }),
+    supabase.from("bairros").select("*").eq("ativo", true).order("nome", { ascending: true }),
   ]);
 
   const adicionais = await listarAdicionaisAtivos(supabase);
@@ -40,6 +41,7 @@ export default async function NovoPedidoPage({ params }) {
         mesas={mesas ?? []}
         adicionais={adicionais}
         categorias={categorias ?? []}
+        bairros={bairros ?? []}
       />
     </section>
   );

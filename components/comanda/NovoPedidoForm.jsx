@@ -11,11 +11,19 @@ import { criarPedido } from '@/lib/comanda/pedidos';
 
 const CAMPOS_INICIAIS = {
   mesa: { mesa: null },
-  delivery: { clienteNome: '', clienteTelefone: '', endereco: '', taxaEntrega: 0 },
+  delivery: {
+    clienteNome: '',
+    clienteTelefone: '',
+    endereco: '',
+    bairroId: null,
+    cidade: '',
+    estado: '',
+    taxaEntrega: 0,
+  },
   pdv: { clienteNome: '', formaPagamento: null },
 };
 
-export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, categorias }) {
+export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, categorias, bairros }) {
   const router = useRouter();
   const [supabase] = useState(() => criarClienteBrowser());
   const [itens, setItens] = useState([]);
@@ -78,6 +86,10 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
       clienteNome: atual.clienteNome || cliente.nome,
       clienteTelefone: atual.clienteTelefone || cliente.telefone || '',
       endereco: atual.endereco || cliente.endereco || '',
+      bairroId: atual.bairroId || cliente.bairro_id || null,
+      cidade: atual.cidade || cliente.cidade || '',
+      estado: atual.estado || cliente.estado || '',
+      taxaEntrega: atual.taxaEntrega || Number(cliente.bairros?.valor_entrega) || atual.taxaEntrega,
     }));
   }
 
@@ -109,6 +121,9 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
         clienteNome: campos.clienteNome || null,
         clienteTelefone: campos.clienteTelefone || null,
         endereco: campos.endereco || null,
+        bairroId: tipo === 'delivery' ? campos.bairroId || null : null,
+        cidade: tipo === 'delivery' ? campos.cidade || null : null,
+        estado: tipo === 'delivery' ? campos.estado || null : null,
         taxaEntrega: tipo === 'delivery' ? Number(campos.taxaEntrega) || 0 : 0,
         formaPagamento: campos.formaPagamento || null,
         observacoes: observacoes || null,
@@ -144,8 +159,9 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
             clienteSelecionado={clienteSelecionado}
             onSelecionar={selecionarCliente}
             onLimpar={() => setClienteSelecionado(null)}
+            bairros={bairros}
           />
-          <CamposPedido tipo={tipo} campos={campos} onChange={setCampos} mesas={mesas} />
+          <CamposPedido tipo={tipo} campos={campos} onChange={setCampos} mesas={mesas} bairros={bairros} />
         </div>
 
         <SeletorProdutos produtos={produtos} categorias={categorias} onAdicionar={adicionarProduto} />

@@ -7,7 +7,7 @@ import { listarClientes } from '@/lib/comanda/clientes';
 import { formatarDataNascimento } from '@/lib/comanda/formato';
 import FormularioCliente from '@/components/comanda/FormularioCliente';
 
-export default function PainelClientes({ clientesIniciais }) {
+export default function PainelClientes({ clientesIniciais, bairros }) {
   const [supabase] = useState(() => criarClienteBrowser());
   const [clientes, setClientes] = useState(clientesIniciais);
   const [busca, setBusca] = useState('');
@@ -55,7 +55,11 @@ export default function PainelClientes({ clientesIniciais }) {
               </span>
             </div>
             {cliente.telefone && <p className="text-gray-500 text-xs font-bold">{cliente.telefone}</p>}
-            {cliente.endereco && <p className="text-gray-400 text-xs font-medium truncate">{cliente.endereco}</p>}
+            {(cliente.endereco || cliente.bairros?.nome) && (
+              <p className="text-gray-400 text-xs font-medium truncate">
+                {[cliente.endereco, cliente.bairros?.nome, cliente.cidade].filter(Boolean).join(' — ')}
+              </p>
+            )}
             {cliente.data_nascimento && (
               <p className="text-gray-400 text-xs font-medium">Nasc. {formatarDataNascimento(cliente.data_nascimento)}</p>
             )}
@@ -90,6 +94,7 @@ export default function PainelClientes({ clientesIniciais }) {
         <FormularioCliente
           supabase={supabase}
           cliente={clienteEmEdicao}
+          bairros={bairros}
           onFechar={() => setClienteEmEdicao(undefined)}
           onSalvo={recarregar}
         />

@@ -10,7 +10,7 @@ export default async function RelatorioClientePage({ params }) {
 
   const { data: cliente } = await supabase
     .from("clientes")
-    .select("*, pedidos(id, numero, tipo, status, total, forma_pagamento, created_at)")
+    .select("*, bairros(id, nome, valor_entrega), pedidos(id, numero, tipo, status, total, forma_pagamento, created_at)")
     .eq("id", id)
     .order("created_at", { foreignTable: "pedidos", ascending: false })
     .maybeSingle();
@@ -37,7 +37,9 @@ export default async function RelatorioClientePage({ params }) {
         </h1>
         <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm text-gray-500 font-medium">
           {cliente.telefone && <span>{cliente.telefone}</span>}
-          {cliente.endereco && <span>{cliente.endereco}</span>}
+          {(cliente.endereco || cliente.bairros?.nome) && (
+            <span>{[cliente.endereco, cliente.bairros?.nome, cliente.cidade, cliente.estado].filter(Boolean).join(', ')}</span>
+          )}
           {cliente.data_nascimento && <span>Nasc. {formatarDataNascimento(cliente.data_nascimento)}</span>}
         </div>
       </div>

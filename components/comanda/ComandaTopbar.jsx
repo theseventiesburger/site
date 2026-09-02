@@ -27,6 +27,7 @@ const ITENS_MENU = [
       { href: '/comanda/adicionais', label: 'Adicionais' },
       { href: '/comanda/categorias', label: 'Categorias' },
       { href: '/comanda/clientes', label: 'Clientes' },
+      { href: '/comanda/bairros', label: 'Bairros' },
     ],
   },
 ];

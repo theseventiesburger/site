@@ -2,14 +2,18 @@
 
 import { useState } from 'react';
 import { criarCliente, atualizarCliente } from '@/lib/comanda/clientes';
+import { formatarTelefone, formatarDataDigitada, dataDigitadaParaISO, isoParaDataDigitada } from '@/lib/comanda/formato';
 
-export default function FormularioCliente({ supabase, cliente, onFechar, onSalvo }) {
+export default function FormularioCliente({ supabase, cliente, bairros, onFechar, onSalvo }) {
   const modoEdicao = Boolean(cliente);
 
   const [nome, setNome] = useState(cliente?.nome ?? '');
-  const [telefone, setTelefone] = useState(cliente?.telefone ?? '');
+  const [telefone, setTelefone] = useState(formatarTelefone(cliente?.telefone ?? ''));
+  const [dataNascimento, setDataNascimento] = useState(isoParaDataDigitada(cliente?.data_nascimento));
   const [endereco, setEndereco] = useState(cliente?.endereco ?? '');
-  const [dataNascimento, setDataNascimento] = useState(cliente?.data_nascimento ?? '');
+  const [bairroId, setBairroId] = useState(cliente?.bairro_id ?? '');
+  const [cidade, setCidade] = useState(cliente?.cidade ?? '');
+  const [estado, setEstado] = useState(cliente?.estado ?? '');
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState(null);
 
@@ -24,7 +28,15 @@ export default function FormularioCliente({ supabase, cliente, onFechar, onSalvo
     setErro(null);
 
     try {
-      const dados = { nome, telefone, endereco, dataNascimento };
+      const dados = {
+        nome,
+        telefone,
+        endereco,
+        bairroId: bairroId || null,
+        cidade,
+        estado,
+        dataNascimento: dataDigitadaParaISO(dataNascimento),
+      };
       if (modoEdicao) {
         await atualizarCliente(supabase, cliente.id, dados);
       } else {
@@ -64,7 +76,8 @@ export default function FormularioCliente({ supabase, cliente, onFechar, onSalvo
             <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Telefone</label>
             <input
               value={telefone}
-              onChange={(e) => setTelefone(e.target.value)}
+              onChange={(e) => setTelefone(formatarTelefone(e.target.value))}
+              placeholder="(35) 99277-6777"
               className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
             />
           </div>
@@ -72,21 +85,58 @@ export default function FormularioCliente({ supabase, cliente, onFechar, onSalvo
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Data de nascimento</label>
             <input
-              type="date"
-              value={dataNascimento ?? ''}
-              onChange={(e) => setDataNascimento(e.target.value)}
+              value={dataNascimento}
+              onChange={(e) => setDataNascimento(formatarDataDigitada(e.target.value))}
+              placeholder="dd/mm/aaaa"
+              inputMode="numeric"
+              maxLength={10}
               className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
             />
           </div>
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Endereço</label>
+          <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Endereço (rua e número)</label>
           <input
             value={endereco}
             onChange={(e) => setEndereco(e.target.value)}
             className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
           />
+        </div>
+
+        <div className="grid grid-cols-[1fr_1fr_5rem] gap-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Bairro</label>
+            <select
+              value={bairroId}
+              onChange={(e) => setBairroId(e.target.value)}
+              className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
+            >
+              <option value="">Selecione</option>
+              {bairros.map((b) => (
+                <option key={b.id} value={b.id}>{b.nome}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Cidade</label>
+            <input
+              value={cidade}
+              onChange={(e) => setCidade(e.target.value)}
+              className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-black text-gray-400 uppercase tracking-widest">UF</label>
+            <input
+              value={estado}
+              onChange={(e) => setEstado(e.target.value.toUpperCase())}
+              maxLength={2}
+              className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue uppercase"
+            />
+          </div>
         </div>
 
         {erro && (

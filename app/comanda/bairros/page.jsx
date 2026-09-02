@@ -1,12 +1,12 @@
-import PainelClientes from "@/components/comanda/PainelClientes";
+import PainelBairros from "@/components/comanda/PainelBairros";
 import { criarClienteServidor } from "@/lib/supabase/server";
 
-export default async function ClientesPage() {
+export default async function BairrosPage() {
   const supabase = await criarClienteServidor();
-  const [{ data: clientes }, { data: bairros }] = await Promise.all([
-    supabase.from("clientes").select("*, bairros(id, nome, valor_entrega), pedidos(count)").order("nome", { ascending: true }),
-    supabase.from("bairros").select("*").eq("ativo", true).order("nome", { ascending: true }),
-  ]);
+  const { data: bairros } = await supabase
+    .from("bairros")
+    .select("*")
+    .order("nome", { ascending: true });
 
   return (
     <section className="w-full max-w-6xl mx-auto px-6 py-10 flex-1">
@@ -15,11 +15,14 @@ export default async function ClientesPage() {
           Comanda Eletrônica
         </span>
         <h1 className="text-3xl md:text-4xl font-black text-sv-dark uppercase tracking-tighter leading-none">
-          Clientes
+          Bairros
         </h1>
+        <p className="text-gray-500 text-sm font-medium mt-2">
+          Valor do frete por bairro, usado no cálculo automático do delivery.
+        </p>
       </div>
 
-      <PainelClientes clientesIniciais={clientes ?? []} bairros={bairros ?? []} />
+      <PainelBairros bairrosIniciais={bairros ?? []} />
     </section>
   );
 }

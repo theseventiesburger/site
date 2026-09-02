@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { buscarClientes, criarCliente } from '@/lib/comanda/clientes';
+import { formatarTelefone, formatarDataDigitada, dataDigitadaParaISO } from '@/lib/comanda/formato';
 
 // Evita que Enter num campo aqui dentro submeta o pedido inteiro — este
 // seletor vive dentro do <form> de Novo Pedido.
@@ -9,7 +10,7 @@ function bloquearEnter(e) {
   if (e.key === 'Enter') e.preventDefault();
 }
 
-export default function SeletorCliente({ supabase, clienteSelecionado, onSelecionar, onLimpar }) {
+export default function SeletorCliente({ supabase, clienteSelecionado, onSelecionar, onLimpar, bairros = [] }) {
   const [termo, setTermo] = useState('');
   const [resultados, setResultados] = useState([]);
   const [buscando, setBuscando] = useState(false);
@@ -17,6 +18,7 @@ export default function SeletorCliente({ supabase, clienteSelecionado, onSelecio
   const [novoNome, setNovoNome] = useState('');
   const [novoTelefone, setNovoTelefone] = useState('');
   const [novoEndereco, setNovoEndereco] = useState('');
+  const [novoBairroId, setNovoBairroId] = useState('');
   const [novoNascimento, setNovoNascimento] = useState('');
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState(null);
@@ -64,13 +66,15 @@ export default function SeletorCliente({ supabase, clienteSelecionado, onSelecio
         nome: novoNome,
         telefone: novoTelefone,
         endereco: novoEndereco,
-        dataNascimento: novoNascimento,
+        bairroId: novoBairroId || null,
+        dataNascimento: dataDigitadaParaISO(novoNascimento),
       });
       selecionar(cliente);
       setMostrarForm(false);
       setNovoNome('');
       setNovoTelefone('');
       setNovoEndereco('');
+      setNovoBairroId('');
       setNovoNascimento('');
     } catch (err) {
       console.error(err);
@@ -146,26 +150,40 @@ export default function SeletorCliente({ supabase, clienteSelecionado, onSelecio
           <div className="grid grid-cols-2 gap-2">
             <input
               value={novoTelefone}
-              onChange={(e) => setNovoTelefone(e.target.value)}
+              onChange={(e) => setNovoTelefone(formatarTelefone(e.target.value))}
               onKeyDown={bloquearEnter}
-              placeholder="Telefone"
+              placeholder="(35) 99277-6777"
               className="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium"
             />
             <input
-              type="date"
               value={novoNascimento}
-              onChange={(e) => setNovoNascimento(e.target.value)}
+              onChange={(e) => setNovoNascimento(formatarDataDigitada(e.target.value))}
               onKeyDown={bloquearEnter}
+              placeholder="dd/mm/aaaa"
+              inputMode="numeric"
+              maxLength={10}
               className="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium"
             />
           </div>
-          <input
-            value={novoEndereco}
-            onChange={(e) => setNovoEndereco(e.target.value)}
-            onKeyDown={bloquearEnter}
-            placeholder="Endereço"
-            className="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium"
-          />
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              value={novoEndereco}
+              onChange={(e) => setNovoEndereco(e.target.value)}
+              onKeyDown={bloquearEnter}
+              placeholder="Endereço"
+              className="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium"
+            />
+            <select
+              value={novoBairroId}
+              onChange={(e) => setNovoBairroId(e.target.value)}
+              className="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium"
+            >
+              <option value="">Bairro</option>
+              {bairros.map((b) => (
+                <option key={b.id} value={b.id}>{b.nome}</option>
+              ))}
+            </select>
+          </div>
           {erro && <p className="text-sv-red text-xs font-bold">{erro}</p>}
           <button
             type="button"
