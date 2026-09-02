@@ -2,8 +2,12 @@
 
 import { formatarBRL } from '@/lib/comanda/formato';
 
+function precoAdicional(adicional) {
+  return adicional.categorias_adicionais?.gratuita ? 0 : Number(adicional.preco);
+}
+
 function precoComAdicionais(item) {
-  const somaAdicionais = (item.adicionaisSelecionados ?? []).reduce((soma, a) => soma + Number(a.preco), 0);
+  const somaAdicionais = (item.adicionaisSelecionados ?? []).reduce((soma, a) => soma + precoAdicional(a), 0);
   return Number(item.precoUnitario) + somaAdicionais;
 }
 
@@ -44,6 +48,13 @@ export default function CarrinhoComanda({
       ? item.adicionaisSelecionados.filter((a) => a.id !== adicional.id)
       : [...(item.adicionaisSelecionados ?? []), adicional];
     onAdicionais(idx, novaLista);
+  }
+
+  // Categorias gratuitas (ex: Pães) são escolha única — selecionar uma
+  // troca a anterior da mesma categoria em vez de acumular.
+  function selecionarNaCategoria(idx, item, categoriaId, adicional) {
+    const outros = (item.adicionaisSelecionados ?? []).filter((a) => a.categoria_id !== categoriaId);
+    onAdicionais(idx, adicional ? [...outros, adicional] : outros);
   }
 
   return (
@@ -98,27 +109,66 @@ export default function CarrinhoComanda({
 
                 {adicionaisDisponiveis.length > 0 && (
                   <div className="flex flex-col gap-2 pt-1">
-                    {agruparPorCategoria(adicionaisDisponiveis).map(({ categoria, itens }) => (
-                      <div key={categoria?.id ?? 'sem-categoria'} className="flex flex-col gap-1">
-                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
-                          {categoria ? `${categoria.emoji ?? ''} ${categoria.nome}` : 'Outros'}
-                        </p>
-                        {itens.map((adicional) => {
-                          const marcado = (item.adicionaisSelecionados ?? []).some((a) => a.id === adicional.id);
-                          return (
-                            <label key={adicional.id} className="flex items-center gap-2 text-xs font-medium text-sv-dark">
+                    {agruparPorCategoria(adicionaisDisponiveis).map(({ categoria, itens }) => {
+                      if (categoria?.gratuita) {
+                        const selecionadoId = (item.adicionaisSelecionados ?? []).find(
+                          (a) => a.categoria_id === categoria.id
+                        )?.id ?? '';
+                        const nomeGrupo = `troca-${idx}-${categoria.id}`;
+
+                        return (
+                          <div key={categoria.id} className="flex flex-col gap-1">
+                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                              {categoria.emoji ?? ''} {categoria.nome}{' '}
+                              <span className="text-green-600 normal-case">· troca sem custo</span>
+                            </p>
+                            <label className="flex items-center gap-2 text-xs font-medium text-sv-dark">
                               <input
-                                type="checkbox"
-                                checked={marcado}
-                                onChange={() => toggleAdicional(idx, item, adicional)}
+                                type="radio"
+                                name={nomeGrupo}
+                                checked={selecionadoId === ''}
+                                onChange={() => selecionarNaCategoria(idx, item, categoria.id, null)}
                               />
-                              {adicional.nome}
-                              <span className="text-gray-400">+{formatarBRL(adicional.preco)}</span>
+                              Padrão (sem troca)
                             </label>
-                          );
-                        })}
-                      </div>
-                    ))}
+                            {itens.map((adicional) => (
+                              <label key={adicional.id} className="flex items-center gap-2 text-xs font-medium text-sv-dark">
+                                <input
+                                  type="radio"
+                                  name={nomeGrupo}
+                                  checked={selecionadoId === adicional.id}
+                                  onChange={() => selecionarNaCategoria(idx, item, categoria.id, adicional)}
+                                />
+                                {adicional.nome}
+                                <span className="text-green-600">Grátis</span>
+                              </label>
+                            ))}
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div key={categoria?.id ?? 'sem-categoria'} className="flex flex-col gap-1">
+                          <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                            {categoria ? `${categoria.emoji ?? ''} ${categoria.nome}` : 'Outros'}
+                          </p>
+                          {itens.map((adicional) => {
+                            const marcado = (item.adicionaisSelecionados ?? []).some((a) => a.id === adicional.id);
+                            return (
+                              <label key={adicional.id} className="flex items-center gap-2 text-xs font-medium text-sv-dark">
+                                <input
+                                  type="checkbox"
+                                  checked={marcado}
+                                  onChange={() => toggleAdicional(idx, item, adicional)}
+                                />
+                                {adicional.nome}
+                                <span className="text-gray-400">+{formatarBRL(adicional.preco)}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
 

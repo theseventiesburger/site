@@ -123,7 +123,7 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
 
   return (
     <form onSubmit={enviarPedido} className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 min-w-0">
         <div className="bg-white rounded-3xl shadow-md border border-gray-100 p-6">
           <CamposPedido tipo={tipo} campos={campos} onChange={setCampos} mesas={mesas} />
         </div>
@@ -131,7 +131,7 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
         <SeletorProdutos produtos={produtos} categorias={categorias} onAdicionar={adicionarProduto} />
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 min-w-0">
         <CarrinhoComanda
           itens={itens}
           adicionaisDisponiveis={adicionais}

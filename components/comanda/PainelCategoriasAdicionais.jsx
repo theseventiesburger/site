@@ -12,8 +12,10 @@ export default function PainelCategoriasAdicionais({ supabase, categorias, onMud
   const [emEdicaoId, setEmEdicaoId] = useState(null);
   const [nomeEdicao, setNomeEdicao] = useState('');
   const [emojiEdicao, setEmojiEdicao] = useState('');
+  const [gratuitaEdicao, setGratuitaEdicao] = useState(false);
   const [novoNome, setNovoNome] = useState('');
   const [novoEmoji, setNovoEmoji] = useState('');
+  const [novaGratuita, setNovaGratuita] = useState(false);
   const [erro, setErro] = useState(null);
 
   async function recarregar() {
@@ -25,9 +27,10 @@ export default function PainelCategoriasAdicionais({ supabase, categorias, onMud
     if (!novoNome) return;
 
     try {
-      await criarCategoriaAdicional(supabase, { nome: novoNome, emoji: novoEmoji });
+      await criarCategoriaAdicional(supabase, { nome: novoNome, emoji: novoEmoji, gratuita: novaGratuita });
       setNovoNome('');
       setNovoEmoji('');
+      setNovaGratuita(false);
       setErro(null);
       await recarregar();
     } catch (err) {
@@ -40,11 +43,12 @@ export default function PainelCategoriasAdicionais({ supabase, categorias, onMud
     setEmEdicaoId(categoria.id);
     setNomeEdicao(categoria.nome);
     setEmojiEdicao(categoria.emoji ?? '');
+    setGratuitaEdicao(categoria.gratuita ?? false);
   }
 
   async function salvarEdicao(id) {
     try {
-      await atualizarCategoriaAdicional(supabase, id, { nome: nomeEdicao, emoji: emojiEdicao });
+      await atualizarCategoriaAdicional(supabase, id, { nome: nomeEdicao, emoji: emojiEdicao, gratuita: gratuitaEdicao });
       setEmEdicaoId(null);
       await recarregar();
     } catch (err) {
@@ -86,6 +90,14 @@ export default function PainelCategoriasAdicionais({ supabase, categorias, onMud
                   onChange={(e) => setNomeEdicao(e.target.value)}
                   className="w-28 px-2 py-1 rounded-lg border border-gray-200"
                 />
+                <label className="flex items-center gap-1 text-[10px] font-bold text-gray-500 whitespace-nowrap">
+                  <input
+                    type="checkbox"
+                    checked={gratuitaEdicao}
+                    onChange={(e) => setGratuitaEdicao(e.target.checked)}
+                  />
+                  Grátis (troca)
+                </label>
                 <button type="button" onClick={() => salvarEdicao(categoria.id)} className="font-black uppercase text-sv-blue">
                   Salvar
                 </button>
@@ -94,6 +106,11 @@ export default function PainelCategoriasAdicionais({ supabase, categorias, onMud
               <>
                 <span>{categoria.emoji || '🏷️'}</span>
                 <span className="font-bold text-sv-dark">{categoria.nome}</span>
+                {categoria.gratuita && (
+                  <span className="px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 text-[9px] font-black uppercase tracking-wider">
+                    Grátis
+                  </span>
+                )}
                 <button type="button" onClick={() => iniciarEdicao(categoria)} className="font-black uppercase text-sv-blue">
                   Editar
                 </button>
@@ -123,6 +140,14 @@ export default function PainelCategoriasAdicionais({ supabase, categorias, onMud
           placeholder="Ex: Pães"
           className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium"
         />
+        <label className="flex items-center gap-1.5 text-[11px] font-bold text-gray-500 whitespace-nowrap flex-shrink-0">
+          <input
+            type="checkbox"
+            checked={novaGratuita}
+            onChange={(e) => setNovaGratuita(e.target.checked)}
+          />
+          Grátis (troca)
+        </label>
         <button
           type="submit"
           className="bg-sv-dark text-white text-[10px] font-black uppercase px-3 py-2 rounded-lg flex-shrink-0"
