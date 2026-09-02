@@ -19,6 +19,7 @@ const ITENS_MENU = [
   },
   { tipo: 'link', href: '/comanda/cozinha', label: 'Cozinha' },
   { tipo: 'link', href: '/comanda/relatorio', label: 'Relatório' },
+  { tipo: 'link', href: '/comanda/auditoria', label: 'Auditoria' },
   {
     tipo: 'menu',
     label: 'Cadastros',
