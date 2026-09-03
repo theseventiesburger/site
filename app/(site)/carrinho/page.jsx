@@ -87,7 +87,11 @@ export default function CarrinhoPage() {
       });
   }, [supabase]);
 
+  // Se o bairro salvo no cadastro tiver sido desativado depois, bairroId
+  // aponta pra um id que não está mais na lista — trata como "nenhum
+  // selecionado" em vez de deixar passar com frete zerado por engano.
   const bairro = bairros.find((b) => b.id === bairroId);
+  const bairroSelecionadoValido = Boolean(bairroId) && bairros.length > 0 && Boolean(bairro);
   const taxaEntrega = tipoEntrega === 'retirada' ? 0 : Number(bairro?.valor_entrega ?? 0);
 
   const avisoCupomInvalido = cupomAplicado ? validarCupom(cupomAplicado, subtotal) : null;
@@ -124,7 +128,7 @@ export default function CarrinhoPage() {
   async function finalizarPedido(e) {
     e.preventDefault();
     if (enviandoRef.current) return;
-    if (tipoEntrega === 'entrega' && !bairroId) {
+    if (tipoEntrega === 'entrega' && !bairroSelecionadoValido) {
       setErro('Selecione seu bairro.');
       return;
     }
@@ -394,7 +398,7 @@ export default function CarrinhoPage() {
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-500 font-medium">{tipoEntrega === 'retirada' ? 'Retirada' : 'Entrega'}</span>
                   <span className="font-bold text-sv-dark">
-                    {tipoEntrega === 'retirada' ? 'Grátis' : bairroId ? formatarBRL(taxaEntrega) : 'Selecione o bairro'}
+                    {tipoEntrega === 'retirada' ? 'Grátis' : bairroSelecionadoValido ? formatarBRL(taxaEntrega) : 'Selecione o bairro'}
                   </span>
                 </div>
                 {desconto > 0 && (
