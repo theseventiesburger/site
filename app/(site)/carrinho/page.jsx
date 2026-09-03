@@ -3,11 +3,13 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import QRCode from 'qrcode';
 import { criarClienteBrowser } from '@/lib/supabase/client';
 import { useCarrinho } from '@/components/site/CarrinhoContext';
 import { listarBairrosPublico, criarPedidoSite } from '@/lib/site/pedidos';
+import { obterMeuCadastro } from '@/lib/site/clientes';
 import { gerarPixCopiaECola } from '@/lib/site/pix';
-import { formatarBRL, formatarTelefone } from '@/lib/comanda/formato';
+import { formatarBRL } from '@/lib/comanda/formato';
 import { buscarCupomPorCodigo } from '@/lib/comanda/cupons';
 
 function validarCupom(cupom, subtotal) {
@@ -33,10 +35,11 @@ export default function CarrinhoPage() {
   const [supabase] = useState(() => criarClienteBrowser());
   const { itens, alterarQuantidade, remover, limpar, subtotal } = useCarrinho();
 
+  const [carregandoConta, setCarregandoConta] = useState(true);
+  const [usuario, setUsuario] = useState(null);
+  const [cliente, setCliente] = useState(null);
   const [bairros, setBairros] = useState([]);
   const [bairroId, setBairroId] = useState('');
-  const [nome, setNome] = useState('');
-  const [telefone, setTelefone] = useState('');
   const [endereco, setEndereco] = useState('');
   const [pontoReferencia, setPontoReferencia] = useState('');
   const [observacoes, setObservacoes] = useState('');
@@ -51,6 +54,25 @@ export default function CarrinhoPage() {
   const [pedidoConfirmado, setPedidoConfirmado] = useState(null);
 
   useEffect(() => {
+    async function carregar() {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUsuario(user);
+      if (user) {
+        try {
+          const meuCadastro = await obterMeuCadastro(supabase);
+          setCliente(meuCadastro);
+          if (meuCadastro) {
+            setEndereco(meuCadastro.endereco ?? '');
+            setBairroId(meuCadastro.bairro_id ?? '');
+            setPontoReferencia(meuCadastro.ponto_referencia ?? '');
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      setCarregandoConta(false);
+    }
+    carregar();
     listarBairrosPublico(supabase).then(setBairros).catch(() => {});
   }, [supabase]);
 
@@ -100,8 +122,6 @@ export default function CarrinhoPage() {
 
     try {
       const resultado = await criarPedidoSite(supabase, {
-        nome,
-        telefone,
         endereco,
         bairroId,
         pontoReferencia,
@@ -120,7 +140,7 @@ export default function CarrinhoPage() {
   }
 
   if (pedidoConfirmado) {
-    return <ConfirmacaoPedido pedido={pedidoConfirmado} />;
+    return <ConfirmacaoPedido supabase={supabase} pedido={pedidoConfirmado} />;
   }
 
   return (
@@ -189,76 +209,87 @@ export default function CarrinhoPage() {
                 ))}
               </div>
 
-              <form onSubmit={finalizarPedido} className="bg-white rounded-3xl shadow-md border border-gray-100 p-5 flex flex-col gap-4">
-                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Seus dados</p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <input
-                    value={nome}
-                    onChange={(e) => setNome(e.target.value)}
-                    placeholder="Nome completo"
-                    required
-                    className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
-                  />
-                  <input
-                    value={telefone}
-                    onChange={(e) => setTelefone(formatarTelefone(e.target.value))}
-                    placeholder="(35) 99277-6777"
-                    required
-                    className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
-                  />
+              {carregandoConta ? (
+                <div className="bg-white rounded-3xl shadow-md border border-gray-100 p-8 text-center text-gray-400 text-sm font-medium">
+                  Carregando...
                 </div>
-
-                <input
-                  value={endereco}
-                  onChange={(e) => setEndereco(e.target.value)}
-                  placeholder="Rua, número"
-                  required
-                  className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
-                />
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <select
-                    value={bairroId}
-                    onChange={(e) => setBairroId(e.target.value)}
-                    required
-                    className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
-                  >
-                    <option value="">Selecione o bairro</option>
-                    {bairros.map((b) => (
-                      <option key={b.id} value={b.id}>{b.nome} — {formatarBRL(b.valor_entrega)}</option>
-                    ))}
-                  </select>
-                  <input
-                    value={pontoReferencia}
-                    onChange={(e) => setPontoReferencia(e.target.value)}
-                    placeholder="Ponto de referência (opcional)"
-                    className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
-                  />
-                </div>
-
-                <textarea
-                  value={observacoes}
-                  onChange={(e) => setObservacoes(e.target.value)}
-                  placeholder="Observações do pedido (opcional)"
-                  rows={2}
-                  className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue resize-none"
-                />
-
-                {erro && (
-                  <p className="text-sv-red text-xs font-bold bg-sv-red/5 border border-sv-red/20 rounded-xl px-4 py-3">
-                    {erro}
+              ) : !usuario ? (
+                <div className="bg-white rounded-3xl shadow-md border border-gray-100 p-8 flex flex-col items-center text-center gap-3">
+                  <span className="text-3xl">🔒</span>
+                  <p className="font-black text-sv-dark uppercase tracking-tight">Entre pra finalizar seu pedido</p>
+                  <p className="text-gray-500 text-sm font-medium">
+                    Assim seu endereço fica salvo e você não precisa digitar tudo de novo da próxima vez.
                   </p>
-                )}
+                  <div className="flex gap-3 w-full mt-2">
+                    <Link
+                      href="/conta/entrar?proximo=/carrinho"
+                      className="flex-1 bg-sv-dark hover:bg-sv-blue text-white font-black py-3 rounded-xl uppercase tracking-wider text-xs transition-colors duration-150"
+                    >
+                      Entrar
+                    </Link>
+                    <Link
+                      href="/conta/cadastro?proximo=/carrinho"
+                      className="flex-1 bg-sv-blue hover:bg-sv-red text-white font-black py-3 rounded-xl uppercase tracking-wider text-xs transition-colors duration-150"
+                    >
+                      Criar conta
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={finalizarPedido} className="bg-white rounded-3xl shadow-md border border-gray-100 p-5 flex flex-col gap-4">
+                  <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Entregar em</p>
 
-                <button
-                  type="submit"
-                  disabled={enviando}
-                  className="bg-sv-blue hover:bg-sv-red text-white font-black py-4 rounded-xl uppercase tracking-wider text-sm transition-colors duration-150 disabled:opacity-60"
-                >
-                  {enviando ? 'Enviando...' : `Finalizar Pedido — ${formatarBRL(total)}`}
-                </button>
-              </form>
+                  <input
+                    value={endereco}
+                    onChange={(e) => setEndereco(e.target.value)}
+                    placeholder="Rua, número"
+                    required
+                    className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
+                  />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <select
+                      value={bairroId}
+                      onChange={(e) => setBairroId(e.target.value)}
+                      required
+                      className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
+                    >
+                      <option value="">Selecione o bairro</option>
+                      {bairros.map((b) => (
+                        <option key={b.id} value={b.id}>{b.nome} — {formatarBRL(b.valor_entrega)}</option>
+                      ))}
+                    </select>
+                    <input
+                      value={pontoReferencia}
+                      onChange={(e) => setPontoReferencia(e.target.value)}
+                      placeholder="Ponto de referência (opcional)"
+                      className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
+                    />
+                  </div>
+
+                  <textarea
+                    value={observacoes}
+                    onChange={(e) => setObservacoes(e.target.value)}
+                    placeholder="Observações do pedido (opcional)"
+                    rows={2}
+                    className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue resize-none"
+                  />
+
+                  {erro && (
+                    <p className="text-sv-red text-xs font-bold bg-sv-red/5 border border-sv-red/20 rounded-xl px-4 py-3">
+                      {erro}
+                    </p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={enviando}
+                    className="bg-sv-blue hover:bg-sv-red text-white font-black py-4 rounded-xl uppercase tracking-wider text-sm transition-colors duration-150 disabled:opacity-60"
+                  >
+                    {enviando ? 'Enviando...' : `Finalizar Pedido — ${formatarBRL(total)}`}
+                  </button>
+                </form>
+              )}
             </div>
 
             <div className="bg-white rounded-3xl shadow-md border border-gray-100 p-5 flex flex-col gap-4 lg:sticky lg:top-28">
@@ -331,8 +362,10 @@ export default function CarrinhoPage() {
   );
 }
 
-function ConfirmacaoPedido({ pedido }) {
+function ConfirmacaoPedido({ supabase, pedido }) {
   const [copiado, setCopiado] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState(null);
+  const [pago, setPago] = useState(pedido.pago);
   const chavePix = process.env.NEXT_PUBLIC_PIX_CHAVE;
 
   const codigoPix = chavePix
@@ -345,6 +378,33 @@ function ConfirmacaoPedido({ pedido }) {
       })
     : null;
 
+  useEffect(() => {
+    if (!codigoPix) return;
+    QRCode.toDataURL(codigoPix, { width: 260, margin: 1 })
+      .then(setQrCodeUrl)
+      .catch((err) => console.error(err));
+  }, [codigoPix]);
+
+  // Acompanha o pagamento em tempo real — quando o atendente confirma no
+  // painel, essa tela atualiza sozinha sem precisar recarregar.
+  useEffect(() => {
+    if (pago) return;
+    const canal = supabase
+      .channel(`pedido-${pedido.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'pedidos', filter: `id=eq.${pedido.id}` },
+        (payload) => {
+          if (payload.new.pago) setPago(true);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(canal);
+    };
+  }, [supabase, pedido.id, pago]);
+
   function copiar() {
     navigator.clipboard.writeText(codigoPix);
     setCopiado(true);
@@ -354,27 +414,41 @@ function ConfirmacaoPedido({ pedido }) {
   return (
     <section className="w-full bg-[#F7F7F7] min-h-screen pt-32 pb-20 px-6 flex items-center justify-center">
       <div className="max-w-lg w-full bg-white rounded-3xl shadow-xl border border-gray-100 p-8 text-center flex flex-col items-center gap-4">
-        <span className="text-5xl">✅</span>
-        <h1 className="text-2xl font-black text-sv-dark uppercase tracking-tight">Pedido enviado!</h1>
+        <span className="text-5xl">{pago ? '🎉' : '✅'}</span>
+        <h1 className="text-2xl font-black text-sv-dark uppercase tracking-tight">
+          {pago ? 'Pagamento confirmado!' : 'Pedido enviado!'}
+        </h1>
         <p className="text-gray-500 text-sm font-medium">
-          Pedido <span className="font-black text-sv-dark">#{pedido.numero}</span> recebido — total de{' '}
+          Pedido <span className="font-black text-sv-dark">#{pedido.numero}</span> — total de{' '}
           <span className="font-black text-sv-dark">{formatarBRL(pedido.total)}</span>.
         </p>
 
-        {codigoPix ? (
-          <div className="w-full flex flex-col gap-2 mt-2">
-            <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Pague com Pix Copia e Cola</p>
+        {pago ? (
+          <p className="w-full bg-green-50 border border-green-200 text-green-700 text-sm font-bold rounded-xl px-4 py-4">
+            Recebemos seu pagamento — seu pedido já está em preparo! 🍔
+          </p>
+        ) : codigoPix ? (
+          <div className="w-full flex flex-col items-center gap-3 mt-2">
+            <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Pague com Pix</p>
+
+            {qrCodeUrl && (
+              <div className="p-3 bg-white border border-gray-200 rounded-2xl">
+                <Image src={qrCodeUrl} alt="QR Code Pix" width={220} height={220} unoptimized />
+              </div>
+            )}
+
             <button
               type="button"
               onClick={copiar}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border-2 border-dashed transition-all duration-200 font-black text-xs uppercase tracking-widest ${
+              className={`w-full flex items-center justify-center px-4 py-3 rounded-xl border-2 border-dashed transition-all duration-200 font-black text-xs uppercase tracking-widest ${
                 copiado ? 'border-green-400 bg-green-50 text-green-600' : 'border-sv-blue text-sv-blue hover:bg-sv-blue hover:text-white'
               }`}
             >
-              <span>{copiado ? '✓ Código copiado!' : 'Copiar código Pix'}</span>
+              {copiado ? '✓ Código copiado!' : 'Copiar código Pix'}
             </button>
-            <p className="text-gray-400 text-[11px] font-medium">
-              Cole no app do seu banco pra pagar. Assim que o pagamento cair, seu pedido é confirmado.
+            <p className="text-gray-400 text-[11px] font-medium flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse inline-block" />
+              Aguardando pagamento — essa tela atualiza sozinha assim que cair.
             </p>
           </div>
         ) : (
