@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { criarClienteBrowser } from '@/lib/supabase/client';
 import { atualizarMeuCadastro } from '@/lib/site/clientes';
 import { formatarTelefone } from '@/lib/comanda/formato';
@@ -47,6 +48,7 @@ function BotaoSair() {
 }
 
 function PainelContaFormulario({ cliente, email, bairros, supabase }) {
+  const router = useRouter();
   const [nome, setNome] = useState(cliente?.nome ?? '');
   const [telefone, setTelefone] = useState(cliente?.telefone ?? '');
   const [endereco, setEndereco] = useState(cliente?.endereco ?? '');
@@ -64,7 +66,7 @@ function PainelContaFormulario({ cliente, email, bairros, supabase }) {
     try {
       await atualizarMeuCadastro(supabase, cliente.id, { nome, telefone, endereco, bairroId, pontoReferencia });
       setSalvo(true);
-      setTimeout(() => setSalvo(false), 4000);
+      setTimeout(() => router.push('/'), 900);
     } catch (err) {
       console.error(err);
       setErro(err.message || 'Não foi possível salvar. Tente novamente.');
