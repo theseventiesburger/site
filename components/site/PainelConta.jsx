@@ -16,16 +16,34 @@ export default function PainelConta({ cliente, email, bairros }) {
           Não achamos seu cadastro de cliente vinculado a essa conta ({email}).
         </p>
         <p className="text-gray-400 text-xs font-medium">Fale com a gente pelo WhatsApp pra resolver.</p>
-        <form action={sairCliente}>
-          <button type="submit" className="self-start text-xs font-black uppercase text-sv-red">
-            Sair
-          </button>
-        </form>
+        <BotaoSair />
       </div>
     );
   }
 
-  return <PainelContaFormulario cliente={cliente} email={email} bairros={bairros} supabase={supabase} />;
+  return (
+    <div className="flex flex-col gap-4">
+      <PainelContaFormulario cliente={cliente} email={email} bairros={bairros} supabase={supabase} />
+      <div className="flex justify-end">
+        <BotaoSair />
+      </div>
+    </div>
+  );
+}
+
+// Fora de qualquer <form> de propósito — HTML não permite <form> dentro de
+// <form>, e isso já causou comportamento inconsistente (bug corrigido).
+function BotaoSair() {
+  return (
+    <form action={sairCliente}>
+      <button
+        type="submit"
+        className="py-3 px-6 rounded-xl border border-gray-200 text-sv-dark font-black uppercase tracking-wider text-xs hover:border-sv-red hover:text-sv-red transition-colors duration-150"
+      >
+        Sair
+      </button>
+    </form>
+  );
 }
 
 function PainelContaFormulario({ cliente, email, bairros, supabase }) {
@@ -46,10 +64,10 @@ function PainelContaFormulario({ cliente, email, bairros, supabase }) {
     try {
       await atualizarMeuCadastro(supabase, cliente.id, { nome, telefone, endereco, bairroId, pontoReferencia });
       setSalvo(true);
-      setTimeout(() => setSalvo(false), 2500);
+      setTimeout(() => setSalvo(false), 4000);
     } catch (err) {
       console.error(err);
-      setErro('Não foi possível salvar. Tente novamente.');
+      setErro(err.message || 'Não foi possível salvar. Tente novamente.');
     } finally {
       setSalvando(false);
     }
@@ -57,6 +75,12 @@ function PainelContaFormulario({ cliente, email, bairros, supabase }) {
 
   return (
     <form onSubmit={salvar} className="bg-white rounded-3xl shadow-md border border-gray-100 p-6 flex flex-col gap-4">
+      {salvo && (
+        <p className="text-green-700 text-sm font-bold bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+          ✓ Dados salvos com sucesso!
+        </p>
+      )}
+
       <div className="flex flex-col gap-1.5">
         <label className="text-xs font-black text-gray-400 uppercase tracking-widest">E-mail</label>
         <p className="text-sv-dark font-bold text-sm">{email}</p>
@@ -115,25 +139,13 @@ function PainelContaFormulario({ cliente, email, bairros, supabase }) {
         <p className="text-sv-red text-xs font-bold bg-sv-red/5 border border-sv-red/20 rounded-xl px-4 py-3">{erro}</p>
       )}
 
-      <div className="flex gap-3 mt-2">
-        <button
-          type="submit"
-          disabled={salvando}
-          className={`flex-1 py-3.5 rounded-xl font-black uppercase tracking-wider text-xs transition-colors duration-150 disabled:opacity-60 ${
-            salvo ? 'bg-green-500 text-white' : 'bg-sv-blue hover:bg-sv-red text-white'
-          }`}
-        >
-          {salvando ? 'Salvando...' : salvo ? '✓ Salvo!' : 'Salvar dados'}
-        </button>
-        <form action={sairCliente}>
-          <button
-            type="submit"
-            className="py-3.5 px-6 rounded-xl border border-gray-200 text-sv-dark font-black uppercase tracking-wider text-xs hover:border-sv-red hover:text-sv-red transition-colors duration-150"
-          >
-            Sair
-          </button>
-        </form>
-      </div>
+      <button
+        type="submit"
+        disabled={salvando}
+        className="bg-sv-blue hover:bg-sv-red text-white py-3.5 rounded-xl font-black uppercase tracking-wider text-xs transition-colors duration-150 disabled:opacity-60"
+      >
+        {salvando ? 'Salvando...' : 'Salvar dados'}
+      </button>
     </form>
   );
 }
