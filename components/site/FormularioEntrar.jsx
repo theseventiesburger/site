@@ -23,7 +23,12 @@ export default function FormularioEntrar({ proximo }) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="senha" className="text-xs font-black text-gray-400 uppercase tracking-widest">Senha</label>
+        <div className="flex items-center justify-between">
+          <label htmlFor="senha" className="text-xs font-black text-gray-400 uppercase tracking-widest">Senha</label>
+          <Link href="/conta/recuperar-senha" className="text-[11px] font-bold text-sv-blue hover:text-sv-red">
+            Esqueci a senha
+          </Link>
+        </div>
         <input
           id="senha" name="senha" type="password" required autoComplete="current-password"
           className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sv-dark font-medium focus:outline-none focus:border-sv-blue"

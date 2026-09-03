@@ -38,6 +38,7 @@ export default function CarrinhoPage() {
   const [carregandoConta, setCarregandoConta] = useState(true);
   const [usuario, setUsuario] = useState(null);
   const [cliente, setCliente] = useState(null);
+  const [tipoEntrega, setTipoEntrega] = useState('entrega'); // 'entrega' | 'retirada'
   const [bairros, setBairros] = useState([]);
   const [bairroId, setBairroId] = useState('');
   const [endereco, setEndereco] = useState('');
@@ -77,7 +78,7 @@ export default function CarrinhoPage() {
   }, [supabase]);
 
   const bairro = bairros.find((b) => b.id === bairroId);
-  const taxaEntrega = Number(bairro?.valor_entrega ?? 0);
+  const taxaEntrega = tipoEntrega === 'retirada' ? 0 : Number(bairro?.valor_entrega ?? 0);
 
   const avisoCupomInvalido = cupomAplicado ? validarCupom(cupomAplicado, subtotal) : null;
   const cupomValido = avisoCupomInvalido ? null : cupomAplicado;
@@ -112,7 +113,7 @@ export default function CarrinhoPage() {
 
   async function finalizarPedido(e) {
     e.preventDefault();
-    if (!bairroId) {
+    if (tipoEntrega === 'entrega' && !bairroId) {
       setErro('Selecione seu bairro.');
       return;
     }
@@ -122,9 +123,10 @@ export default function CarrinhoPage() {
 
     try {
       const resultado = await criarPedidoSite(supabase, {
-        endereco,
-        bairroId,
-        pontoReferencia,
+        tipoEntrega,
+        endereco: tipoEntrega === 'entrega' ? endereco : null,
+        bairroId: tipoEntrega === 'entrega' ? bairroId : null,
+        pontoReferencia: tipoEntrega === 'entrega' ? pontoReferencia : null,
         observacoes,
         cupomCodigo: cupomValido?.codigo || null,
         itens: itens.map((i) => ({ produto_id: i.produtoId, quantidade: i.quantidade })),
@@ -237,35 +239,70 @@ export default function CarrinhoPage() {
                 </div>
               ) : (
                 <form onSubmit={finalizarPedido} className="bg-white rounded-3xl shadow-md border border-gray-100 p-5 flex flex-col gap-4">
-                  <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Entregar em</p>
-
-                  <input
-                    value={endereco}
-                    onChange={(e) => setEndereco(e.target.value)}
-                    placeholder="Rua, número"
-                    required
-                    className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
-                  />
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <select
-                      value={bairroId}
-                      onChange={(e) => setBairroId(e.target.value)}
-                      required
-                      className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setTipoEntrega('entrega')}
+                      className={`py-3 rounded-xl font-black uppercase tracking-wider text-xs transition-colors duration-150 ${
+                        tipoEntrega === 'entrega' ? 'bg-sv-blue text-white' : 'bg-[#F7F7F7] text-gray-400 hover:text-sv-dark'
+                      }`}
                     >
-                      <option value="">Selecione o bairro</option>
-                      {bairros.map((b) => (
-                        <option key={b.id} value={b.id}>{b.nome} — {formatarBRL(b.valor_entrega)}</option>
-                      ))}
-                    </select>
-                    <input
-                      value={pontoReferencia}
-                      onChange={(e) => setPontoReferencia(e.target.value)}
-                      placeholder="Ponto de referência (opcional)"
-                      className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
-                    />
+                      🛵 Entrega
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTipoEntrega('retirada')}
+                      className={`py-3 rounded-xl font-black uppercase tracking-wider text-xs transition-colors duration-150 ${
+                        tipoEntrega === 'retirada' ? 'bg-sv-blue text-white' : 'bg-[#F7F7F7] text-gray-400 hover:text-sv-dark'
+                      }`}
+                    >
+                      🏠 Retirar no balcão
+                    </button>
                   </div>
+
+                  {tipoEntrega === 'entrega' ? (
+                    <>
+                      <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Entregar em</p>
+
+                      <input
+                        value={endereco}
+                        onChange={(e) => setEndereco(e.target.value)}
+                        placeholder="Rua, número"
+                        required
+                        className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
+                      />
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <select
+                          value={bairroId}
+                          onChange={(e) => setBairroId(e.target.value)}
+                          required
+                          className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
+                        >
+                          <option value="">Selecione o bairro</option>
+                          {bairros.map((b) => (
+                            <option key={b.id} value={b.id}>{b.nome} — {formatarBRL(b.valor_entrega)}</option>
+                          ))}
+                        </select>
+                        <input
+                          value={pontoReferencia}
+                          onChange={(e) => setPontoReferencia(e.target.value)}
+                          placeholder="Ponto de referência (opcional)"
+                          className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex items-start gap-3 bg-[#F7F7F7] rounded-xl px-4 py-3.5">
+                      <span className="text-xl flex-shrink-0">📍</span>
+                      <div>
+                        <p className="font-black text-sv-dark text-sm uppercase tracking-tight">Retire no balcão</p>
+                        <p className="text-gray-500 text-xs font-medium mt-0.5">
+                          R. Wenceslau Braz, 167 — Centro, São Lourenço - MG
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   <textarea
                     value={observacoes}
@@ -336,8 +373,10 @@ export default function CarrinhoPage() {
                   <span className="font-bold text-sv-dark">{formatarBRL(subtotal)}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500 font-medium">Entrega</span>
-                  <span className="font-bold text-sv-dark">{bairroId ? formatarBRL(taxaEntrega) : 'Selecione o bairro'}</span>
+                  <span className="text-gray-500 font-medium">{tipoEntrega === 'retirada' ? 'Retirada' : 'Entrega'}</span>
+                  <span className="font-bold text-sv-dark">
+                    {tipoEntrega === 'retirada' ? 'Grátis' : bairroId ? formatarBRL(taxaEntrega) : 'Selecione o bairro'}
+                  </span>
                 </div>
                 {desconto > 0 && (
                   <div className="flex items-center justify-between text-sm">
