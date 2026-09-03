@@ -23,9 +23,13 @@ export default async function ComandaLayout({ children }) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F7F7F7]">
-      {user && <ComandaTopbar email={user.email} userId={user.id} />}
-      {user && <AlertasPedidos cargo={cargo} />}
+    <div className="min-h-screen flex flex-col bg-[#F7F7F7] print:bg-white">
+      {user && (
+        <div className="print:hidden">
+          <ComandaTopbar email={user.email} userId={user.id} />
+          <AlertasPedidos cargo={cargo} />
+        </div>
+      )}
       <div className="flex-1 flex flex-col">{children}</div>
     </div>
   );

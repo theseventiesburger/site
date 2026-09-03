@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { criarClienteBrowser } from '@/lib/supabase/client';
 import { listarTodosProdutos, alternarAtivoProduto } from '@/lib/comanda/produtos';
 import { formatarBRL } from '@/lib/comanda/formato';
@@ -36,13 +37,23 @@ export default function PainelProdutos({ produtosIniciais, categorias, insumos =
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <p className="text-gray-500 text-sm font-medium">{produtos.length} produtos cadastrados</p>
-        <button
-          type="button"
-          onClick={() => setProdutoEmEdicao(null)}
-          className="bg-sv-blue hover:bg-sv-red text-white font-black px-6 py-3 rounded-xl uppercase tracking-wider text-xs transition-colors duration-150"
-        >
-          + Novo Produto
-        </button>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/comanda/produtos/fichas"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-white text-sv-dark border border-gray-200 font-black px-6 py-3 rounded-xl uppercase tracking-wider text-xs transition-all duration-200 hover:border-sv-blue hover:text-sv-blue"
+          >
+            🖨️ Imprimir fichas
+          </Link>
+          <button
+            type="button"
+            onClick={() => setProdutoEmEdicao(null)}
+            className="bg-sv-blue hover:bg-sv-red text-white font-black px-6 py-3 rounded-xl uppercase tracking-wider text-xs transition-colors duration-150"
+          >
+            + Novo Produto
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -108,6 +119,15 @@ export default function PainelProdutos({ produtosIniciais, categorias, insumos =
                 >
                   Ficha técnica
                 </button>
+                <span className="text-gray-300">·</span>
+                <Link
+                  href={`/comanda/produtos/${produto.id}/ficha`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] font-black uppercase tracking-wider text-sv-blue hover:text-sv-red"
+                >
+                  Imprimir
+                </Link>
               </div>
             </div>
           </div>
