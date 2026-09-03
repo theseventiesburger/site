@@ -93,11 +93,11 @@ export default function PainelProdutos({ produtosIniciais, categorias, insumos =
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 mt-2">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2">
                 <button
                   type="button"
                   onClick={() => setProdutoEmEdicao(produto)}
-                  className="text-[10px] font-black uppercase tracking-wider text-sv-blue hover:text-sv-red"
+                  className="whitespace-nowrap text-[10px] font-black uppercase tracking-wider text-sv-blue hover:text-sv-red"
                 >
                   Editar
                 </button>
@@ -105,7 +105,7 @@ export default function PainelProdutos({ produtosIniciais, categorias, insumos =
                 <button
                   type="button"
                   onClick={() => toggleAtivo(produto)}
-                  className={`text-[10px] font-black uppercase tracking-wider ${
+                  className={`whitespace-nowrap text-[10px] font-black uppercase tracking-wider ${
                     produto.ativo ? 'text-gray-400 hover:text-sv-red' : 'text-green-600 hover:text-green-700'
                   }`}
                 >
@@ -115,7 +115,7 @@ export default function PainelProdutos({ produtosIniciais, categorias, insumos =
                 <button
                   type="button"
                   onClick={() => setProdutoComReceita(produto)}
-                  className="text-[10px] font-black uppercase tracking-wider text-sv-blue hover:text-sv-red"
+                  className="whitespace-nowrap text-[10px] font-black uppercase tracking-wider text-sv-blue hover:text-sv-red"
                 >
                   Ficha técnica
                 </button>
@@ -124,7 +124,7 @@ export default function PainelProdutos({ produtosIniciais, categorias, insumos =
                   href={`/comanda/produtos/${produto.id}/ficha`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[10px] font-black uppercase tracking-wider text-sv-blue hover:text-sv-red"
+                  className="whitespace-nowrap text-[10px] font-black uppercase tracking-wider text-sv-blue hover:text-sv-red"
                 >
                   Imprimir
                 </Link>
