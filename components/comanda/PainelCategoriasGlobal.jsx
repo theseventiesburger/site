@@ -53,11 +53,13 @@ export default function PainelCategoriasGlobal({ categoriasIniciais }) {
 
   async function toggleAtivo(categoria) {
     setCategorias((atual) => atual.map((c) => (c.id === categoria.id ? { ...c, ativo: !c.ativo } : c)));
+    setErro(null);
     try {
       await alternarAtivoCategoria(supabase, categoria.id, !categoria.ativo);
     } catch (err) {
       console.error(err);
-      recarregar();
+      setCategorias((atual) => atual.map((c) => (c.id === categoria.id ? { ...c, ativo: categoria.ativo } : c)));
+      setErro(`Não foi possível ${categoria.ativo ? 'desativar' : 'ativar'} "${categoria.nome}". Tente de novo.`);
     }
   }
 

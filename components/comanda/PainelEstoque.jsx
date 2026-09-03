@@ -18,11 +18,13 @@ function CartaoInsumo({ insumo, onMudou }) {
   const abaixoDoMinimo = Number(insumo.estoque_atual) <= Number(insumo.estoque_minimo);
 
   async function toggleAtivo() {
+    setErro(null);
     try {
       await alternarAtivoInsumo(supabase, insumo.id, !insumo.ativo);
       onMudou();
     } catch (err) {
       console.error(err);
+      setErro(`Não foi possível ${insumo.ativo ? 'desativar' : 'ativar'} este insumo. Tente de novo.`);
     }
   }
 
@@ -69,6 +71,8 @@ function CartaoInsumo({ insumo, onMudou }) {
       {Number(insumo.estoque_minimo) > 0 && (
         <p className="text-gray-400 text-[11px] font-bold -mt-2">Mínimo: {insumo.estoque_minimo} {insumo.unidade}</p>
       )}
+
+      {erro && !movimentoAberto && <p className="text-sv-red text-xs font-bold">{erro}</p>}
 
       {movimentoAberto ? (
         <form onSubmit={confirmarMovimento} className="flex flex-col gap-2 pt-2 border-t border-gray-100">

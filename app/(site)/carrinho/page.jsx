@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import QRCode from 'qrcode';
@@ -52,7 +52,12 @@ export default function CarrinhoPage() {
 
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState(null);
+  const [erroBairros, setErroBairros] = useState(false);
   const [pedidoConfirmado, setPedidoConfirmado] = useState(null);
+  // Trava síncrona contra clique duplo — o estado "enviando" só bloqueia o
+  // botão depois de re-renderizar, e um clique/Enter bem rápido pode
+  // disparar duas requisições antes disso, criando dois pedidos pagos.
+  const enviandoRef = useRef(false);
 
   useEffect(() => {
     async function carregar() {
@@ -74,7 +79,12 @@ export default function CarrinhoPage() {
       setCarregandoConta(false);
     }
     carregar();
-    listarBairrosPublico(supabase).then(setBairros).catch(() => {});
+    listarBairrosPublico(supabase)
+      .then(setBairros)
+      .catch((err) => {
+        console.error(err);
+        setErroBairros(true);
+      });
   }, [supabase]);
 
   const bairro = bairros.find((b) => b.id === bairroId);
@@ -113,11 +123,13 @@ export default function CarrinhoPage() {
 
   async function finalizarPedido(e) {
     e.preventDefault();
+    if (enviandoRef.current) return;
     if (tipoEntrega === 'entrega' && !bairroId) {
       setErro('Selecione seu bairro.');
       return;
     }
 
+    enviandoRef.current = true;
     setEnviando(true);
     setErro(null);
 
@@ -136,6 +148,7 @@ export default function CarrinhoPage() {
     } catch (err) {
       console.error(err);
       setErro(err.message || 'Não foi possível enviar o pedido. Tente novamente.');
+      enviandoRef.current = false;
     } finally {
       setEnviando(false);
     }
@@ -291,6 +304,12 @@ export default function CarrinhoPage() {
                           className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
                         />
                       </div>
+
+                      {erroBairros && (
+                        <p className="text-sv-red text-xs font-bold bg-sv-red/5 border border-sv-red/20 rounded-xl px-4 py-3">
+                          Não conseguimos carregar os bairros agora. Atualize a página ou peça pelo WhatsApp.
+                        </p>
+                      )}
                     </>
                   ) : (
                     <div className="flex items-start gap-3 bg-[#F7F7F7] rounded-xl px-4 py-3.5">

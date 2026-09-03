@@ -78,11 +78,13 @@ export default function PainelAdicionaisGlobal({ adicionaisIniciais, categoriasI
 
   async function toggleAtivo(adicional) {
     setAdicionais((atual) => atual.map((a) => (a.id === adicional.id ? { ...a, ativo: !a.ativo } : a)));
+    setErro(null);
     try {
       await alternarAtivoAdicional(supabase, adicional.id, !adicional.ativo);
     } catch (err) {
       console.error(err);
-      recarregar();
+      setAdicionais((atual) => atual.map((a) => (a.id === adicional.id ? { ...a, ativo: adicional.ativo } : a)));
+      setErro(`Não foi possível ${adicional.ativo ? 'desativar' : 'ativar'} "${adicional.nome}". Tente de novo.`);
     }
   }
 

@@ -63,11 +63,13 @@ export default function PainelCategoriasAdicionais({ supabase, categorias, onMud
   }
 
   async function toggleAtivo(categoria) {
+    setErro(null);
     try {
       await alternarAtivoCategoriaAdicional(supabase, categoria.id, !categoria.ativo);
       await recarregar();
     } catch (err) {
       console.error(err);
+      setErro(`Não foi possível ${categoria.ativo ? 'desativar' : 'ativar'} "${categoria.nome}". Tente de novo.`);
     }
   }
 

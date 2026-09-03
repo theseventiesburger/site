@@ -14,6 +14,7 @@ export default function PainelProdutos({ produtosIniciais, categorias, insumos =
   const [produtos, setProdutos] = useState(produtosIniciais);
   const [produtoEmEdicao, setProdutoEmEdicao] = useState(undefined); // undefined = fechado, null = criar, objeto = editar
   const [produtoComReceita, setProdutoComReceita] = useState(null);
+  const [erro, setErro] = useState(null);
 
   async function recarregar() {
     const dados = await listarTodosProdutos(supabase);
@@ -25,11 +26,15 @@ export default function PainelProdutos({ produtosIniciais, categorias, insumos =
     setProdutos((atual) =>
       atual.map((p) => (p.id === produto.id ? { ...p, ativo: !p.ativo } : p))
     );
+    setErro(null);
     try {
       await alternarAtivoProduto(supabase, produto.id, !produto.ativo);
     } catch (err) {
       console.error(err);
-      recarregar();
+      setProdutos((atual) =>
+        atual.map((p) => (p.id === produto.id ? { ...p, ativo: produto.ativo } : p))
+      );
+      setErro(`Não foi possível ${produto.ativo ? 'desativar' : 'ativar'} "${produto.nome}". Tente de novo.`);
     }
   }
 
@@ -55,6 +60,12 @@ export default function PainelProdutos({ produtosIniciais, categorias, insumos =
           </button>
         </div>
       </div>
+
+      {erro && (
+        <p className="text-sv-red text-xs font-bold bg-sv-red/5 border border-sv-red/20 rounded-xl px-4 py-3">
+          {erro}
+        </p>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {produtos.map((produto) => (

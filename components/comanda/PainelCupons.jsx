@@ -24,6 +24,7 @@ export default function PainelCupons({ cuponsIniciais }) {
   const [supabase] = useState(() => criarClienteBrowser());
   const [cupons, setCupons] = useState(cuponsIniciais);
   const [cupomEmEdicao, setCupomEmEdicao] = useState(undefined); // undefined = fechado, null = criar, objeto = editar
+  const [erro, setErro] = useState(null);
 
   async function recarregar() {
     const dados = await listarTodosCupons(supabase);
@@ -33,11 +34,15 @@ export default function PainelCupons({ cuponsIniciais }) {
 
   async function toggleAtivo(cupom) {
     setCupons((atual) => atual.map((c) => (c.id === cupom.id ? { ...c, ativo: !c.ativo } : c)));
+    setErro(null);
     try {
       await alternarAtivoCupom(supabase, cupom.id, !cupom.ativo);
     } catch (err) {
       console.error(err);
-      recarregar();
+      // Desfaz na tela — sem isso o cupom parecia desativado enquanto
+      // continuava valendo de verdade pro cliente no banco.
+      setCupons((atual) => atual.map((c) => (c.id === cupom.id ? { ...c, ativo: cupom.ativo } : c)));
+      setErro(`Não foi possível ${cupom.ativo ? 'desativar' : 'ativar'} o cupom "${cupom.codigo}". Tente de novo.`);
     }
   }
 
@@ -53,6 +58,12 @@ export default function PainelCupons({ cuponsIniciais }) {
           + Novo Cupom
         </button>
       </div>
+
+      {erro && (
+        <p className="text-sv-red text-xs font-bold bg-sv-red/5 border border-sv-red/20 rounded-xl px-4 py-3">
+          {erro}
+        </p>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {cupons.map((cupom) => (

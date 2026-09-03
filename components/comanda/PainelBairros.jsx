@@ -54,11 +54,13 @@ export default function PainelBairros({ bairrosIniciais }) {
 
   async function toggleAtivo(bairro) {
     setBairros((atual) => atual.map((b) => (b.id === bairro.id ? { ...b, ativo: !b.ativo } : b)));
+    setErro(null);
     try {
       await alternarAtivoBairro(supabase, bairro.id, !bairro.ativo);
     } catch (err) {
       console.error(err);
-      recarregar();
+      setBairros((atual) => atual.map((b) => (b.id === bairro.id ? { ...b, ativo: bairro.ativo } : b)));
+      setErro(`Não foi possível ${bairro.ativo ? 'desativar' : 'ativar'} "${bairro.nome}". Tente de novo.`);
     }
   }
 

@@ -117,14 +117,19 @@ export default function PainelAuditoria({ entradasIniciais }) {
   const [entradas, setEntradas] = useState(entradasIniciais);
   const [carregando, setCarregando] = useState(false);
   const [temMais, setTemMais] = useState(entradasIniciais.length >= 50);
+  const [erro, setErro] = useState(null);
 
   async function filtrar(novaTabela) {
     setTabela(novaTabela);
     setCarregando(true);
+    setErro(null);
     try {
       const dados = await listarAuditoria(supabase, { tabela: novaTabela || undefined });
       setEntradas(dados);
       setTemMais(dados.length >= 50);
+    } catch (err) {
+      console.error(err);
+      setErro('Não foi possível carregar. Tente de novo.');
     } finally {
       setCarregando(false);
     }
@@ -132,11 +137,15 @@ export default function PainelAuditoria({ entradasIniciais }) {
 
   async function carregarMais() {
     setCarregando(true);
+    setErro(null);
     try {
       const cursor = entradas[entradas.length - 1]?.id;
       const dados = await listarAuditoria(supabase, { tabela: tabela || undefined, cursor });
       setEntradas((atual) => [...atual, ...dados]);
       setTemMais(dados.length >= 50);
+    } catch (err) {
+      console.error(err);
+      setErro('Não foi possível carregar mais. Tente de novo.');
     } finally {
       setCarregando(false);
     }
@@ -158,6 +167,12 @@ export default function PainelAuditoria({ entradasIniciais }) {
           </button>
         ))}
       </div>
+
+      {erro && (
+        <p className="text-sv-red text-xs font-bold bg-sv-red/5 border border-sv-red/20 rounded-xl px-4 py-3">
+          {erro}
+        </p>
+      )}
 
       <div className="flex flex-col gap-3">
         {entradas.map((entrada) => (
