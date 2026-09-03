@@ -2,9 +2,32 @@
 
 import { useMemo, useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { formatarBRL } from '@/lib/comanda/formato';
 import GoogleRatingBadge from '@/components/GoogleRatingBadge';
+import { useCarrinho } from '@/components/site/CarrinhoContext';
+
+function BotaoAdicionar({ produto }) {
+  const { adicionar } = useCarrinho();
+  const [adicionado, setAdicionado] = useState(false);
+
+  function clicar() {
+    adicionar(produto);
+    setAdicionado(true);
+    setTimeout(() => setAdicionado(false), 1500);
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={clicar}
+      className={`font-black px-6 py-3 rounded-xl shadow-md transition-all duration-200 tracking-wide uppercase text-xs ${
+        adicionado ? 'bg-green-500 text-white' : 'bg-sv-blue text-white hover:bg-sv-red hover:scale-105'
+      }`}
+    >
+      {adicionado ? '✓ Adicionado' : 'Eu quero'}
+    </button>
+  );
+}
 
 export default function CardapioInterativo({ produtos, categorias = [] }) {
   const [categoriaAtiva, setCategoriaAtiva] = useState('todos');
@@ -147,12 +170,7 @@ export default function CardapioInterativo({ produtos, categorias = [] }) {
                     )}
                   </div>
 
-                  <Link
-                    href={`/pedido/${produto.slug}`}
-                    className="bg-sv-blue text-white font-black px-6 py-3 rounded-xl shadow-md transition-all duration-200 hover:bg-sv-red hover:scale-105 tracking-wide uppercase text-xs"
-                  >
-                    Eu quero
-                  </Link>
+                  <BotaoAdicionar produto={produto} />
                 </div>
               </div>
             </div>

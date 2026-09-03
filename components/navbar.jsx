@@ -3,10 +3,12 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useCarrinho } from '@/components/site/CarrinhoContext';
 
 export default function Menu() {
   const [dropdownAberto, setDropdownAberto] = useState(false);
   const dropdownRef = useRef(null);
+  const { totalItens } = useCarrinho();
 
   // Fecha ao clicar fora
   useEffect(() => {
@@ -54,6 +56,19 @@ export default function Menu() {
           </Link>
           <Link href="/contato" className="text-[#1A1A1A] font-extrabold text-xl tracking-wide transition-all duration-200 hover:text-[#0026E6]">
             Contato
+          </Link>
+
+          <Link href="/carrinho" className="relative flex items-center text-[#1A1A1A] hover:text-[#0026E6] transition-colors duration-200">
+            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="9" cy="21" r="1" />
+              <circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+            </svg>
+            {totalItens > 0 && (
+              <span className="absolute -top-2 -right-2 bg-[#E51212] text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center">
+                {totalItens}
+              </span>
+            )}
           </Link>
 
           {/* Dropdown Delivery */}
