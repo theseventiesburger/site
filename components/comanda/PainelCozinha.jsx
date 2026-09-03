@@ -25,7 +25,13 @@ export default function PainelCozinha({ pedidosIniciais }) {
   const [supabase] = useState(() => criarClienteBrowser());
   const [pedidos, setPedidos] = useState(pedidosIniciais);
   const [conectado, setConectado] = useState(false);
+  const [erro, setErro] = useState(null);
   const [, forcarAtualizacaoRelogio] = useState(0);
+
+  function avisarErro(mensagem) {
+    setErro(mensagem);
+    setTimeout(() => setErro(null), 5000);
+  }
 
   const pedidosRef = useRef(pedidos);
   useEffect(() => {
@@ -104,33 +110,48 @@ export default function PainelCozinha({ pedidosIniciais }) {
       return;
     }
 
+    const statusAnterior = pedido?.status;
     setPedidos((atual) => atual.map((p) => (p.id === pedidoId ? { ...p, status: novoStatus } : p)));
     try {
       await atualizarStatusPedido(supabase, pedidoId, novoStatus);
     } catch (err) {
       console.error(err);
+      // Sem isso, um erro (RLS, rede, o que for) deixava o pedido "sumido"
+      // na tela sem nunca ter mudado de verdade no banco — desfaz aqui.
+      setPedidos((atual) => atual.map((p) => (p.id === pedidoId ? { ...p, status: statusAnterior } : p)));
+      avisarErro('Não foi possível avançar o pedido. Tente de novo.');
     }
   }
 
   async function cancelarPedido(pedidoId) {
+    const pedido = pedidosRef.current.find((p) => p.id === pedidoId);
+    const statusAnterior = pedido?.status;
     setPedidos((atual) => atual.map((p) => (p.id === pedidoId ? { ...p, status: 'cancelado' } : p)));
     try {
       await atualizarStatusPedido(supabase, pedidoId, 'cancelado');
     } catch (err) {
       console.error(err);
+      setPedidos((atual) => atual.map((p) => (p.id === pedidoId ? { ...p, status: statusAnterior } : p)));
+      avisarErro('Não foi possível cancelar o pedido. Tente de novo.');
     }
   }
 
   async function togglePago(pedidoId, pago) {
+    const pedido = pedidosRef.current.find((p) => p.id === pedidoId);
+    const pagoAnterior = pedido?.pago;
     setPedidos((atual) => atual.map((p) => (p.id === pedidoId ? { ...p, pago } : p)));
     try {
       await atualizarPagamentoPedido(supabase, pedidoId, pago);
     } catch (err) {
       console.error(err);
+      setPedidos((atual) => atual.map((p) => (p.id === pedidoId ? { ...p, pago: pagoAnterior } : p)));
+      avisarErro('Não foi possível atualizar o pagamento. Tente de novo.');
     }
   }
 
   async function pagarMesa(pedidoId, formaPagamento) {
+    const pedido = pedidosRef.current.find((p) => p.id === pedidoId);
+    const anterior = { pago: pedido?.pago, forma_pagamento: pedido?.forma_pagamento };
     setPedidos((atual) =>
       atual.map((p) =>
         p.id === pedidoId ? { ...p, pago: Boolean(formaPagamento), forma_pagamento: formaPagamento || null } : p
@@ -140,6 +161,8 @@ export default function PainelCozinha({ pedidosIniciais }) {
       await definirPagamentoPedido(supabase, pedidoId, formaPagamento);
     } catch (err) {
       console.error(err);
+      setPedidos((atual) => atual.map((p) => (p.id === pedidoId ? { ...p, ...anterior } : p)));
+      avisarErro('Não foi possível registrar o pagamento. Tente de novo.');
     }
   }
 
@@ -151,6 +174,12 @@ export default function PainelCozinha({ pedidosIniciais }) {
         <span className={`w-2 h-2 rounded-full ${conectado ? 'bg-green-500' : 'bg-gray-300'}`} />
         {conectado ? 'Ao vivo' : 'Conectando...'}
       </div>
+
+      {erro && (
+        <p className="text-sv-red text-xs font-bold bg-sv-red/5 border border-sv-red/20 rounded-xl px-4 py-3">
+          ⚠ {erro}
+        </p>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {COLUNAS.map((coluna) => {
