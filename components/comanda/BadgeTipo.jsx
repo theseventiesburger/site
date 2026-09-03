@@ -4,6 +4,7 @@ const CORES = {
   mesa: 'bg-sv-blue/10 text-sv-blue',
   delivery: 'bg-sv-red/10 text-sv-red',
   pdv: 'bg-sv-dark/10 text-sv-dark',
+  retirada: 'bg-amber-500/10 text-amber-600',
 };
 
 export default function BadgeTipo({ tipo }) {

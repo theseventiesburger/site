@@ -45,7 +45,11 @@ export default function CardPedidoCozinha({ pedido, onAvancar, onCancelar, onTog
         {pedido.tipo === 'mesa' && `Pedido #${pedido.numero}`}
         {pedido.tipo === 'delivery' && (pedido.cliente_nome || 'Cliente sem nome')}
         {pedido.tipo === 'pdv' && (pedido.cliente_nome || 'Balcão')}
+        {pedido.tipo === 'retirada' && (pedido.cliente_nome || 'Cliente sem nome')}
       </div>
+      {pedido.tipo === 'retirada' && pedido.cliente_telefone && (
+        <p className="text-xs text-gray-500 font-medium -mt-2">{pedido.cliente_telefone}</p>
+      )}
 
       {pedido.tipo === 'delivery' && pedido.endereco && (
         <p className="text-xs text-gray-500 font-medium leading-relaxed">{pedido.endereco}</p>
