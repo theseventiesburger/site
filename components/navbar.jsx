@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCarrinho } from '@/components/site/CarrinhoContext';
+import ContaNavLink from '@/components/site/ContaNavLink';
 
 export default function Menu() {
   const [dropdownAberto, setDropdownAberto] = useState(false);
@@ -57,6 +58,8 @@ export default function Menu() {
           <Link href="/contato" className="text-[#1A1A1A] font-extrabold text-xl tracking-wide transition-all duration-200 hover:text-[#0026E6]">
             Contato
           </Link>
+
+          <ContaNavLink />
 
           <Link href="/carrinho" className="relative flex items-center text-[#1A1A1A] hover:text-[#0026E6] transition-colors duration-200">
             <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
