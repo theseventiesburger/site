@@ -8,7 +8,7 @@ import {
   atualizarPagamentoPedido,
   atualizarStatusPedido,
   buscarPedidoPorId,
-  definirPagamentoPedido,
+  fecharContaPedido,
 } from '@/lib/comanda/pedidos';
 import { tocarAvisoTempo } from '@/lib/comanda/som';
 import { minutosDecorridos } from '@/lib/comanda/formato';
@@ -149,20 +149,44 @@ export default function PainelCozinha({ pedidosIniciais }) {
     }
   }
 
-  async function pagarMesa(pedidoId, formaPagamento) {
+  async function fecharConta(pedidoId, { formaPagamento, taxaServico, desconto, itensCortesiaIds }) {
     const pedido = pedidosRef.current.find((p) => p.id === pedidoId);
-    const anterior = { pago: pedido?.pago, forma_pagamento: pedido?.forma_pagamento };
+    if (!pedido) return;
+
+    const anterior = {
+      pago: pedido.pago,
+      forma_pagamento: pedido.forma_pagamento,
+      taxa_servico: pedido.taxa_servico,
+      desconto: pedido.desconto,
+      total: pedido.total,
+      itens_pedido: pedido.itens_pedido,
+    };
+
+    const cortesiaSet = new Set(itensCortesiaIds);
+    const itensAtualizados = (pedido.itens_pedido ?? []).map((item) => ({
+      ...item,
+      cortesia: cortesiaSet.has(item.id),
+    }));
+    const subtotal = itensAtualizados.reduce(
+      (soma, item) => soma + (item.cortesia ? 0 : Number(item.subtotal)),
+      0
+    );
+    const novoTotal = Math.max(0, subtotal + Number(pedido.taxa_entrega || 0) + taxaServico - desconto);
+
     setPedidos((atual) =>
       atual.map((p) =>
-        p.id === pedidoId ? { ...p, pago: Boolean(formaPagamento), forma_pagamento: formaPagamento || null } : p
+        p.id === pedidoId
+          ? { ...p, pago: true, forma_pagamento: formaPagamento, taxa_servico: taxaServico, desconto, itens_pedido: itensAtualizados, total: novoTotal }
+          : p
       )
     );
+
     try {
-      await definirPagamentoPedido(supabase, pedidoId, formaPagamento);
+      await fecharContaPedido(supabase, pedidoId, { formaPagamento, taxaServico, desconto, itensCortesiaIds });
     } catch (err) {
       console.error(err);
       setPedidos((atual) => atual.map((p) => (p.id === pedidoId ? { ...p, ...anterior } : p)));
-      avisarErro('Não foi possível registrar o pagamento. Tente de novo.');
+      throw err;
     }
   }
 
@@ -203,7 +227,7 @@ export default function PainelCozinha({ pedidosIniciais }) {
                     onAvancar={avancarStatus}
                     onCancelar={cancelarPedido}
                     onTogglePago={togglePago}
-                    onPagarMesa={pagarMesa}
+                    onFecharConta={fecharConta}
                   />
                 ))}
               </div>

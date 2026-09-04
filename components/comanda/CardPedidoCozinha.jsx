@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import BadgeStatus from '@/components/comanda/BadgeStatus';
 import BadgeTipo from '@/components/comanda/BadgeTipo';
-import { PROXIMO_STATUS, STATUS_LABEL, PONTO_CARNE_LABEL, FORMAS_PAGAMENTO, FORMA_PAGAMENTO_LABEL } from '@/lib/comanda/constantes';
+import FecharContaModal from '@/components/comanda/FecharContaModal';
+import { PROXIMO_STATUS, STATUS_LABEL, PONTO_CARNE_LABEL, FORMA_PAGAMENTO_LABEL } from '@/lib/comanda/constantes';
 import { formatarBRL, formatarHora, tempoDecorrido, minutosDecorridos } from '@/lib/comanda/formato';
 
-export default function CardPedidoCozinha({ pedido, onAvancar, onCancelar, onTogglePago, onPagarMesa }) {
+export default function CardPedidoCozinha({ pedido, onAvancar, onCancelar, onTogglePago, onFecharConta }) {
+  const [contaAberta, setContaAberta] = useState(false);
   const proximoStatus = PROXIMO_STATUS[pedido.status];
   const itens = pedido.itens_pedido ?? [];
   // Na mesa, o garçom reconhece o pedido pelo número da mesa mais rápido
@@ -94,23 +97,20 @@ export default function CardPedidoCozinha({ pedido, onAvancar, onCancelar, onTog
               </span>
               <button
                 type="button"
-                onClick={() => onPagarMesa(pedido.id, null)}
+                onClick={() => setContaAberta(true)}
                 className="text-[10px] font-black uppercase text-gray-400 hover:text-sv-red transition-colors duration-150"
               >
-                Trocar
+                Editar
               </button>
             </div>
           ) : (
-            <select
-              value=""
-              onChange={(e) => onPagarMesa(pedido.id, e.target.value)}
+            <button
+              type="button"
+              onClick={() => setContaAberta(true)}
               className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-full border border-amber-300 bg-amber-50 text-amber-700"
             >
-              <option value="" disabled>Forma de pagamento</option>
-              {FORMAS_PAGAMENTO.map((f) => (
-                <option key={f} value={f}>{FORMA_PAGAMENTO_LABEL[f]}</option>
-              ))}
-            </select>
+              Fechar conta
+            </button>
           )
         ) : (
           <button
@@ -151,6 +151,17 @@ export default function CardPedidoCozinha({ pedido, onAvancar, onCancelar, onTog
           </button>
         )}
       </div>
+
+      {contaAberta && (
+        <FecharContaModal
+          pedido={pedido}
+          onFechar={() => setContaAberta(false)}
+          onConfirmar={async (pedidoId, payload) => {
+            await onFecharConta(pedidoId, payload);
+            setContaAberta(false);
+          }}
+        />
+      )}
     </div>
   );
 }

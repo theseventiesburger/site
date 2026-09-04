@@ -114,8 +114,14 @@ export default function CarrinhoComanda({
     onCupomAplicado?.(null);
   }
 
+  // Taxa de serviço (garçom): 10% nas vendas de mesa, aplicada sozinha pelo
+  // servidor ao criar o pedido — só exibida aqui pro atendente já ver o
+  // total real antes de enviar (dá pra tirar depois, na hora de fechar a
+  // conta).
+  const taxaServico = tipoPedido === 'mesa' ? Math.round(subtotal * 0.10 * 100) / 100 : 0;
+
   const desconto = calcularDesconto(cupomValido, subtotal, taxaEntrega || 0);
-  const total = subtotal + (taxaEntrega || 0) - desconto;
+  const total = subtotal + (taxaEntrega || 0) + taxaServico - desconto;
 
   function toggleAdicional(idx, item, adicional) {
     const jaSelecionado = (item.adicionaisSelecionados ?? []).some((a) => a.id === adicional.id);
@@ -323,6 +329,12 @@ export default function CarrinhoComanda({
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-500 font-medium">Taxa de entrega</span>
             <span className="font-bold text-sv-dark">{formatarBRL(taxaEntrega)}</span>
+          </div>
+        )}
+        {taxaServico > 0 && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-gray-500 font-medium">Taxa de serviço (10%)</span>
+            <span className="font-bold text-sv-dark">{formatarBRL(taxaServico)}</span>
           </div>
         )}
         {desconto > 0 && (
