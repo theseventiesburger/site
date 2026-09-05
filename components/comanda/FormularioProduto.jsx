@@ -26,6 +26,10 @@ export default function FormularioProduto({ supabase, produto, categorias, categ
   const [ativo, setAtivo] = useState(produto?.ativo ?? true);
   const [vaiParaCozinha, setVaiParaCozinha] = useState(produto?.vai_para_cozinha ?? true);
   const [temPontoCarne, setTemPontoCarne] = useState(produto?.tem_ponto_carne ?? true);
+  const [podeVirarCombo, setPodeVirarCombo] = useState(produto?.pode_virar_combo ?? false);
+  const [precoCombo, setPrecoCombo] = useState(
+    Number(produto?.preco_combo) > 0 ? String(produto.preco_combo).replace('.', ',') : ''
+  );
   // Produto novo já nasce com todas as categorias de adicionais liberadas
   // (mesmo comportamento de sempre) — só existente é que já tem vínculos
   // próprios pra respeitar.
@@ -80,6 +84,8 @@ export default function FormularioProduto({ supabase, produto, categorias, categ
         ativo,
         vaiParaCozinha,
         temPontoCarne,
+        podeVirarCombo,
+        precoCombo: parsePrecoInput(precoCombo || '0'),
         imagem,
       };
 
@@ -228,6 +234,35 @@ export default function FormularioProduto({ supabase, produto, categorias, categ
           Desmarcado, o carrinho não mostra o seletor de ponto da carne pra esse item — use pra
           fritas, bebida, sobremesa e outros itens sem carne.
         </p>
+
+        <label className="flex items-center gap-2 text-sm font-bold text-sv-dark">
+          <input
+            type="checkbox"
+            checked={podeVirarCombo}
+            onChange={(e) => setPodeVirarCombo(e.target.checked)}
+          />
+          Pode virar combo
+        </label>
+        <p className="text-gray-400 text-[11px] font-medium -mt-3">
+          Marcado, o carrinho oferece &quot;virar combo&quot; nesse item — inclui a fritas e a bebida do
+          combo (configuradas na lista de produtos) pelo acréscimo abaixo.
+        </p>
+
+        {podeVirarCombo && (
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-black text-gray-400 uppercase tracking-widest">
+              Acréscimo do combo (R$)
+            </label>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={precoCombo}
+              onChange={(e) => setPrecoCombo(e.target.value)}
+              placeholder="21,00"
+              className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
+            />
+          </div>
+        )}
 
         {categoriasAdicionais.length > 0 && (
           <div className="flex flex-col gap-1.5">

@@ -96,6 +96,9 @@ export default function PainelMesa({ mesa, comandaInicial, produtos, categorias,
             (v) => v.categoria_adicional_id
           ),
           temPontoCarne: produto.tem_ponto_carne ?? true,
+          podeVirarCombo: produto.pode_virar_combo ?? false,
+          precoCombo: Number(produto.preco_combo) || 0,
+          comboAtivo: false,
         },
       ];
     });
@@ -115,6 +118,10 @@ export default function PainelMesa({ mesa, comandaInicial, produtos, categorias,
 
   function atualizarAdicionaisItem(idx, adicionaisSelecionados) {
     setItens((atual) => atual.map((item, i) => (i === idx ? { ...item, adicionaisSelecionados } : item)));
+  }
+
+  function atualizarCombo(idx, comboAtivo) {
+    setItens((atual) => atual.map((item, i) => (i === idx ? { ...item, comboAtivo } : item)));
   }
 
   function removerItem(idx) {
@@ -235,6 +242,9 @@ export default function PainelMesa({ mesa, comandaInicial, produtos, categorias,
                           + {adicional.nome_adicional}
                         </span>
                       ))}
+                      {item.observacao && (
+                        <span className="block text-gray-400 font-medium pl-4">— {item.observacao}</span>
+                      )}
                     </div>
                     <BadgeStatus status={item.status} />
                   </li>
@@ -257,6 +267,7 @@ export default function PainelMesa({ mesa, comandaInicial, produtos, categorias,
             onObservacao={atualizarObservacao}
             onPontoCarne={atualizarPontoCarne}
             onAdicionais={atualizarAdicionaisItem}
+            onCombo={atualizarCombo}
             onRemover={removerItem}
           />
 

@@ -8,8 +8,15 @@ import { listarTodosProdutos, alternarAtivoProduto } from '@/lib/comanda/produto
 import { formatarBRL } from '@/lib/comanda/formato';
 import FormularioProduto from '@/components/comanda/FormularioProduto';
 import FormularioReceita from '@/components/comanda/FormularioReceita';
+import ConfiguracaoCombo from '@/components/comanda/ConfiguracaoCombo';
 
-export default function PainelProdutos({ produtosIniciais, categorias, categoriasAdicionais = [], insumos = [] }) {
+export default function PainelProdutos({
+  produtosIniciais,
+  categorias,
+  categoriasAdicionais = [],
+  comboConfigInicial,
+  insumos = [],
+}) {
   const [supabase] = useState(() => criarClienteBrowser());
   const [produtos, setProdutos] = useState(produtosIniciais);
   const [produtoEmEdicao, setProdutoEmEdicao] = useState(undefined); // undefined = fechado, null = criar, objeto = editar
@@ -67,6 +74,8 @@ export default function PainelProdutos({ produtosIniciais, categorias, categoria
         </p>
       )}
 
+      <ConfiguracaoCombo supabase={supabase} comboConfigInicial={comboConfigInicial} produtos={produtos} />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {produtos.map((produto) => (
           <div
@@ -93,6 +102,11 @@ export default function PainelProdutos({ produtosIniciais, categorias, categoria
                   {!produto.vai_para_cozinha && (
                     <span className="flex-shrink-0 bg-sv-blue/10 text-sv-blue text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
                       Direto pra mesa
+                    </span>
+                  )}
+                  {produto.pode_virar_combo && (
+                    <span className="flex-shrink-0 bg-green-100 text-green-700 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
+                      Combo +{formatarBRL(produto.preco_combo)}
                     </span>
                   )}
                 </div>

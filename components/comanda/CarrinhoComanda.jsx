@@ -37,7 +37,8 @@ function precoComAdicionais(item, tipoPedido) {
     (soma, a) => soma + precoAdicional(a, tipoPedido),
     0
   );
-  return Number(item.precoUnitario) + somaAdicionais;
+  const precoCombo = item.comboAtivo ? Number(item.precoCombo) || 0 : 0;
+  return Number(item.precoUnitario) + somaAdicionais + precoCombo;
 }
 
 // Nem todo produto recebe todo adicional (cerveja não recebe queijo, por
@@ -79,6 +80,7 @@ export default function CarrinhoComanda({
   onObservacao,
   onPontoCarne,
   onAdicionais,
+  onCombo,
   onRemover,
   onCupomAplicado,
 }) {
@@ -262,6 +264,17 @@ export default function CarrinhoComanda({
                       );
                     })}
                   </div>
+                )}
+
+                {item.podeVirarCombo && (
+                  <label className="flex items-center gap-2 text-xs font-bold text-sv-dark bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                    <input
+                      type="checkbox"
+                      checked={item.comboAtivo ?? false}
+                      onChange={(e) => onCombo(idx, e.target.checked)}
+                    />
+                    Virar combo (+{formatarBRL(item.precoCombo)}) — inclui fritas e bebida
+                  </label>
                 )}
 
                 {(item.temPontoCarne ?? true) && (
