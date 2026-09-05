@@ -264,16 +264,18 @@ export default function CarrinhoComanda({
                   </div>
                 )}
 
-                <select
-                  value={item.pontoCarne ?? ''}
-                  onChange={(e) => onPontoCarne(idx, e.target.value || null)}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs font-medium focus:outline-none focus:border-sv-blue transition-colors duration-150"
-                >
-                  <option value="">Ponto da carne (se for o caso)</option>
-                  {PONTOS_CARNE.map((ponto) => (
-                    <option key={ponto} value={ponto}>{PONTO_CARNE_LABEL[ponto]}</option>
-                  ))}
-                </select>
+                {(item.temPontoCarne ?? true) && (
+                  <select
+                    value={item.pontoCarne ?? ''}
+                    onChange={(e) => onPontoCarne(idx, e.target.value || null)}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs font-medium focus:outline-none focus:border-sv-blue transition-colors duration-150"
+                  >
+                    <option value="">Ponto da carne (se for o caso)</option>
+                    {PONTOS_CARNE.map((ponto) => (
+                      <option key={ponto} value={ponto}>{PONTO_CARNE_LABEL[ponto]}</option>
+                    ))}
+                  </select>
+                )}
 
                 <input
                   type="text"

@@ -25,6 +25,7 @@ export default function FormularioProduto({ supabase, produto, categorias, categ
   const [tag, setTag] = useState(produto?.tag ?? '');
   const [ativo, setAtivo] = useState(produto?.ativo ?? true);
   const [vaiParaCozinha, setVaiParaCozinha] = useState(produto?.vai_para_cozinha ?? true);
+  const [temPontoCarne, setTemPontoCarne] = useState(produto?.tem_ponto_carne ?? true);
   // Produto novo já nasce com todas as categorias de adicionais liberadas
   // (mesmo comportamento de sempre) — só existente é que já tem vínculos
   // próprios pra respeitar.
@@ -78,6 +79,7 @@ export default function FormularioProduto({ supabase, produto, categorias, categ
         tag,
         ativo,
         vaiParaCozinha,
+        temPontoCarne,
         imagem,
       };
 
@@ -212,6 +214,19 @@ export default function FormularioProduto({ supabase, produto, categorias, categ
         <p className="text-gray-400 text-[11px] font-medium -mt-3">
           Desmarcado, o item lançado numa mesa vai direto pra conta, sem passar pela tela da Cozinha
           — use pra bebida e outros itens que não precisam de preparo.
+        </p>
+
+        <label className="flex items-center gap-2 text-sm font-bold text-sv-dark">
+          <input
+            type="checkbox"
+            checked={temPontoCarne}
+            onChange={(e) => setTemPontoCarne(e.target.checked)}
+          />
+          Tem ponto da carne
+        </label>
+        <p className="text-gray-400 text-[11px] font-medium -mt-3">
+          Desmarcado, o carrinho não mostra o seletor de ponto da carne pra esse item — use pra
+          fritas, bebida, sobremesa e outros itens sem carne.
         </p>
 
         {categoriasAdicionais.length > 0 && (

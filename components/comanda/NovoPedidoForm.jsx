@@ -67,6 +67,7 @@ export default function NovoPedidoForm({ tipo, produtos, adicionais, categorias,
           categoriasAdicionaisPermitidas: (produto.produto_categorias_adicionais ?? []).map(
             (v) => v.categoria_adicional_id
           ),
+          temPontoCarne: produto.tem_ponto_carne ?? true,
         },
       ];
     });

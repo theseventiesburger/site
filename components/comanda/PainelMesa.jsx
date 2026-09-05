@@ -95,6 +95,7 @@ export default function PainelMesa({ mesa, comandaInicial, produtos, categorias,
           categoriasAdicionaisPermitidas: (produto.produto_categorias_adicionais ?? []).map(
             (v) => v.categoria_adicional_id
           ),
+          temPontoCarne: produto.tem_ponto_carne ?? true,
         },
       ];
     });
