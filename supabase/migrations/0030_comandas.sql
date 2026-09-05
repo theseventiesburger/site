@@ -27,10 +27,14 @@ create unique index comandas_mesa_aberta_idx on comandas (mesa_id) where status 
 
 alter table pedidos add column comanda_id uuid references comandas(id) on delete restrict;
 
+-- "not valid": pedidos antigos de mesa (já entregues/pagos, de antes dessa
+-- migration) não têm comanda_id e nunca vão ter — não dá pra inventar uma
+-- comanda pra eles agora. "not valid" pula a validação do que já existe e
+-- só passa a exigir a regra em pedidos novos daqui pra frente.
 alter table pedidos add constraint comanda_obrigatoria check (
   (tipo = 'mesa' and comanda_id is not null) or
   (tipo <> 'mesa' and comanda_id is null)
-);
+) not valid;
 
 -- ─── total da comanda: soma o subtotal (exceto cortesia) de todos os itens
 -- de todos os pedidos vinculados a ela, mais a taxa de serviço, menos o
