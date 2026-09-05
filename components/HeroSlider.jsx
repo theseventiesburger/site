@@ -52,7 +52,7 @@ export default function HeroSlider({ produtosPromocao = [] }) {
       >
         {slides.map((slide, idx) => (
           <SwiperSlide key={slide.id}>
-            <div className={`w-full h-full flex items-center justify-center text-white relative px-6 md:px-12 py-12 md:py-20 ${slide.estiloFundo}`}>
+            <div className={`w-full h-full flex items-center justify-center text-white relative px-6 md:px-12 py-6 md:py-20 ${slide.estiloFundo}`}>
 
               <div
                 className="absolute inset-0 bg-cover bg-center mix-blend-overlay opacity-25 pointer-events-none"
@@ -90,13 +90,14 @@ export default function HeroSlider({ produtosPromocao = [] }) {
                       </div>
                     </div>
 
-                    <div className="w-full h-full flex items-center justify-center order-1 md:order-2 relative py-12">
+                    <div className="w-full h-[260px] md:h-full flex items-center justify-center order-1 md:order-2 relative py-4 md:py-12">
                       <div className="w-full h-full relative transform scale-110 md:scale-125 lg:scale-135 transition-transform duration-700 hover:rotate-2">
                         <Image
                           src={slide.produto.imagem}
                           alt={slide.produto.nome}
                           fill
                           priority={idx === 0}
+                          sizes="(max-width: 768px) 100vw, 50vw"
                           className="object-contain drop-shadow-[0_35px_40px_rgba(0,0,0,0.85)]"
                         />
                       </div>
@@ -121,13 +122,14 @@ export default function HeroSlider({ produtosPromocao = [] }) {
                       </div>
                     </div>
 
-                    <div className="w-full h-full flex items-center justify-center order-1 md:order-2 relative py-12">
+                    <div className="w-full h-[260px] md:h-full flex items-center justify-center order-1 md:order-2 relative py-4 md:py-12">
                       <div className="w-full h-full relative transform scale-110 md:scale-125 lg:scale-135 transition-transform duration-700 hover:rotate-2">
                         <Image
                           src={slide.imagem}
                           alt={slide.titulo}
                           fill
                           priority={idx === 0}
+                          sizes="(max-width: 768px) 100vw, 50vw"
                           className="object-contain drop-shadow-[0_35px_40px_rgba(0,0,0,0.85)]"
                         />
                       </div>

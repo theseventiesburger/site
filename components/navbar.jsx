@@ -6,8 +6,18 @@ import Image from 'next/image';
 import { useCarrinho } from '@/components/site/CarrinhoContext';
 import ContaNavLink from '@/components/site/ContaNavLink';
 
+const LINKS = [
+  { href: '/', label: 'Início' },
+  { href: '/cupons', label: 'Cupons' },
+  { href: '/cardapio', label: 'Cardápio' },
+  { href: '/appseventies', label: 'App' },
+  { href: '/clube', label: 'Clube' },
+  { href: '/contato', label: 'Contato' },
+];
+
 export default function Menu() {
   const [dropdownAberto, setDropdownAberto] = useState(false);
+  const [menuMobileAberto, setMenuMobileAberto] = useState(false);
   const dropdownRef = useRef(null);
   const { totalItens } = useCarrinho();
 
@@ -40,24 +50,15 @@ export default function Menu() {
         </div>
 
         <div className="hidden md:flex items-center gap-8">
-          <Link href="/" className="text-[#1A1A1A] font-extrabold text-xl tracking-wide transition-all duration-200 hover:text-[#0026E6]">
-            Início
-          </Link>
-          <Link href="/cupons" className="text-[#1A1A1A] font-extrabold text-xl tracking-wide transition-all duration-200 hover:text-[#0026E6]">
-            Cupons
-          </Link>
-          <Link href="/cardapio" className="text-[#1A1A1A] font-extrabold text-xl tracking-wide transition-all duration-200 hover:text-[#0026E6]">
-            Cardápio
-          </Link>
-          <Link href="/appseventies" className="text-[#1A1A1A] font-extrabold text-xl tracking-wide transition-all duration-200 hover:text-[#0026E6]">
-            App
-          </Link>
-          <Link href="/clube" className="text-[#1A1A1A] font-extrabold text-xl tracking-wide transition-all duration-200 hover:text-[#0026E6]">
-            Clube
-          </Link>
-          <Link href="/contato" className="text-[#1A1A1A] font-extrabold text-xl tracking-wide transition-all duration-200 hover:text-[#0026E6]">
-            Contato
-          </Link>
+          {LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="text-[#1A1A1A] font-extrabold text-xl tracking-wide transition-all duration-200 hover:text-[#0026E6]"
+            >
+              {link.label}
+            </Link>
+          ))}
 
           <ContaNavLink />
 
@@ -141,7 +142,75 @@ export default function Menu() {
           </div>
 
         </div>
+
+        {/* Controles mobile: carrinho sempre visível + botão do menu sanduíche */}
+        <div className="flex md:hidden items-center gap-4">
+          <Link href="/carrinho" className="relative flex items-center text-[#1A1A1A]">
+            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="9" cy="21" r="1" />
+              <circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+            </svg>
+            {totalItens > 0 && (
+              <span className="absolute -top-2 -right-2 bg-[#E51212] text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center">
+                {totalItens}
+              </span>
+            )}
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => setMenuMobileAberto((atual) => !atual)}
+            aria-label={menuMobileAberto ? 'Fechar menu' : 'Abrir menu'}
+            className="flex flex-col items-center justify-center gap-1.5 w-10 h-10"
+          >
+            <span className={`block w-7 h-0.5 bg-[#1A1A1A] transition-all duration-200 ${menuMobileAberto ? 'rotate-45 translate-y-2' : ''}`} />
+            <span className={`block w-7 h-0.5 bg-[#1A1A1A] transition-all duration-200 ${menuMobileAberto ? 'opacity-0' : ''}`} />
+            <span className={`block w-7 h-0.5 bg-[#1A1A1A] transition-all duration-200 ${menuMobileAberto ? '-rotate-45 -translate-y-2' : ''}`} />
+          </button>
+        </div>
       </div>
+
+      {/* Painel do menu mobile */}
+      {menuMobileAberto && (
+        <div className="md:hidden absolute top-20 left-0 w-full bg-white border-b-4 border-[#E51212] shadow-xl flex flex-col py-4 max-h-[calc(100vh-5rem)] overflow-y-auto">
+          {LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setMenuMobileAberto(false)}
+              className="text-[#1A1A1A] font-extrabold text-lg tracking-wide px-6 py-3 hover:bg-[#F7F7F7] hover:text-[#0026E6] transition-colors duration-150"
+            >
+              {link.label}
+            </Link>
+          ))}
+
+          <div className="px-6 py-3">
+            <ContaNavLink />
+          </div>
+
+          <div className="px-6 pt-3 flex flex-col gap-3">
+            <a
+              href="https://wa.me/5535992776777"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setMenuMobileAberto(false)}
+              className="flex items-center justify-center gap-2 bg-green-500 text-white font-black text-sm px-6 py-3 rounded-full uppercase tracking-wider shadow-md"
+            >
+              WhatsApp
+            </a>
+            <a
+              href="https://www.uairango.com.br"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setMenuMobileAberto(false)}
+              className="flex items-center justify-center gap-2 bg-[#0026E6] text-white font-black text-sm px-6 py-3 rounded-full uppercase tracking-wider shadow-md"
+            >
+              UaiRango
+            </a>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
