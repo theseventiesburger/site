@@ -3,8 +3,7 @@ import BadgeTipo from '@/components/comanda/BadgeTipo';
 import { PROXIMO_STATUS, STATUS_LABEL, PONTO_CARNE_LABEL } from '@/lib/comanda/constantes';
 import { formatarBRL, formatarHora, tempoDecorrido, minutosDecorridos } from '@/lib/comanda/formato';
 
-export default function CardPedidoCozinha({ pedido, onAvancar, onCancelar, onTogglePago }) {
-  const proximoStatus = PROXIMO_STATUS[pedido.status];
+export default function CardPedidoCozinha({ pedido, onAvancarItem, onCancelar, onTogglePago }) {
   const itens = pedido.itens_pedido ?? [];
   // Na mesa, o garçom reconhece o pedido pelo número da mesa mais rápido
   // que pelo número do pedido — então é a mesa que fica em destaque.
@@ -51,26 +50,46 @@ export default function CardPedidoCozinha({ pedido, onAvancar, onCancelar, onTog
         <p className="text-xs text-gray-500 font-medium leading-relaxed">{pedido.endereco}</p>
       )}
 
-      <ul className="flex flex-col gap-1.5 border-t border-gray-100 pt-3">
-        {itens.map((item) => (
-          <li key={item.id} className="text-xs">
-            <span className="font-black text-sv-dark">{item.quantidade}x</span>{' '}
-            <span className="text-sv-dark font-medium">{item.nome_produto}</span>
-            {item.ponto_carne && (
-              <span className="block text-sv-red font-black pl-4 uppercase tracking-wide">
-                🔥 {PONTO_CARNE_LABEL[item.ponto_carne] ?? item.ponto_carne}
-              </span>
-            )}
-            {(item.itens_pedido_adicionais ?? []).map((adicional) => (
-              <span key={adicional.id} className="block text-sv-blue font-bold pl-4">
-                + {adicional.nome_adicional}
-              </span>
-            ))}
-            {item.observacao && (
-              <span className="block text-gray-400 font-medium pl-4">— {item.observacao}</span>
-            )}
-          </li>
-        ))}
+      {/* Cada item libera sozinho — a batata pode ficar pronta antes do
+          hambúrguer, sem esperar a rodada inteira. */}
+      <ul className="flex flex-col gap-2 border-t border-gray-100 pt-3">
+        {itens.map((item) => {
+          const proximoStatusItem = PROXIMO_STATUS[item.status];
+          return (
+            <li key={item.id} className="flex items-start justify-between gap-2">
+              <div className="text-xs min-w-0">
+                <span className="font-black text-sv-dark">{item.quantidade}x</span>{' '}
+                <span className="text-sv-dark font-medium">{item.nome_produto}</span>
+                {item.ponto_carne && (
+                  <span className="block text-sv-red font-black pl-4 uppercase tracking-wide">
+                    🔥 {PONTO_CARNE_LABEL[item.ponto_carne] ?? item.ponto_carne}
+                  </span>
+                )}
+                {(item.itens_pedido_adicionais ?? []).map((adicional) => (
+                  <span key={adicional.id} className="block text-sv-blue font-bold pl-4">
+                    + {adicional.nome_adicional}
+                  </span>
+                ))}
+                {item.observacao && (
+                  <span className="block text-gray-400 font-medium pl-4">— {item.observacao}</span>
+                )}
+              </div>
+
+              <div className="flex-shrink-0 flex items-center gap-1.5">
+                <BadgeStatus status={item.status} />
+                {proximoStatusItem && (
+                  <button
+                    type="button"
+                    onClick={() => onAvancarItem(pedido.id, item.id, proximoStatusItem)}
+                    className="bg-sv-dark text-white font-black px-2.5 py-1.5 rounded-full uppercase tracking-wider text-[10px] hover:bg-sv-blue transition-colors duration-150"
+                  >
+                    {STATUS_LABEL[proximoStatusItem]}
+                  </button>
+                )}
+              </div>
+            </li>
+          );
+        })}
       </ul>
 
       {pedido.observacoes && (
@@ -95,26 +114,17 @@ export default function CardPedidoCozinha({ pedido, onAvancar, onCancelar, onTog
         )}
       </div>
 
-      <div className="flex items-center gap-2 pt-1">
-        {proximoStatus && (
-          <button
-            type="button"
-            onClick={() => onAvancar(pedido.id, proximoStatus)}
-            className="flex-1 font-black py-3 rounded-xl uppercase tracking-wider text-xs transition-all duration-150 bg-sv-dark text-white hover:bg-sv-blue"
-          >
-            {STATUS_LABEL[proximoStatus]}
-          </button>
-        )}
-        {pedido.status !== 'cancelado' && pedido.status !== 'entregue' && (
+      {pedido.status !== 'cancelado' && pedido.status !== 'entregue' && (
+        <div className="flex items-center gap-2 pt-1">
           <button
             type="button"
             onClick={() => onCancelar(pedido.id)}
-            className="px-4 py-3 rounded-xl border border-gray-200 text-gray-400 hover:text-sv-red hover:border-sv-red font-black text-xs uppercase transition-colors duration-150"
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-400 hover:text-sv-red hover:border-sv-red font-black text-xs uppercase tracking-wider transition-colors duration-150"
           >
-            ✕
+            Cancelar rodada
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

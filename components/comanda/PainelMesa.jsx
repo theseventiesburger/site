@@ -217,19 +217,22 @@ export default function PainelMesa({ mesa, comandaInicial, produtos, categorias,
               </div>
               <ul className="flex flex-col gap-1.5">
                 {(pedido.itens_pedido ?? []).map((item) => (
-                  <li key={item.id} className="text-xs">
-                    <span className="font-black text-sv-dark">{item.quantidade}x</span>{' '}
-                    <span className="text-sv-dark font-medium">{item.nome_produto}</span>
-                    {item.ponto_carne && (
-                      <span className="block text-sv-red font-black pl-4 uppercase tracking-wide">
-                        🔥 {PONTO_CARNE_LABEL[item.ponto_carne] ?? item.ponto_carne}
-                      </span>
-                    )}
-                    {(item.itens_pedido_adicionais ?? []).map((adicional) => (
-                      <span key={adicional.id} className="block text-sv-blue font-bold pl-4">
-                        + {adicional.nome_adicional}
-                      </span>
-                    ))}
+                  <li key={item.id} className="flex items-start justify-between gap-2 text-xs">
+                    <div className="min-w-0">
+                      <span className="font-black text-sv-dark">{item.quantidade}x</span>{' '}
+                      <span className="text-sv-dark font-medium">{item.nome_produto}</span>
+                      {item.ponto_carne && (
+                        <span className="block text-sv-red font-black pl-4 uppercase tracking-wide">
+                          🔥 {PONTO_CARNE_LABEL[item.ponto_carne] ?? item.ponto_carne}
+                        </span>
+                      )}
+                      {(item.itens_pedido_adicionais ?? []).map((adicional) => (
+                        <span key={adicional.id} className="block text-sv-blue font-bold pl-4">
+                          + {adicional.nome_adicional}
+                        </span>
+                      ))}
+                    </div>
+                    <BadgeStatus status={item.status} />
                   </li>
                 ))}
               </ul>

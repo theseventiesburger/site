@@ -6,6 +6,7 @@ import EstadoVazio from '@/components/comanda/EstadoVazio';
 import { criarClienteBrowser } from '@/lib/supabase/client';
 import {
   atualizarPagamentoPedido,
+  atualizarStatusItemPedido,
   atualizarStatusPedido,
   buscarPedidoPorId,
 } from '@/lib/comanda/pedidos';
@@ -84,8 +85,13 @@ export default function PainelCozinha({ pedidosIniciais }) {
             return [...atual, pedidoCompleto];
           });
         })
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'pedidos' }, (payload) => {
-          setPedidos((atual) => atual.map((p) => (p.id === payload.new.id ? { ...p, ...payload.new } : p)));
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'pedidos' }, async (payload) => {
+          // Refaz a busca (em vez de só mesclar payload.new) porque o status
+          // do pedido muda sozinho quando um item muda de status em outro
+          // terminal — sem isso, esse terminal nunca saberia quais itens
+          // mudaram dentro do pedido.
+          const pedidoCompleto = await buscarPedidoPorId(supabase, payload.new.id);
+          setPedidos((atual) => atual.map((p) => (p.id === pedidoCompleto.id ? pedidoCompleto : p)));
         })
         .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'pedidos' }, (payload) => {
           setPedidos((atual) => atual.filter((p) => p.id !== payload.old.id));
@@ -101,18 +107,29 @@ export default function PainelCozinha({ pedidosIniciais }) {
     };
   }, [supabase]);
 
-  async function avancarStatus(pedidoId, novoStatus) {
+  async function avancarStatusItem(pedidoId, itemId, novoStatus) {
     const pedido = pedidosRef.current.find((p) => p.id === pedidoId);
-    const statusAnterior = pedido?.status;
-    setPedidos((atual) => atual.map((p) => (p.id === pedidoId ? { ...p, status: novoStatus } : p)));
+    const item = pedido?.itens_pedido?.find((i) => i.id === itemId);
+    const statusAnterior = item?.status;
+
+    function comStatusItem(status) {
+      return (atual) =>
+        atual.map((p) =>
+          p.id !== pedidoId
+            ? p
+            : { ...p, itens_pedido: p.itens_pedido.map((i) => (i.id === itemId ? { ...i, status } : i)) }
+        );
+    }
+
+    setPedidos(comStatusItem(novoStatus));
     try {
-      await atualizarStatusPedido(supabase, pedidoId, novoStatus);
+      await atualizarStatusItemPedido(supabase, itemId, novoStatus);
     } catch (err) {
       console.error(err);
-      // Sem isso, um erro (RLS, rede, o que for) deixava o pedido "sumido"
+      // Sem isso, um erro (RLS, rede, o que for) deixava o item "sumido"
       // na tela sem nunca ter mudado de verdade no banco — desfaz aqui.
-      setPedidos((atual) => atual.map((p) => (p.id === pedidoId ? { ...p, status: statusAnterior } : p)));
-      avisarErro('Não foi possível avançar o pedido. Tente de novo.');
+      setPedidos(comStatusItem(statusAnterior));
+      avisarErro('Não foi possível avançar o item. Tente de novo.');
     }
   }
 
@@ -176,7 +193,7 @@ export default function PainelCozinha({ pedidosIniciais }) {
                   <CardPedidoCozinha
                     key={pedido.id}
                     pedido={pedido}
-                    onAvancar={avancarStatus}
+                    onAvancarItem={avancarStatusItem}
                     onCancelar={cancelarPedido}
                     onTogglePago={togglePago}
                   />
