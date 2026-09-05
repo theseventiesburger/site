@@ -90,6 +90,11 @@ export default function PainelProdutos({ produtosIniciais, categorias, insumos =
                       Promo
                     </span>
                   )}
+                  {!produto.vai_para_cozinha && (
+                    <span className="flex-shrink-0 bg-sv-blue/10 text-sv-blue text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
+                      Direto pra mesa
+                    </span>
+                  )}
                 </div>
                 <p className="text-gray-400 text-xs font-bold">
                   {produto.categorias?.nome ?? 'Sem categoria'} ·{' '}

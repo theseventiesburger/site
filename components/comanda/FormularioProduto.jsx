@@ -15,6 +15,7 @@ export default function FormularioProduto({ supabase, produto, categorias, onFec
   const [categoriaId, setCategoriaId] = useState(produto?.categoria_id ?? categorias[0]?.id ?? '');
   const [tag, setTag] = useState(produto?.tag ?? '');
   const [ativo, setAtivo] = useState(produto?.ativo ?? true);
+  const [vaiParaCozinha, setVaiParaCozinha] = useState(produto?.vai_para_cozinha ?? true);
   const [arquivoImagem, setArquivoImagem] = useState(null);
   const [previaImagem, setPreviaImagem] = useState(produto?.imagem ?? '/hb2.png');
   const [enviando, setEnviando] = useState(false);
@@ -59,6 +60,7 @@ export default function FormularioProduto({ supabase, produto, categorias, onFec
         categoriaId,
         tag,
         ativo,
+        vaiParaCozinha,
         imagem,
       };
 
@@ -179,6 +181,19 @@ export default function FormularioProduto({ supabase, produto, categorias, onFec
           <input type="checkbox" checked={ativo} onChange={(e) => setAtivo(e.target.checked)} />
           Ativo (visível no cardápio e na comanda)
         </label>
+
+        <label className="flex items-center gap-2 text-sm font-bold text-sv-dark">
+          <input
+            type="checkbox"
+            checked={vaiParaCozinha}
+            onChange={(e) => setVaiParaCozinha(e.target.checked)}
+          />
+          Vai para a cozinha
+        </label>
+        <p className="text-gray-400 text-[11px] font-medium -mt-3">
+          Desmarcado, o item lançado numa mesa vai direto pra conta, sem passar pela tela da Cozinha
+          — use pra bebida e outros itens que não precisam de preparo.
+        </p>
 
         {erro && (
           <p className="text-sv-red text-xs font-bold bg-sv-red/5 border border-sv-red/20 rounded-xl px-4 py-3">
