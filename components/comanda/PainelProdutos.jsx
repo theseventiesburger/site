@@ -9,7 +9,7 @@ import { formatarBRL } from '@/lib/comanda/formato';
 import FormularioProduto from '@/components/comanda/FormularioProduto';
 import FormularioReceita from '@/components/comanda/FormularioReceita';
 
-export default function PainelProdutos({ produtosIniciais, categorias, insumos = [] }) {
+export default function PainelProdutos({ produtosIniciais, categorias, categoriasAdicionais = [], insumos = [] }) {
   const [supabase] = useState(() => criarClienteBrowser());
   const [produtos, setProdutos] = useState(produtosIniciais);
   const [produtoEmEdicao, setProdutoEmEdicao] = useState(undefined); // undefined = fechado, null = criar, objeto = editar
@@ -155,6 +155,7 @@ export default function PainelProdutos({ produtosIniciais, categorias, insumos =
           supabase={supabase}
           produto={produtoEmEdicao}
           categorias={categorias}
+          categoriasAdicionais={categoriasAdicionais}
           onFechar={() => setProdutoEmEdicao(undefined)}
           onSalvo={recarregar}
         />

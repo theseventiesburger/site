@@ -40,6 +40,16 @@ function precoComAdicionais(item, tipoPedido) {
   return Number(item.precoUnitario) + somaAdicionais;
 }
 
+// Nem todo produto recebe todo adicional (cerveja não recebe queijo, por
+// exemplo) — adicional sem categoria continua liberado pra qualquer item.
+function adicionaisParaItem(adicionaisDisponiveis, item) {
+  const permitidas = item.categoriasAdicionaisPermitidas;
+  if (!permitidas) return adicionaisDisponiveis;
+  return adicionaisDisponiveis.filter(
+    (adicional) => !adicional.categoria_id || permitidas.includes(adicional.categoria_id)
+  );
+}
+
 function agruparPorCategoria(adicionais) {
   const porCategoria = new Map();
   const semCategoria = [];
@@ -149,6 +159,7 @@ export default function CarrinhoComanda({
       ) : (
         <div className="flex flex-col gap-3 max-h-[360px] overflow-y-auto pr-1">
           {itens.map((item, idx) => {
+            const adicionaisDoItem = adicionaisParaItem(adicionaisDisponiveis, item);
             return (
               <div key={idx} className="flex flex-col gap-2 p-3 bg-[#F7F7F7] rounded-xl border border-gray-100">
                 <div className="flex items-start justify-between gap-2">
@@ -188,9 +199,9 @@ export default function CarrinhoComanda({
                   </span>
                 </div>
 
-                {adicionaisDisponiveis.length > 0 && (
+                {adicionaisDoItem.length > 0 && (
                   <div className="flex flex-col gap-2 pt-1">
-                    {agruparPorCategoria(adicionaisDisponiveis).map(({ categoria, itens }) => {
+                    {agruparPorCategoria(adicionaisDoItem).map(({ categoria, itens }) => {
                       if (categoriaGratuitaAgora(categoria, tipoPedido)) {
                         const selecionadoId = (item.adicionaisSelecionados ?? []).find(
                           (a) => a.categoria_id === categoria.id

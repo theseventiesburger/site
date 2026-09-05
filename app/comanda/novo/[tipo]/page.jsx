@@ -14,7 +14,11 @@ export default async function NovoPedidoPage({ params }) {
   const supabase = await criarClienteServidor();
 
   const [{ data: produtos }, { data: categorias }, { data: bairros }] = await Promise.all([
-    supabase.from("produtos").select("*").eq("ativo", true).order("ordem", { ascending: true }),
+    supabase
+      .from("produtos")
+      .select("*, produto_categorias_adicionais(categoria_adicional_id)")
+      .eq("ativo", true)
+      .order("ordem", { ascending: true }),
     supabase.from("categorias").select("*").eq("ativo", true).order("ordem", { ascending: true }),
     supabase.from("bairros").select("*").eq("ativo", true).order("nome", { ascending: true }),
   ]);

@@ -92,6 +92,9 @@ export default function PainelMesa({ mesa, comandaInicial, produtos, categorias,
           observacao: '',
           pontoCarne: '',
           adicionaisSelecionados,
+          categoriasAdicionaisPermitidas: (produto.produto_categorias_adicionais ?? []).map(
+            (v) => v.categoria_adicional_id
+          ),
         },
       ];
     });

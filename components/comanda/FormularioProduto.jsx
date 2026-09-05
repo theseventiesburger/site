@@ -2,10 +2,19 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { criarProduto, atualizarProduto, enviarImagemProduto } from '@/lib/comanda/produtos';
+import {
+  criarProduto,
+  atualizarProduto,
+  enviarImagemProduto,
+  definirCategoriasAdicionaisProduto,
+} from '@/lib/comanda/produtos';
 import { parsePrecoInput } from '@/lib/comanda/formato';
 
-export default function FormularioProduto({ supabase, produto, categorias, onFechar, onSalvo }) {
+function alternarId(lista, id) {
+  return lista.includes(id) ? lista.filter((i) => i !== id) : [...lista, id];
+}
+
+export default function FormularioProduto({ supabase, produto, categorias, categoriasAdicionais = [], onFechar, onSalvo }) {
   const modoEdicao = Boolean(produto);
 
   const [nome, setNome] = useState(produto?.nome ?? '');
@@ -16,6 +25,14 @@ export default function FormularioProduto({ supabase, produto, categorias, onFec
   const [tag, setTag] = useState(produto?.tag ?? '');
   const [ativo, setAtivo] = useState(produto?.ativo ?? true);
   const [vaiParaCozinha, setVaiParaCozinha] = useState(produto?.vai_para_cozinha ?? true);
+  // Produto novo já nasce com todas as categorias de adicionais liberadas
+  // (mesmo comportamento de sempre) — só existente é que já tem vínculos
+  // próprios pra respeitar.
+  const [categoriasAdicionaisSelecionadas, setCategoriasAdicionaisSelecionadas] = useState(() =>
+    modoEdicao
+      ? (produto.produto_categorias_adicionais ?? []).map((v) => v.categoria_adicional_id)
+      : categoriasAdicionais.map((c) => c.id)
+  );
   const [arquivoImagem, setArquivoImagem] = useState(null);
   const [previaImagem, setPreviaImagem] = useState(produto?.imagem ?? '/hb2.png');
   const [enviando, setEnviando] = useState(false);
@@ -64,11 +81,13 @@ export default function FormularioProduto({ supabase, produto, categorias, onFec
         imagem,
       };
 
+      let produtoId = produto?.id;
       if (modoEdicao) {
-        await atualizarProduto(supabase, produto.id, dados);
+        await atualizarProduto(supabase, produtoId, dados);
       } else {
-        await criarProduto(supabase, dados);
+        produtoId = await criarProduto(supabase, dados);
       }
+      await definirCategoriasAdicionaisProduto(supabase, produtoId, categoriasAdicionaisSelecionadas);
 
       onSalvo();
     } catch (err) {
@@ -194,6 +213,36 @@ export default function FormularioProduto({ supabase, produto, categorias, onFec
           Desmarcado, o item lançado numa mesa vai direto pra conta, sem passar pela tela da Cozinha
           — use pra bebida e outros itens que não precisam de preparo.
         </p>
+
+        {categoriasAdicionais.length > 0 && (
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-black text-gray-400 uppercase tracking-widest">
+              Adicionais que esse produto pode receber
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {categoriasAdicionais.map((categoria) => (
+                <label
+                  key={categoria.id}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-bold cursor-pointer ${
+                    categoriasAdicionaisSelecionadas.includes(categoria.id)
+                      ? 'border-sv-blue bg-sv-blue/5 text-sv-dark'
+                      : 'border-gray-200 text-gray-400'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={categoriasAdicionaisSelecionadas.includes(categoria.id)}
+                    onChange={() => setCategoriasAdicionaisSelecionadas((atual) => alternarId(atual, categoria.id))}
+                  />
+                  {categoria.emoji} {categoria.nome}
+                </label>
+              ))}
+            </div>
+            <p className="text-gray-400 text-[11px] font-medium">
+              Ex: desmarque &quot;Queijos&quot; numa cerveja — ela não vai mostrar essa opção na hora de montar o pedido.
+            </p>
+          </div>
+        )}
 
         {erro && (
           <p className="text-sv-red text-xs font-bold bg-sv-red/5 border border-sv-red/20 rounded-xl px-4 py-3">
