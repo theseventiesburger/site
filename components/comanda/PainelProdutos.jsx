@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { criarClienteBrowser } from '@/lib/supabase/client';
@@ -9,6 +9,100 @@ import { formatarBRL } from '@/lib/comanda/formato';
 import FormularioProduto from '@/components/comanda/FormularioProduto';
 import FormularioReceita from '@/components/comanda/FormularioReceita';
 import ConfiguracaoCombo from '@/components/comanda/ConfiguracaoCombo';
+
+function CardProduto({ produto, onEditar, onToggleAtivo, onReceita }) {
+  return (
+    <div
+      className={`bg-white rounded-2xl shadow-md border p-4 flex gap-4 ${
+        produto.ativo ? 'border-gray-100' : 'border-gray-200 opacity-60'
+      }`}
+    >
+      <div className="w-20 h-20 relative rounded-xl overflow-hidden bg-[#F7F7F7] flex-shrink-0">
+        <Image src={produto.imagem} alt={produto.nome} fill className="object-contain" />
+      </div>
+
+      <div className="flex-1 min-w-0 flex flex-col justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <p className="font-black text-sv-dark text-sm uppercase tracking-tight truncate">
+              {produto.nome}
+            </p>
+            {produto.preco_promocional && (
+              <span className="flex-shrink-0 bg-sv-red/10 text-sv-red text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
+                Promo
+              </span>
+            )}
+            {!produto.vai_para_cozinha && (
+              <span className="flex-shrink-0 bg-sv-blue/10 text-sv-blue text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
+                Direto pra mesa
+              </span>
+            )}
+            {produto.pode_virar_combo && (
+              <span className="flex-shrink-0 bg-green-100 text-green-700 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
+                Combo +{formatarBRL(produto.preco_combo)}
+              </span>
+            )}
+            {produto.produto_tamanhos?.length > 0 && (
+              <span className="flex-shrink-0 bg-sv-dark/10 text-sv-dark text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
+                {produto.produto_tamanhos.length} tamanhos
+              </span>
+            )}
+          </div>
+          <p className="text-gray-400 text-xs font-bold">
+            {produto.categorias?.nome ?? 'Sem categoria'} ·{' '}
+            {produto.produto_tamanhos?.length > 0 ? (
+              `A partir de ${formatarBRL(Math.min(...produto.produto_tamanhos.map((t) => Number(t.preco))))}`
+            ) : produto.preco_promocional ? (
+              <>
+                <span className="line-through">{formatarBRL(produto.preco)}</span>{' '}
+                <span className="text-sv-red">{formatarBRL(produto.preco_promocional)}</span>
+              </>
+            ) : (
+              formatarBRL(produto.preco)
+            )}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2">
+          <button
+            type="button"
+            onClick={() => onEditar(produto)}
+            className="whitespace-nowrap text-[10px] font-black uppercase tracking-wider text-sv-blue hover:text-sv-red"
+          >
+            Editar
+          </button>
+          <span className="text-gray-300">·</span>
+          <button
+            type="button"
+            onClick={() => onToggleAtivo(produto)}
+            className={`whitespace-nowrap text-[10px] font-black uppercase tracking-wider ${
+              produto.ativo ? 'text-gray-400 hover:text-sv-red' : 'text-green-600 hover:text-green-700'
+            }`}
+          >
+            {produto.ativo ? 'Desativar' : 'Ativar'}
+          </button>
+          <span className="text-gray-300">·</span>
+          <button
+            type="button"
+            onClick={() => onReceita(produto)}
+            className="whitespace-nowrap text-[10px] font-black uppercase tracking-wider text-sv-blue hover:text-sv-red"
+          >
+            Ficha técnica
+          </button>
+          <span className="text-gray-300">·</span>
+          <Link
+            href={`/comanda/produtos/${produto.id}/ficha`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="whitespace-nowrap text-[10px] font-black uppercase tracking-wider text-sv-blue hover:text-sv-red"
+          >
+            Imprimir
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function PainelProdutos({
   produtosIniciais,
@@ -22,6 +116,30 @@ export default function PainelProdutos({
   const [produtoEmEdicao, setProdutoEmEdicao] = useState(undefined); // undefined = fechado, null = criar, objeto = editar
   const [produtoComReceita, setProdutoComReceita] = useState(null);
   const [erro, setErro] = useState(null);
+
+  // Agrupado por categoria (categoria e produto dentro dela em ordem
+  // alfabética) — bem mais fácil de achar um produto do que na lista solta
+  // por "ordem" do cardápio, que é pensada pra exibição pro cliente, não
+  // pra busca no cadastro. "Sem categoria" sempre por último.
+  const gruposPorCategoria = useMemo(() => {
+    const grupos = new Map();
+    for (const produto of produtos) {
+      const nomeCategoria = produto.categorias?.nome ?? 'Sem categoria';
+      if (!grupos.has(nomeCategoria)) grupos.set(nomeCategoria, []);
+      grupos.get(nomeCategoria).push(produto);
+    }
+
+    return [...grupos.entries()]
+      .sort(([a], [b]) => {
+        if (a === 'Sem categoria') return 1;
+        if (b === 'Sem categoria') return -1;
+        return a.localeCompare(b, 'pt-BR');
+      })
+      .map(([nomeCategoria, itens]) => ({
+        nomeCategoria,
+        itens: [...itens].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
+      }));
+  }, [produtos]);
 
   async function recarregar() {
     const dados = await listarTodosProdutos(supabase);
@@ -76,96 +194,27 @@ export default function PainelProdutos({
 
       <ConfiguracaoCombo supabase={supabase} comboConfigInicial={comboConfigInicial} produtos={produtos} />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {produtos.map((produto) => (
-          <div
-            key={produto.id}
-            className={`bg-white rounded-2xl shadow-md border p-4 flex gap-4 ${
-              produto.ativo ? 'border-gray-100' : 'border-gray-200 opacity-60'
-            }`}
-          >
-            <div className="w-20 h-20 relative rounded-xl overflow-hidden bg-[#F7F7F7] flex-shrink-0">
-              <Image src={produto.imagem} alt={produto.nome} fill className="object-contain" />
+      <div className="flex flex-col gap-8">
+        {gruposPorCategoria.map(({ nomeCategoria, itens }) => (
+          <div key={nomeCategoria} className="flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <h3 className="text-sm font-black text-sv-dark uppercase tracking-widest whitespace-nowrap">
+                {nomeCategoria}
+              </h3>
+              <span className="text-gray-400 text-xs font-bold whitespace-nowrap">{itens.length}</span>
+              <div className="flex-1 h-px bg-gray-200" />
             </div>
 
-            <div className="flex-1 min-w-0 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="font-black text-sv-dark text-sm uppercase tracking-tight truncate">
-                    {produto.nome}
-                  </p>
-                  {produto.preco_promocional && (
-                    <span className="flex-shrink-0 bg-sv-red/10 text-sv-red text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
-                      Promo
-                    </span>
-                  )}
-                  {!produto.vai_para_cozinha && (
-                    <span className="flex-shrink-0 bg-sv-blue/10 text-sv-blue text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
-                      Direto pra mesa
-                    </span>
-                  )}
-                  {produto.pode_virar_combo && (
-                    <span className="flex-shrink-0 bg-green-100 text-green-700 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
-                      Combo +{formatarBRL(produto.preco_combo)}
-                    </span>
-                  )}
-                  {produto.produto_tamanhos?.length > 0 && (
-                    <span className="flex-shrink-0 bg-sv-dark/10 text-sv-dark text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
-                      {produto.produto_tamanhos.length} tamanhos
-                    </span>
-                  )}
-                </div>
-                <p className="text-gray-400 text-xs font-bold">
-                  {produto.categorias?.nome ?? 'Sem categoria'} ·{' '}
-                  {produto.produto_tamanhos?.length > 0 ? (
-                    `A partir de ${formatarBRL(Math.min(...produto.produto_tamanhos.map((t) => Number(t.preco))))}`
-                  ) : produto.preco_promocional ? (
-                    <>
-                      <span className="line-through">{formatarBRL(produto.preco)}</span>{' '}
-                      <span className="text-sv-red">{formatarBRL(produto.preco_promocional)}</span>
-                    </>
-                  ) : (
-                    formatarBRL(produto.preco)
-                  )}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2">
-                <button
-                  type="button"
-                  onClick={() => setProdutoEmEdicao(produto)}
-                  className="whitespace-nowrap text-[10px] font-black uppercase tracking-wider text-sv-blue hover:text-sv-red"
-                >
-                  Editar
-                </button>
-                <span className="text-gray-300">·</span>
-                <button
-                  type="button"
-                  onClick={() => toggleAtivo(produto)}
-                  className={`whitespace-nowrap text-[10px] font-black uppercase tracking-wider ${
-                    produto.ativo ? 'text-gray-400 hover:text-sv-red' : 'text-green-600 hover:text-green-700'
-                  }`}
-                >
-                  {produto.ativo ? 'Desativar' : 'Ativar'}
-                </button>
-                <span className="text-gray-300">·</span>
-                <button
-                  type="button"
-                  onClick={() => setProdutoComReceita(produto)}
-                  className="whitespace-nowrap text-[10px] font-black uppercase tracking-wider text-sv-blue hover:text-sv-red"
-                >
-                  Ficha técnica
-                </button>
-                <span className="text-gray-300">·</span>
-                <Link
-                  href={`/comanda/produtos/${produto.id}/ficha`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="whitespace-nowrap text-[10px] font-black uppercase tracking-wider text-sv-blue hover:text-sv-red"
-                >
-                  Imprimir
-                </Link>
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {itens.map((produto) => (
+                <CardProduto
+                  key={produto.id}
+                  produto={produto}
+                  onEditar={setProdutoEmEdicao}
+                  onToggleAtivo={toggleAtivo}
+                  onReceita={setProdutoComReceita}
+                />
+              ))}
             </div>
           </div>
         ))}
