@@ -68,7 +68,7 @@ function CupomCard({ cupom }) {
 
 export default function CuponsPublico({ cupons }) {
   return (
-    <section className="w-full bg-[#F7F7F7] min-h-screen">
+    <section className="w-full bg-[#F7F7F7] min-h-screen pt-20">
 
       <div className="relative w-full h-[280px] md:h-[360px] bg-sv-dark overflow-hidden">
         <Image

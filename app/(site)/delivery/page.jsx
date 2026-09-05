@@ -20,7 +20,7 @@ const passos = [
 
 export default function DeliveryPage() {
   return (
-    <section className="w-full bg-[#F7F7F7] min-h-screen">
+    <section className="w-full bg-[#F7F7F7] min-h-screen pt-20">
 
       {/* ── Hero ────────────────────────────────────────────────────────────── */}
       <div className="relative w-full h-[320px] md:h-[420px] bg-[#990B0B] overflow-hidden">

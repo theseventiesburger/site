@@ -132,7 +132,7 @@ function FaqItem({ item }) {
 // ─── Página Principal ─────────────────────────────────────────────────────────
 export default function ClubePage() {
   return (
-    <section className="w-full bg-[#F7F7F7] min-h-screen">
+    <section className="w-full bg-[#F7F7F7] min-h-screen pt-20">
 
       {/* ── Hero ──────────────────────────────────────────────────────────────── */}
       <div className="relative w-full min-h-[520px] md:min-h-[600px] bg-sv-dark overflow-hidden flex items-center">

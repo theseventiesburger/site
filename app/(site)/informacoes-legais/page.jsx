@@ -42,7 +42,7 @@ export default function InformacoesLegaisPage() {
   }
 
   return (
-    <section className="w-full bg-[#F7F7F7] min-h-screen">
+    <section className="w-full bg-[#F7F7F7] min-h-screen pt-20">
 
       {/* ── Hero ────────────────────────────────────────────────────────────── */}
       <div className="relative w-full h-[220px] md:h-[280px] bg-sv-dark overflow-hidden flex items-center">
