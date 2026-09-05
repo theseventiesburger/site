@@ -87,6 +87,7 @@ export default function FormularioProduto({ supabase, produto, categorias, categ
         podeVirarCombo,
         precoCombo: parsePrecoInput(precoCombo || '0'),
         imagem,
+        ordem: produto?.ordem ?? 0,
       };
 
       let produtoId = produto?.id;
