@@ -117,7 +117,9 @@ export default function PainelProdutos({
                 </div>
                 <p className="text-gray-400 text-xs font-bold">
                   {produto.categorias?.nome ?? 'Sem categoria'} ·{' '}
-                  {produto.preco_promocional ? (
+                  {produto.produto_tamanhos?.length > 0 ? (
+                    `A partir de ${formatarBRL(Math.min(...produto.produto_tamanhos.map((t) => Number(t.preco))))}`
+                  ) : produto.preco_promocional ? (
                     <>
                       <span className="line-through">{formatarBRL(produto.preco)}</span>{' '}
                       <span className="text-sv-red">{formatarBRL(produto.preco_promocional)}</span>

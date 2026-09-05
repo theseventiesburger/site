@@ -54,6 +54,8 @@ export default function FormularioProduto({ supabase, produto, categorias, categ
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState(null);
 
+  const temTamanho = tamanhos.some((t) => t.nome.trim() || t.preco.trim());
+
   function selecionarImagem(e) {
     const arquivo = e.target.files?.[0];
     if (!arquivo) return;
@@ -63,22 +65,25 @@ export default function FormularioProduto({ supabase, produto, categorias, categ
 
   async function salvar(e) {
     e.preventDefault();
-    if (!nome || !preco || !categoriaId) {
-      setErro('Preencha nome, preço e categoria.');
-      return;
-    }
-
-    const precoNumero = parsePrecoInput(preco);
-    const precoPromocionalNumero = precoPromocional ? parsePrecoInput(precoPromocional) : null;
-
-    if (precoPromocionalNumero !== null && precoPromocionalNumero >= precoNumero) {
-      setErro('O preço promocional precisa ser menor que o preço normal.');
-      return;
-    }
 
     const tamanhosPreenchidos = tamanhos.filter((t) => t.nome.trim() || t.preco.trim());
     if (tamanhosPreenchidos.some((t) => !t.nome.trim() || !t.preco.trim())) {
       setErro('Preencha nome e preço de todos os tamanhos, ou remova a linha em branco.');
+      return;
+    }
+
+    // Com tamanho cadastrado, o preço principal vira só referência — pode
+    // ficar em branco (vira 0) já que quem vende de verdade é o tamanho.
+    if (!nome || !categoriaId || (!preco && tamanhosPreenchidos.length === 0)) {
+      setErro('Preencha nome, preço e categoria.');
+      return;
+    }
+
+    const precoNumero = preco ? parsePrecoInput(preco) : 0;
+    const precoPromocionalNumero = precoPromocional ? parsePrecoInput(precoPromocional) : null;
+
+    if (precoPromocionalNumero !== null && precoPromocionalNumero >= precoNumero) {
+      setErro('O preço promocional precisa ser menor que o preço normal.');
       return;
     }
 
@@ -176,14 +181,16 @@ export default function FormularioProduto({ supabase, produto, categorias, categ
 
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Preço (R$)</label>
+            <label className="text-xs font-black text-gray-400 uppercase tracking-widest">
+              Preço (R$){temTamanho ? ' (opcional)' : ''}
+            </label>
             <input
               type="text"
               inputMode="decimal"
               value={preco}
               onChange={(e) => setPreco(e.target.value)}
-              placeholder="34,90"
-              required
+              placeholder={temTamanho ? '0,00' : '34,90'}
+              required={!temTamanho}
               className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
             />
           </div>
@@ -273,8 +280,9 @@ export default function FormularioProduto({ supabase, produto, categorias, categ
           </button>
           <p className="text-gray-400 text-[11px] font-medium">
             Ex: fritas em P, M e G, cada um com seu preço. Cadastrando tamanhos aqui, o cliente
-            escolhe um deles na hora de pedir e o preço acima vira só referência — sem tamanho
-            nenhum, o produto continua vendendo pelo preço acima normalmente.
+            escolhe um deles na hora de pedir e pode deixar o preço acima em branco (vira 0, já
+            que ninguém vende por ele) — sem tamanho nenhum, o produto continua vendendo pelo
+            preço acima normalmente.
           </p>
         </div>
 
