@@ -30,36 +30,43 @@ export function CarrinhoProvider({ children }) {
     }
   }, [itens, carregado]);
 
-  function adicionar(produto) {
+  // tamanho: linha de produto_tamanhos ({ id, nome, preco }) quando o
+  // produto tem tamanho, ou null pra vender pelo preço base normal — cada
+  // tamanho vira uma linha própria no carrinho (fritas P e fritas G não se
+  // somam na mesma linha).
+  function adicionar(produto, tamanho = null) {
+    const chave = tamanho ? `${produto.id}:${tamanho.id}` : produto.id;
     setItens((atual) => {
-      const existente = atual.find((i) => i.produtoId === produto.id);
+      const existente = atual.find((i) => i.chave === chave);
       if (existente) {
-        return atual.map((i) => (i.produtoId === produto.id ? { ...i, quantidade: i.quantidade + 1 } : i));
+        return atual.map((i) => (i.chave === chave ? { ...i, quantidade: i.quantidade + 1 } : i));
       }
       return [
         ...atual,
         {
+          chave,
           produtoId: produto.id,
+          tamanhoId: tamanho?.id ?? null,
           slug: produto.slug,
-          nome: produto.nome,
+          nome: tamanho ? `${produto.nome} (${tamanho.nome})` : produto.nome,
           imagem: produto.imagem,
-          preco: Number(produto.preco_promocional || produto.preco),
+          preco: tamanho ? Number(tamanho.preco) : Number(produto.preco_promocional || produto.preco),
           quantidade: 1,
         },
       ];
     });
   }
 
-  function alterarQuantidade(produtoId, delta) {
+  function alterarQuantidade(chave, delta) {
     setItens((atual) =>
       atual
-        .map((i) => (i.produtoId === produtoId ? { ...i, quantidade: i.quantidade + delta } : i))
+        .map((i) => (i.chave === chave ? { ...i, quantidade: i.quantidade + delta } : i))
         .filter((i) => i.quantidade > 0)
     );
   }
 
-  function remover(produtoId) {
-    setItens((atual) => atual.filter((i) => i.produtoId !== produtoId));
+  function remover(chave) {
+    setItens((atual) => atual.filter((i) => i.chave !== chave));
   }
 
   function limpar() {

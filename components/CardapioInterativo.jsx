@@ -6,12 +6,12 @@ import { formatarBRL } from '@/lib/comanda/formato';
 import GoogleRatingBadge from '@/components/GoogleRatingBadge';
 import { useCarrinho } from '@/components/site/CarrinhoContext';
 
-function BotaoAdicionar({ produto }) {
+function BotaoAdicionar({ produto, tamanho }) {
   const { adicionar } = useCarrinho();
   const [adicionado, setAdicionado] = useState(false);
 
   function clicar() {
-    adicionar(produto);
+    adicionar(produto, tamanho);
     setAdicionado(true);
     setTimeout(() => setAdicionado(false), 1500);
   }
@@ -25,6 +25,32 @@ function BotaoAdicionar({ produto }) {
       }`}
     >
       {adicionado ? '✓ Adicionado' : 'Eu quero'}
+    </button>
+  );
+}
+
+function BotaoTamanho({ produto, tamanho }) {
+  const { adicionar } = useCarrinho();
+  const [adicionado, setAdicionado] = useState(false);
+
+  function clicar() {
+    adicionar(produto, tamanho);
+    setAdicionado(true);
+    setTimeout(() => setAdicionado(false), 1500);
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={clicar}
+      className={`flex flex-col items-center px-4 py-2 rounded-xl border font-black transition-all duration-200 ${
+        adicionado
+          ? 'bg-green-500 border-green-500 text-white'
+          : 'border-gray-200 text-sv-dark hover:border-sv-blue hover:scale-105'
+      }`}
+    >
+      <span className="text-xs uppercase tracking-wider">{adicionado ? '✓' : tamanho.nome}</span>
+      <span className="text-[10px] font-bold opacity-80">{formatarBRL(tamanho.preco)}</span>
     </button>
   );
 }
@@ -121,7 +147,10 @@ export default function CardapioInterativo({ produtos, categorias = [] }) {
 
         {/* ── Grid de Produtos ──────────────────────────────────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
-          {produtosFiltrados.map((produto) => (
+          {produtosFiltrados.map((produto) => {
+            const tamanhos = [...(produto.produto_tamanhos ?? [])].sort((a, b) => a.ordem - b.ordem);
+            const menorPreco = tamanhos.length > 0 ? Math.min(...tamanhos.map((t) => Number(t.preco))) : null;
+            return (
             <div
               key={produto.id}
               className="bg-white rounded-3xl overflow-hidden shadow-md border border-gray-100 flex flex-col transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 group"
@@ -160,7 +189,9 @@ export default function CardapioInterativo({ produtos, categorias = [] }) {
                 <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between">
                   <div className="flex flex-col">
                     <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Preço</span>
-                    {produto.preco_promocional ? (
+                    {tamanhos.length > 0 ? (
+                      <span className="text-2xl font-black text-sv-dark">A partir de {formatarBRL(menorPreco)}</span>
+                    ) : produto.preco_promocional ? (
                       <div className="flex items-baseline gap-2">
                         <span className="text-sm font-bold text-gray-400 line-through">{formatarBRL(produto.preco)}</span>
                         <span className="text-2xl font-black text-sv-red">{formatarBRL(produto.preco_promocional)}</span>
@@ -170,11 +201,20 @@ export default function CardapioInterativo({ produtos, categorias = [] }) {
                     )}
                   </div>
 
-                  <BotaoAdicionar produto={produto} />
+                  {tamanhos.length === 0 && <BotaoAdicionar produto={produto} />}
                 </div>
+
+                {tamanhos.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {tamanhos.map((tamanho) => (
+                      <BotaoTamanho key={tamanho.id} produto={produto} tamanho={tamanho} />
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
-          ))}
+            );
+          })}
 
           {produtosFiltrados.length === 0 && (
             <p className="col-span-full text-center text-gray-400 text-sm font-medium py-12">

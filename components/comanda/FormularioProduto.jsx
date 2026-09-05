@@ -7,11 +7,17 @@ import {
   atualizarProduto,
   enviarImagemProduto,
   definirCategoriasAdicionaisProduto,
+  definirTamanhosProduto,
 } from '@/lib/comanda/produtos';
 import { parsePrecoInput } from '@/lib/comanda/formato';
 
 function alternarId(lista, id) {
   return lista.includes(id) ? lista.filter((i) => i !== id) : [...lista, id];
+}
+
+let proximoIdTamanho = 0;
+function novoTamanho() {
+  return { chave: `novo-${proximoIdTamanho++}`, nome: '', preco: '' };
 }
 
 export default function FormularioProduto({ supabase, produto, categorias, categoriasAdicionais = [], onFechar, onSalvo }) {
@@ -38,6 +44,11 @@ export default function FormularioProduto({ supabase, produto, categorias, categ
       ? (produto.produto_categorias_adicionais ?? []).map((v) => v.categoria_adicional_id)
       : categoriasAdicionais.map((c) => c.id)
   );
+  const [tamanhos, setTamanhos] = useState(() =>
+    [...(produto?.produto_tamanhos ?? [])]
+      .sort((a, b) => a.ordem - b.ordem)
+      .map((t) => ({ chave: t.id, nome: t.nome, preco: String(t.preco).replace('.', ',') }))
+  );
   const [arquivoImagem, setArquivoImagem] = useState(null);
   const [previaImagem, setPreviaImagem] = useState(produto?.imagem ?? '/hb2.png');
   const [enviando, setEnviando] = useState(false);
@@ -62,6 +73,12 @@ export default function FormularioProduto({ supabase, produto, categorias, categ
 
     if (precoPromocionalNumero !== null && precoPromocionalNumero >= precoNumero) {
       setErro('O preço promocional precisa ser menor que o preço normal.');
+      return;
+    }
+
+    const tamanhosPreenchidos = tamanhos.filter((t) => t.nome.trim() || t.preco.trim());
+    if (tamanhosPreenchidos.some((t) => !t.nome.trim() || !t.preco.trim())) {
+      setErro('Preencha nome e preço de todos os tamanhos, ou remova a linha em branco.');
       return;
     }
 
@@ -97,6 +114,11 @@ export default function FormularioProduto({ supabase, produto, categorias, categ
         produtoId = await criarProduto(supabase, dados);
       }
       await definirCategoriasAdicionaisProduto(supabase, produtoId, categoriasAdicionaisSelecionadas);
+      await definirTamanhosProduto(
+        supabase,
+        produtoId,
+        tamanhosPreenchidos.map((t) => ({ nome: t.nome.trim(), preco: parsePrecoInput(t.preco) }))
+      );
 
       onSalvo();
     } catch (err) {
@@ -203,6 +225,57 @@ export default function FormularioProduto({ supabase, produto, categorias, categ
             placeholder="Ex: O Mais Pedido 🔥"
             className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
           />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-black text-gray-400 uppercase tracking-widest">
+            Tamanhos (opcional)
+          </label>
+          {tamanhos.map((tamanho, idx) => (
+            <div key={tamanho.chave} className="flex items-center gap-2">
+              <input
+                value={tamanho.nome}
+                onChange={(e) =>
+                  setTamanhos((atual) =>
+                    atual.map((t, i) => (i === idx ? { ...t, nome: e.target.value } : t))
+                  )
+                }
+                placeholder="Ex: P"
+                className="w-20 px-3 py-2.5 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
+              />
+              <input
+                type="text"
+                inputMode="decimal"
+                value={tamanho.preco}
+                onChange={(e) =>
+                  setTamanhos((atual) =>
+                    atual.map((t, i) => (i === idx ? { ...t, preco: e.target.value } : t))
+                  )
+                }
+                placeholder="Preço (R$)"
+                className="flex-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
+              />
+              <button
+                type="button"
+                onClick={() => setTamanhos((atual) => atual.filter((_, i) => i !== idx))}
+                className="flex-shrink-0 text-gray-400 hover:text-sv-red text-xs font-black uppercase px-1"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => setTamanhos((atual) => [...atual, novoTamanho()])}
+            className="self-start text-sv-blue hover:text-sv-red text-xs font-black uppercase tracking-wider"
+          >
+            + Adicionar tamanho
+          </button>
+          <p className="text-gray-400 text-[11px] font-medium">
+            Ex: fritas em P, M e G, cada um com seu preço. Cadastrando tamanhos aqui, o cliente
+            escolhe um deles na hora de pedir e o preço acima vira só referência — sem tamanho
+            nenhum, o produto continua vendendo pelo preço acima normalmente.
+          </p>
         </div>
 
         <label className="flex items-center gap-2 text-sm font-bold text-sv-dark">

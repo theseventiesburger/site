@@ -14,7 +14,7 @@ export default async function MesaPage({ params }) {
     supabase.from("mesas").select("*").eq("numero", mesaNumero).eq("ativa", true).maybeSingle(),
     supabase
       .from("produtos")
-      .select("*, produto_categorias_adicionais(categoria_adicional_id)")
+      .select("*, produto_categorias_adicionais(categoria_adicional_id), produto_tamanhos(id, nome, preco, ordem)")
       .eq("ativo", true)
       .order("ordem", { ascending: true }),
     supabase.from("categorias").select("*").eq("ativo", true).order("ordem", { ascending: true }),

@@ -16,7 +16,7 @@ export default async function NovoPedidoPage({ params }) {
   const [{ data: produtos }, { data: categorias }, { data: bairros }] = await Promise.all([
     supabase
       .from("produtos")
-      .select("*, produto_categorias_adicionais(categoria_adicional_id)")
+      .select("*, produto_categorias_adicionais(categoria_adicional_id), produto_tamanhos(id, nome, preco, ordem)")
       .eq("ativo", true)
       .order("ordem", { ascending: true }),
     supabase.from("categorias").select("*").eq("ativo", true).order("ordem", { ascending: true }),

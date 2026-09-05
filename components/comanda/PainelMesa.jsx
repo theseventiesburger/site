@@ -66,13 +66,14 @@ export default function PainelMesa({ mesa, comandaInicial, produtos, categorias,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase, comanda?.id, mesa.numero]);
 
-  function adicionarProduto(produto, adicionaisSelecionados = []) {
+  function adicionarProduto(produto, adicionaisSelecionados = [], tamanho = null) {
     setItens((atual) => {
       const existente =
         adicionaisSelecionados.length === 0
           ? atual.find(
               (i) =>
                 i.produtoId === produto.id &&
+                (i.tamanhoId ?? null) === (tamanho?.id ?? null) &&
                 !i.observacao &&
                 !i.pontoCarne &&
                 i.adicionaisSelecionados.length === 0
@@ -86,8 +87,9 @@ export default function PainelMesa({ mesa, comandaInicial, produtos, categorias,
         ...atual,
         {
           produtoId: produto.id,
-          nome: produto.nome,
-          precoUnitario: Number(produto.preco),
+          tamanhoId: tamanho?.id ?? null,
+          nome: tamanho ? `${produto.nome} (${tamanho.nome})` : produto.nome,
+          precoUnitario: Number(tamanho ? tamanho.preco : produto.preco),
           quantidade: 1,
           observacao: '',
           pontoCarne: '',

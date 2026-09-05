@@ -145,7 +145,7 @@ export default function CarrinhoPage() {
         pontoReferencia: tipoEntrega === 'entrega' ? pontoReferencia : null,
         observacoes,
         cupomCodigo: cupomValido?.codigo || null,
-        itens: itens.map((i) => ({ produto_id: i.produtoId, quantidade: i.quantidade })),
+        itens: itens.map((i) => ({ produto_id: i.produtoId, quantidade: i.quantidade, tamanho_id: i.tamanhoId })),
       });
       setPedidoConfirmado(resultado);
       limpar();
@@ -189,7 +189,7 @@ export default function CarrinhoPage() {
             <div className="flex flex-col gap-4">
               <div className="bg-white rounded-3xl shadow-md border border-gray-100 p-5 flex flex-col gap-4">
                 {itens.map((item) => (
-                  <div key={item.produtoId} className="flex items-center gap-4">
+                  <div key={item.chave} className="flex items-center gap-4">
                     <div className="w-16 h-16 relative rounded-xl overflow-hidden bg-[#F7F7F7] flex-shrink-0">
                       <Image src={item.imagem} alt={item.nome} fill className="object-contain" />
                     </div>
@@ -200,7 +200,7 @@ export default function CarrinhoPage() {
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <button
                         type="button"
-                        onClick={() => alterarQuantidade(item.produtoId, -1)}
+                        onClick={() => alterarQuantidade(item.chave, -1)}
                         className="w-7 h-7 rounded-full border border-gray-200 text-sv-dark font-black flex items-center justify-center hover:border-sv-blue"
                       >
                         −
@@ -208,7 +208,7 @@ export default function CarrinhoPage() {
                       <span className="w-6 text-center font-black text-sv-dark text-sm">{item.quantidade}</span>
                       <button
                         type="button"
-                        onClick={() => alterarQuantidade(item.produtoId, 1)}
+                        onClick={() => alterarQuantidade(item.chave, 1)}
                         className="w-7 h-7 rounded-full border border-gray-200 text-sv-dark font-black flex items-center justify-center hover:border-sv-blue"
                       >
                         +
@@ -219,7 +219,7 @@ export default function CarrinhoPage() {
                     </span>
                     <button
                       type="button"
-                      onClick={() => remover(item.produtoId)}
+                      onClick={() => remover(item.chave)}
                       className="text-sv-red text-xs font-black flex-shrink-0"
                     >
                       ✕

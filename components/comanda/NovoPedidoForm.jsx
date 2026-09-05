@@ -35,7 +35,7 @@ export default function NovoPedidoForm({ tipo, produtos, adicionais, categorias,
   const [erro, setErro] = useState(null);
   const [sucesso, setSucesso] = useState(null);
 
-  function adicionarProduto(produto, adicionaisSelecionados = []) {
+  function adicionarProduto(produto, adicionaisSelecionados = [], tamanho = null) {
     setSucesso(null);
     setItens((atual) => {
       const existente =
@@ -43,6 +43,7 @@ export default function NovoPedidoForm({ tipo, produtos, adicionais, categorias,
           ? atual.find(
               (i) =>
                 i.produtoId === produto.id &&
+                (i.tamanhoId ?? null) === (tamanho?.id ?? null) &&
                 !i.observacao &&
                 !i.pontoCarne &&
                 i.adicionaisSelecionados.length === 0
@@ -58,8 +59,9 @@ export default function NovoPedidoForm({ tipo, produtos, adicionais, categorias,
         ...atual,
         {
           produtoId: produto.id,
-          nome: produto.nome,
-          precoUnitario: Number(produto.preco),
+          tamanhoId: tamanho?.id ?? null,
+          nome: tamanho ? `${produto.nome} (${tamanho.nome})` : produto.nome,
+          precoUnitario: Number(tamanho ? tamanho.preco : produto.preco),
           quantidade: 1,
           observacao: '',
           pontoCarne: '',

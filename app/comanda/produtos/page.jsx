@@ -10,7 +10,9 @@ export default async function ProdutosPage() {
     await Promise.all([
       supabase
         .from("produtos")
-        .select("*, categorias(id, nome, emoji), produto_categorias_adicionais(categoria_adicional_id)")
+        .select(
+          "*, categorias(id, nome, emoji), produto_categorias_adicionais(categoria_adicional_id), produto_tamanhos(id, nome, preco, ordem)"
+        )
         .order("ordem", { ascending: true }),
       supabase.from("categorias").select("*").order("ordem", { ascending: true }),
       supabase.from("insumos").select("*").eq("ativo", true).order("nome", { ascending: true }),

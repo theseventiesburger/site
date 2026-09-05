@@ -109,6 +109,11 @@ export default function PainelProdutos({
                       Combo +{formatarBRL(produto.preco_combo)}
                     </span>
                   )}
+                  {produto.produto_tamanhos?.length > 0 && (
+                    <span className="flex-shrink-0 bg-sv-dark/10 text-sv-dark text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
+                      {produto.produto_tamanhos.length} tamanhos
+                    </span>
+                  )}
                 </div>
                 <p className="text-gray-400 text-xs font-bold">
                   {produto.categorias?.nome ?? 'Sem categoria'} ·{' '}
