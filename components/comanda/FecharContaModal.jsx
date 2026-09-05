@@ -1,22 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { FORMAS_PAGAMENTO, FORMA_PAGAMENTO_LABEL } from '@/lib/comanda/constantes';
 import { formatarBRL, parsePrecoInput } from '@/lib/comanda/formato';
 
 const TAXA_SERVICO_PERCENTUAL = 0.10;
 
-export default function FecharContaModal({ pedido, onFechar, onConfirmar }) {
-  const itens = pedido.itens_pedido ?? [];
+// Fecha a conta da mesa inteira: `comanda` traz todas as rodadas
+// (comanda.pedidos[].itens_pedido) — o total soma tudo de uma vez, não só
+// a última rodada.
+export default function FecharContaModal({ comanda, onFechar, onConfirmar }) {
+  const itens = useMemo(
+    () => (comanda.pedidos ?? []).flatMap((pedido) => pedido.itens_pedido ?? []),
+    [comanda.pedidos]
+  );
 
   const [cortesiaIds, setCortesiaIds] = useState(
     () => new Set(itens.filter((item) => item.cortesia).map((item) => item.id))
   );
-  const [taxaServicoAtiva, setTaxaServicoAtiva] = useState(Number(pedido.taxa_servico) > 0);
+  const [taxaServicoAtiva, setTaxaServicoAtiva] = useState(Number(comanda.taxa_servico) > 0);
   const [descontoInput, setDescontoInput] = useState(
-    Number(pedido.desconto) > 0 ? String(pedido.desconto).replace('.', ',') : ''
+    Number(comanda.desconto) > 0 ? String(comanda.desconto).replace('.', ',') : ''
   );
-  const [formaPagamento, setFormaPagamento] = useState(pedido.forma_pagamento ?? '');
+  const [formaPagamento, setFormaPagamento] = useState(comanda.forma_pagamento ?? '');
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState(null);
 
@@ -35,7 +41,7 @@ export default function FecharContaModal({ pedido, onFechar, onConfirmar }) {
   );
   const taxaServico = taxaServicoAtiva ? Math.round(subtotal * TAXA_SERVICO_PERCENTUAL * 100) / 100 : 0;
   const desconto = parsePrecoInput(descontoInput || '0');
-  const total = Math.max(0, subtotal + Number(pedido.taxa_entrega || 0) + taxaServico - desconto);
+  const total = Math.max(0, subtotal + taxaServico - desconto);
 
   async function confirmar(e) {
     e.preventDefault();
@@ -43,7 +49,7 @@ export default function FecharContaModal({ pedido, onFechar, onConfirmar }) {
       setErro('Selecione a forma de pagamento.');
       return;
     }
-    if (desconto > subtotal + Number(pedido.taxa_entrega || 0) + taxaServico) {
+    if (desconto > subtotal + taxaServico) {
       setErro('O desconto não pode ser maior que o valor da conta.');
       return;
     }
@@ -51,7 +57,7 @@ export default function FecharContaModal({ pedido, onFechar, onConfirmar }) {
     setEnviando(true);
     setErro(null);
     try {
-      await onConfirmar(pedido.id, {
+      await onConfirmar(comanda.id, {
         formaPagamento,
         taxaServico,
         desconto,
@@ -72,7 +78,7 @@ export default function FecharContaModal({ pedido, onFechar, onConfirmar }) {
         className="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-6 md:p-8 flex flex-col gap-4 my-auto"
       >
         <h2 className="text-xl font-black text-sv-dark uppercase tracking-tight">
-          Fechar conta — Mesa {pedido.mesa_id}
+          Fechar conta — Mesa {comanda.mesa_id}
         </h2>
 
         <ul className="flex flex-col gap-2 max-h-[220px] overflow-y-auto pr-1">

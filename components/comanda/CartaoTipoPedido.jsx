@@ -6,10 +6,10 @@ const CORES = {
   pdv: 'hover:border-sv-dark',
 };
 
-export default function CartaoTipoPedido({ tipo, titulo, descricao, emoji, contador }) {
+export default function CartaoTipoPedido({ tipo, titulo, descricao, emoji, contador, href, cta = 'Novo pedido →' }) {
   return (
     <Link
-      href={`/comanda/novo/${tipo}`}
+      href={href ?? `/comanda/novo/${tipo}`}
       className={`bg-white rounded-3xl shadow-md border border-gray-100 p-8 flex flex-col gap-4 transition-all duration-200 hover:shadow-xl hover:-translate-y-1 ${CORES[tipo] ?? ''}`}
     >
       <div className="flex items-start justify-between">
@@ -25,7 +25,7 @@ export default function CartaoTipoPedido({ tipo, titulo, descricao, emoji, conta
         <p className="text-gray-500 text-sm font-medium mt-1 leading-relaxed">{descricao}</p>
       </div>
       <span className="mt-2 text-xs font-black text-sv-blue uppercase tracking-wider">
-        Novo pedido →
+        {cta}
       </span>
     </Link>
   );

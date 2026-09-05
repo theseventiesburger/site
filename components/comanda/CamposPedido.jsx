@@ -7,7 +7,7 @@ const campoClasse =
   'w-full min-w-0 px-4 py-3 rounded-xl border border-gray-200 text-sv-dark font-medium text-sm focus:outline-none focus:border-sv-blue transition-colors duration-150';
 const labelClasse = 'text-xs font-black text-gray-400 uppercase tracking-widest';
 
-export default function CamposPedido({ tipo, campos, onChange, mesas, bairros = [] }) {
+export default function CamposPedido({ tipo, campos, onChange, bairros = [] }) {
   function set(chave, valor) {
     onChange({ ...campos, [chave]: valor });
   }
@@ -21,28 +21,6 @@ export default function CamposPedido({ tipo, campos, onChange, mesas, bairros = 
       bairroId: bairroId || null,
       taxaEntrega: bairro ? Number(bairro.valor_entrega) : campos.taxaEntrega,
     });
-  }
-
-  if (tipo === 'mesa') {
-    return (
-      <div className="flex flex-col gap-2 min-w-0">
-        <label className={labelClasse} htmlFor="mesa">Mesa</label>
-        <select
-          id="mesa"
-          className={campoClasse}
-          value={campos.mesa ?? ''}
-          onChange={(e) => set('mesa', e.target.value ? Number(e.target.value) : null)}
-          required
-        >
-          <option value="" disabled>Selecione a mesa</option>
-          {mesas.map((m) => (
-            <option key={m.numero} value={m.numero}>
-              Mesa {m.numero}{m.apelido ? ` — ${m.apelido}` : ''}
-            </option>
-          ))}
-        </select>
-      </div>
-    );
   }
 
   if (tipo === 'delivery') {

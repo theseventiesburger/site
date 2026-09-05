@@ -13,10 +13,11 @@ const ITENS_MENU = [
     label: 'Vendas',
     itens: [
       { href: '/comanda/vendas', label: 'Visão Geral' },
-      { href: '/comanda/novo/mesa', label: 'Nova Mesa' },
+      { href: '/comanda/mesas', label: 'Mesas' },
       { href: '/comanda/novo/delivery', label: 'Novo Delivery' },
       { href: '/comanda/novo/pdv', label: 'Novo PDV' },
       { href: '/comanda/abertos', label: 'Pedidos Abertos' },
+      { href: '/comanda/whatsapp', label: 'WhatsApp' },
     ],
   },
   {

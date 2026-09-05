@@ -10,7 +10,6 @@ import { criarClienteBrowser } from '@/lib/supabase/client';
 import { criarPedido } from '@/lib/comanda/pedidos';
 
 const CAMPOS_INICIAIS = {
-  mesa: { mesa: null },
   delivery: {
     clienteNome: '',
     clienteTelefone: '',
@@ -24,7 +23,7 @@ const CAMPOS_INICIAIS = {
   pdv: { clienteNome: '', formaPagamento: null },
 };
 
-export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, categorias, bairros }) {
+export default function NovoPedidoForm({ tipo, produtos, adicionais, categorias, bairros }) {
   const router = useRouter();
   const [supabase] = useState(() => criarClienteBrowser());
   const [itens, setItens] = useState([]);
@@ -107,7 +106,6 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
 
   function validar() {
     if (itens.length === 0) return 'Adicione pelo menos um item ao pedido.';
-    if (tipo === 'mesa' && !campos.mesa) return 'Selecione a mesa.';
     if (tipo === 'delivery' && (!campos.clienteNome || !campos.endereco)) {
       return 'Nome do cliente e endereço são obrigatórios no delivery.';
     }
@@ -128,7 +126,6 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
     try {
       const pedidoId = await criarPedido(supabase, {
         tipo,
-        mesa: tipo === 'mesa' ? campos.mesa : null,
         clienteId: clienteSelecionado?.id || null,
         clienteNome: campos.clienteNome || null,
         clienteTelefone: campos.clienteTelefone || null,
@@ -176,7 +173,7 @@ export default function NovoPedidoForm({ tipo, produtos, mesas, adicionais, cate
             onLimpar={() => setClienteSelecionado(null)}
             bairros={bairros}
           />
-          <CamposPedido tipo={tipo} campos={campos} onChange={setCampos} mesas={mesas} bairros={bairros} />
+          <CamposPedido tipo={tipo} campos={campos} onChange={setCampos} bairros={bairros} />
         </div>
 
         <SeletorProdutos produtos={produtos} categorias={categorias} onAdicionar={adicionarProduto} />

@@ -1,15 +1,10 @@
-import PainelAbertos from "@/components/comanda/PainelAbertos";
+import PainelMesas from "@/components/comanda/PainelMesas";
+import { listarMesasComComandas } from "@/lib/comanda/comandas";
 import { criarClienteServidor } from "@/lib/supabase/server";
 
-export default async function PedidosAbertosPage() {
+export default async function MesasPage() {
   const supabase = await criarClienteServidor();
-  const { data: pedidos } = await supabase
-    .from("pedidos")
-    .select("*, itens_pedido(*, itens_pedido_adicionais(*))")
-    .eq("status", "entregue")
-    .eq("pago", false)
-    .neq("tipo", "mesa")
-    .order("created_at", { ascending: true });
+  const mesas = await listarMesasComComandas(supabase);
 
   return (
     <section className="w-full max-w-5xl mx-auto px-6 py-10 flex-1">
@@ -18,14 +13,14 @@ export default async function PedidosAbertosPage() {
           Comanda Eletrônica
         </span>
         <h1 className="text-3xl md:text-4xl font-black text-sv-dark uppercase tracking-tighter leading-none">
-          Pedidos Abertos
+          Mesas
         </h1>
         <p className="text-gray-400 text-sm font-medium mt-2">
-          Já saíram da cozinha, mas ainda esperam a confirmação do pagamento.
+          Toque numa mesa livre pra abrir, ou numa ocupada pra ver a conta e lançar mais itens.
         </p>
       </div>
 
-      <PainelAbertos pedidosIniciais={pedidos ?? []} />
+      <PainelMesas mesasIniciais={mesas} />
     </section>
   );
 }

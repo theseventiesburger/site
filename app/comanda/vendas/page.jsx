@@ -13,7 +13,8 @@ export default async function VendasHubPage() {
     .from("pedidos")
     .select("id", { count: "exact", head: true })
     .eq("status", "entregue")
-    .eq("pago", false);
+    .eq("pago", false)
+    .neq("tipo", "mesa");
 
   const contarPorTipo = (tipo) =>
     (pedidosAbertos ?? []).filter((p) => p.tipo === tipo).length;
@@ -62,9 +63,11 @@ export default async function VendasHubPage() {
         <CartaoTipoPedido
           tipo="mesa"
           titulo="Mesa"
-          descricao="Lançar pedido para uma mesa do salão."
+          descricao="Abrir ou continuar a comanda de uma mesa do salão."
           emoji="🍽️"
           contador={contarPorTipo("mesa")}
+          href="/comanda/mesas"
+          cta="Ver mesas →"
         />
         <CartaoTipoPedido
           tipo="delivery"

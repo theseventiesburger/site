@@ -25,7 +25,7 @@ export default function PainelAbertos({ pedidosIniciais }) {
       canal = supabase
         .channel('pedidos-abertos')
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'pedidos' }, async (payload) => {
-          const entrouAberto = payload.new.status === 'entregue' && !payload.new.pago;
+          const entrouAberto = payload.new.status === 'entregue' && !payload.new.pago && payload.new.tipo !== 'mesa';
           if (entrouAberto) {
             const pedidoCompleto = await buscarPedidoPorId(supabase, payload.new.id);
             setPedidos((atual) =>

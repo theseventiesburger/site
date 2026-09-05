@@ -8,7 +8,6 @@ import {
   atualizarPagamentoPedido,
   atualizarStatusPedido,
   buscarPedidoPorId,
-  fecharContaPedido,
 } from '@/lib/comanda/pedidos';
 import { tocarAvisoTempo } from '@/lib/comanda/som';
 import { minutosDecorridos } from '@/lib/comanda/formato';
@@ -103,13 +102,7 @@ export default function PainelCozinha({ pedidosIniciais }) {
   }, [supabase]);
 
   async function avancarStatus(pedidoId, novoStatus) {
-    // Mesa não fecha (não sai da cozinha) sem ter registrado o pagamento —
-    // sem isso o valor da conta se perde de vista.
     const pedido = pedidosRef.current.find((p) => p.id === pedidoId);
-    if (pedido?.tipo === 'mesa' && novoStatus === 'entregue' && !(pedido.pago && pedido.forma_pagamento)) {
-      return;
-    }
-
     const statusAnterior = pedido?.status;
     setPedidos((atual) => atual.map((p) => (p.id === pedidoId ? { ...p, status: novoStatus } : p)));
     try {
@@ -146,47 +139,6 @@ export default function PainelCozinha({ pedidosIniciais }) {
       console.error(err);
       setPedidos((atual) => atual.map((p) => (p.id === pedidoId ? { ...p, pago: pagoAnterior } : p)));
       avisarErro('Não foi possível atualizar o pagamento. Tente de novo.');
-    }
-  }
-
-  async function fecharConta(pedidoId, { formaPagamento, taxaServico, desconto, itensCortesiaIds }) {
-    const pedido = pedidosRef.current.find((p) => p.id === pedidoId);
-    if (!pedido) return;
-
-    const anterior = {
-      pago: pedido.pago,
-      forma_pagamento: pedido.forma_pagamento,
-      taxa_servico: pedido.taxa_servico,
-      desconto: pedido.desconto,
-      total: pedido.total,
-      itens_pedido: pedido.itens_pedido,
-    };
-
-    const cortesiaSet = new Set(itensCortesiaIds);
-    const itensAtualizados = (pedido.itens_pedido ?? []).map((item) => ({
-      ...item,
-      cortesia: cortesiaSet.has(item.id),
-    }));
-    const subtotal = itensAtualizados.reduce(
-      (soma, item) => soma + (item.cortesia ? 0 : Number(item.subtotal)),
-      0
-    );
-    const novoTotal = Math.max(0, subtotal + Number(pedido.taxa_entrega || 0) + taxaServico - desconto);
-
-    setPedidos((atual) =>
-      atual.map((p) =>
-        p.id === pedidoId
-          ? { ...p, pago: true, forma_pagamento: formaPagamento, taxa_servico: taxaServico, desconto, itens_pedido: itensAtualizados, total: novoTotal }
-          : p
-      )
-    );
-
-    try {
-      await fecharContaPedido(supabase, pedidoId, { formaPagamento, taxaServico, desconto, itensCortesiaIds });
-    } catch (err) {
-      console.error(err);
-      setPedidos((atual) => atual.map((p) => (p.id === pedidoId ? { ...p, ...anterior } : p)));
-      throw err;
     }
   }
 
@@ -227,7 +179,6 @@ export default function PainelCozinha({ pedidosIniciais }) {
                     onAvancar={avancarStatus}
                     onCancelar={cancelarPedido}
                     onTogglePago={togglePago}
-                    onFecharConta={fecharConta}
                   />
                 ))}
               </div>

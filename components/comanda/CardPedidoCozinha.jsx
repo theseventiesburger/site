@@ -1,22 +1,15 @@
-import { useState } from 'react';
 import BadgeStatus from '@/components/comanda/BadgeStatus';
 import BadgeTipo from '@/components/comanda/BadgeTipo';
-import FecharContaModal from '@/components/comanda/FecharContaModal';
-import { PROXIMO_STATUS, STATUS_LABEL, PONTO_CARNE_LABEL, FORMA_PAGAMENTO_LABEL } from '@/lib/comanda/constantes';
+import { PROXIMO_STATUS, STATUS_LABEL, PONTO_CARNE_LABEL } from '@/lib/comanda/constantes';
 import { formatarBRL, formatarHora, tempoDecorrido, minutosDecorridos } from '@/lib/comanda/formato';
 
-export default function CardPedidoCozinha({ pedido, onAvancar, onCancelar, onTogglePago, onFecharConta }) {
-  const [contaAberta, setContaAberta] = useState(false);
+export default function CardPedidoCozinha({ pedido, onAvancar, onCancelar, onTogglePago }) {
   const proximoStatus = PROXIMO_STATUS[pedido.status];
   const itens = pedido.itens_pedido ?? [];
   // Na mesa, o garçom reconhece o pedido pelo número da mesa mais rápido
   // que pelo número do pedido — então é a mesa que fica em destaque.
   const destaque = pedido.tipo === 'mesa' ? `Mesa ${pedido.mesa_id}` : `#${pedido.numero}`;
   const minutosPassados = minutosDecorridos(pedido.created_at);
-  // Mesa só define forma de pagamento na hora de fechar a conta — sem isso
-  // registrado, não deixa avançar pro status final.
-  const faltaPagamento = pedido.tipo === 'mesa' && !(pedido.pago && pedido.forma_pagamento);
-  const bloqueadoPorPagamento = faltaPagamento && proximoStatus === 'entregue';
 
   return (
     <div
@@ -89,30 +82,7 @@ export default function CardPedidoCozinha({ pedido, onAvancar, onCancelar, onTog
       <div className="flex items-center justify-between border-t border-gray-100 pt-3 gap-2">
         <span className="font-black text-sv-dark">{formatarBRL(pedido.total)}</span>
 
-        {pedido.tipo === 'mesa' ? (
-          pedido.pago && pedido.forma_pagamento ? (
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider bg-green-100 text-green-700">
-                Pago · {FORMA_PAGAMENTO_LABEL[pedido.forma_pagamento] ?? pedido.forma_pagamento}
-              </span>
-              <button
-                type="button"
-                onClick={() => setContaAberta(true)}
-                className="text-[10px] font-black uppercase text-gray-400 hover:text-sv-red transition-colors duration-150"
-              >
-                Editar
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setContaAberta(true)}
-              className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-full border border-amber-300 bg-amber-50 text-amber-700"
-            >
-              Fechar conta
-            </button>
-          )
-        ) : (
+        {pedido.tipo !== 'mesa' && (
           <button
             type="button"
             onClick={() => onTogglePago(pedido.id, !pedido.pago)}
@@ -129,16 +99,10 @@ export default function CardPedidoCozinha({ pedido, onAvancar, onCancelar, onTog
         {proximoStatus && (
           <button
             type="button"
-            onClick={() => !bloqueadoPorPagamento && onAvancar(pedido.id, proximoStatus)}
-            disabled={bloqueadoPorPagamento}
-            title={bloqueadoPorPagamento ? 'Registre a forma de pagamento antes de finalizar a mesa' : undefined}
-            className={`flex-1 font-black py-3 rounded-xl uppercase tracking-wider text-xs transition-all duration-150 ${
-              bloqueadoPorPagamento
-                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                : 'bg-sv-dark text-white hover:bg-sv-blue'
-            }`}
+            onClick={() => onAvancar(pedido.id, proximoStatus)}
+            className="flex-1 font-black py-3 rounded-xl uppercase tracking-wider text-xs transition-all duration-150 bg-sv-dark text-white hover:bg-sv-blue"
           >
-            {bloqueadoPorPagamento ? 'Falta o pagamento' : STATUS_LABEL[proximoStatus]}
+            {STATUS_LABEL[proximoStatus]}
           </button>
         )}
         {pedido.status !== 'cancelado' && pedido.status !== 'entregue' && (
@@ -151,17 +115,6 @@ export default function CardPedidoCozinha({ pedido, onAvancar, onCancelar, onTog
           </button>
         )}
       </div>
-
-      {contaAberta && (
-        <FecharContaModal
-          pedido={pedido}
-          onFechar={() => setContaAberta(false)}
-          onConfirmar={async (pedidoId, payload) => {
-            await onFecharConta(pedidoId, payload);
-            setContaAberta(false);
-          }}
-        />
-      )}
     </div>
   );
 }
