@@ -70,7 +70,7 @@ export default function CardapioInterativo({ produtos, categorias = [] }) {
       : produtos.filter((p) => p.categoria_id === categoriaAtiva);
 
   return (
-    <section className="w-full bg-[#F7F7F7] min-h-screen">
+    <section className="w-full bg-[#F7F7F7] min-h-screen pt-20">
 
       {/* ── Hero Banner ─────────────────────────────────────────────────────── */}
       <div className="relative w-full h-[320px] md:h-[420px] bg-sv-dark overflow-hidden">
