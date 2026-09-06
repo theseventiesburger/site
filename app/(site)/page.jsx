@@ -1,44 +1,25 @@
 import HeroSlider from '@/components/HeroSlider';
+import CardCampeao from '@/components/CardCampeao';
 import GoogleRatingBadge from '@/components/GoogleRatingBadge';
 import Image from 'next/image';
-import Link from 'next/link';
 import { criarClienteServidor } from '@/lib/supabase/server';
 
 export default async function HomePage() {
   const supabase = await criarClienteServidor();
-  const { data: produtosPromocao } = await supabase
-    .from('produtos')
-    .select('*')
-    .eq('ativo', true)
-    .not('preco_promocional', 'is', null)
-    .order('ordem', { ascending: true });
+  const [{ data: produtosPromocao }, { data: maisVendidos }] = await Promise.all([
+    supabase
+      .from('produtos')
+      .select('*')
+      .eq('ativo', true)
+      .not('preco_promocional', 'is', null)
+      .order('ordem', { ascending: true }),
+    supabase.rpc('produtos_mais_vendidos', { p_limite: 3 }),
+  ]);
 
-  const campeoes = [
-    {
-      id: "new-castle",
-      nome: "New Castle",
-      tag: "O Mais Pedido 🔥",
-      imagem: "/hb2.png",
-      descricao: "Hambúrguer de 160g grelhado na brasa, ovo frito perfeito, bacon super crocante, queijo muçarela derretido e a nossa exclusiva maionese da casa, servidos num pão de gergelim incrivelmente macio.",
-      preco: "R$ 34,90"
-    },
-    {
-      id: "metro-black",
-      nome: "Metro Black",
-      tag: "Clássico Perfeito 👑",
-      imagem: "/hb2.png",
-      descricao: "Hambúrguer de 160g suculento, alface americana fresca, tomate selecionado, queijo muçarela derretido e maionese artesanal da casa, tudo isso num pão de gergelim super macio.",
-      preco: "R$ 31,90"
-    },
-    {
-      id: "gorgon",
-      nome: "Gorgon",
-      tag: "Premium Especial 🌟",
-      imagem: "/hb2.png",
-      descricao: "Hambúrguer de 160g, a intensidade marcante do queijo gorgonzola, rúcula fresca colhida no dia, um fio de mel silvestre, muita cebola crispy crocante e maionese da casa num pão de gergelim macio.",
-      preco: "R$ 38,90"
-    }
-  ];
+  // "Campeões de Vendas" e os slides de destaque do banner vêm dos produtos
+  // realmente mais vendidos (RPC produtos_mais_vendidos, soma itens_pedido
+  // de pedidos não cancelados) — nada de lista fixa desatualizada.
+  const campeoes = maisVendidos ?? [];
 
   const depoimentos = [
     {
@@ -70,7 +51,7 @@ export default async function HomePage() {
 
   return (
     <section className="w-full bg-[#F7F7F7]">
-      <HeroSlider produtosPromocao={produtosPromocao ?? []} />
+      <HeroSlider produtosPromocao={produtosPromocao ?? []} produtosDestaque={campeoes.slice(0, 2)} />
 
       <div className="w-full flex justify-center -mt-7 relative z-10">
         <GoogleRatingBadge />
@@ -85,55 +66,18 @@ export default async function HomePage() {
           <div className="w-24 h-1.5 bg-sv-red rounded-full" />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mb-16">
-          {campeoes.map((burger) => (
-            <div
-              key={burger.id}
-              className="bg-white rounded-3xl p-6 shadow-md border border-gray-100 flex flex-col justify-between transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 group relative text-left min-h-[500px]"
-            >
-              <div className="relative w-full flex flex-col items-center">
-                <span className="absolute top-0 right-0 bg-sv-dark text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider z-10">
-                  {burger.tag}
-                </span>
-
-                <div className="w-full h-48 relative mt-6 transform transition-transform duration-500 group-hover:scale-110">
-                  <Image
-                    src={burger.imagem}
-                    alt={burger.nome}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                    className="object-contain drop-shadow-[0_15px_15px_rgba(0,0,0,0.15)]"
-                    priority
-                  />
-                </div>
-              </div>
-
-              <div className="mt-6 flex flex-col flex-grow">
-                <h4 className="text-2xl font-black text-sv-dark tracking-tight uppercase group-hover:text-sv-blue transition-colors duration-200">
-                  {burger.nome}
-                </h4>
-                <p className="text-gray-500 font-medium text-sm mt-3 leading-relaxed flex-grow">
-                  {burger.descricao}
-                </p>
-              </div>
-
-              <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Preço</span>
-                  <span className="text-2xl font-black text-sv-dark">{burger.preco}</span>
-                </div>
-
-                <Link
-                  href={`/pedido/${burger.id}`}
-                  className="bg-sv-blue text-white font-black px-6 py-3 rounded-xl shadow-md transition-all duration-200 hover:bg-sv-red hover:scale-105 tracking-wide uppercase text-xs text-center"
-                >
-                  Eu quero
-                </Link>
-              </div>
-
-            </div>
-          ))}
-        </div>
+        {campeoes.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mb-16">
+            {campeoes.map((item, indice) => (
+              <CardCampeao key={item.produto_id} item={item} indice={indice} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-gray-400 text-sm font-medium mb-16">
+            Ainda sem vendas registradas pra calcular os campeões — assim que os primeiros pedidos
+            entrarem, essa seção se preenche sozinha.
+          </p>
+        )}
 
         <div className="flex flex-col items-center justify-center text-center mb-16 space-y-4">
           <h3 className="text-4xl md:text-5xl font-black text-sv-dark tracking-tighter uppercase">

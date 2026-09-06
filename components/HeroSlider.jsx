@@ -27,9 +27,11 @@ const BANNERS_FIXOS = [
   }
 ];
 
-export default function HeroSlider({ produtosPromocao = [] }) {
+const ROTULOS_DESTAQUE = ['Mais Pedido 🔥', 'Favorito da Casa 👑'];
+
+export default function HeroSlider({ produtosPromocao = [], produtosDestaque = [] }) {
   // Promoções entram primeiro — é a oferta que mais vale a pena mostrar
-  // assim que a página carrega, antes dos banners institucionais fixos.
+  // assim que a página carrega, antes dos produtos mais vendidos.
   const slidesPromocao = produtosPromocao.map((produto) => ({
     id: `promo-${produto.id}`,
     tipo: 'promo',
@@ -37,7 +39,24 @@ export default function HeroSlider({ produtosPromocao = [] }) {
     estiloFundo: "bg-[#990B0B] bg-gradient-to-r from-[#730808] via-transparent to-[#730808]",
   }));
 
-  const slides = [...slidesPromocao, ...BANNERS_FIXOS];
+  // Produtos reais mais vendidos (ver RPC produtos_mais_vendidos) — substitui
+  // os banners institucionais genéricos por conteúdo de verdade do cardápio.
+  // Não usa produto.tag: na prática esse campo guarda "Número X" (numeração
+  // do lanche no cardápio), não uma frase de destaque de vendas.
+  const slidesDestaque = produtosDestaque.map((produto, idx) => ({
+    id: `destaque-${produto.produto_id}`,
+    tipo: 'destaque',
+    produto,
+    rotulo: ROTULOS_DESTAQUE[idx] || 'Destaque do Cardápio ⭐',
+    estiloFundo: "bg-[#161616] bg-gradient-to-r from-[#121212] via-transparent to-[#121212]",
+  }));
+
+  // Sem nenhum dado real ainda (restaurante novo, zero venda registrada) —
+  // cai pros banners institucionais fixos em vez de mostrar slider vazio.
+  const slides =
+    slidesPromocao.length + slidesDestaque.length > 0
+      ? [...slidesPromocao, ...slidesDestaque]
+      : BANNERS_FIXOS;
 
   return (
     <div className="w-full h-[550px] md:h-[650px] lg:h-[750px] overflow-hidden relative">
@@ -82,7 +101,45 @@ export default function HeroSlider({ produtosPromocao = [] }) {
                       </div>
                       <div className="pt-4">
                         <Link
-                          href={`/pedido/${slide.produto.slug}`}
+                          href="/cardapio"
+                          className="inline-block bg-[#0026E6] text-white font-black text-xl px-12 py-5 rounded-full shadow-2xl hover:bg-white hover:text-[#0026E6] hover:scale-105 transition-all duration-300 tracking-widest uppercase"
+                        >
+                          Peça Agora
+                        </Link>
+                      </div>
+                    </div>
+
+                    <div className="w-full h-[260px] md:h-full flex items-center justify-center order-1 md:order-2 relative py-4 md:py-12">
+                      <div className="w-full h-full relative transform scale-110 md:scale-125 lg:scale-135 transition-transform duration-700 hover:rotate-2">
+                        <Image
+                          src={slide.produto.imagem}
+                          alt={slide.produto.nome}
+                          fill
+                          priority={idx === 0}
+                          sizes="(max-width: 768px) 100vw, 50vw"
+                          className="object-contain drop-shadow-[0_35px_40px_rgba(0,0,0,0.85)]"
+                        />
+                      </div>
+                    </div>
+                  </>
+                ) : slide.tipo === 'destaque' ? (
+                  <>
+                    <div className="flex flex-col justify-center space-y-6 text-center md:text-left order-2 md:order-1 lg:pr-10">
+                      <span className="self-center md:self-start bg-white text-sv-dark font-black text-xs px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg">
+                        {slide.rotulo}
+                      </span>
+                      <h2 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter leading-[0.9] uppercase drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">
+                        {slide.produto.nome}
+                      </h2>
+                      <p className="text-lg md:text-2xl font-medium text-gray-200 tracking-wide max-w-md mx-auto md:mx-0 line-clamp-3">
+                        {slide.produto.descricao}
+                      </p>
+                      <span className="text-3xl md:text-5xl font-black text-white">
+                        {formatarBRL(slide.produto.preco)}
+                      </span>
+                      <div className="pt-4">
+                        <Link
+                          href="/cardapio"
                           className="inline-block bg-[#0026E6] text-white font-black text-xl px-12 py-5 rounded-full shadow-2xl hover:bg-white hover:text-[#0026E6] hover:scale-105 transition-all duration-300 tracking-widest uppercase"
                         >
                           Peça Agora
