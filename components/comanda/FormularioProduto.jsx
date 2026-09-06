@@ -36,6 +36,12 @@ export default function FormularioProduto({ supabase, produto, categorias, categ
   const [precoCombo, setPrecoCombo] = useState(
     Number(produto?.preco_combo) > 0 ? String(produto.preco_combo).replace('.', ',') : ''
   );
+  const [permiteSegundoHamburguer, setPermiteSegundoHamburguer] = useState(
+    produto?.permite_segundo_hamburguer ?? false
+  );
+  const [precoSegundoHamburguer, setPrecoSegundoHamburguer] = useState(
+    Number(produto?.preco_segundo_hamburguer) > 0 ? String(produto.preco_segundo_hamburguer).replace('.', ',') : ''
+  );
   // Produto novo já nasce com todas as categorias de adicionais liberadas
   // (mesmo comportamento de sempre) — só existente é que já tem vínculos
   // próprios pra respeitar.
@@ -108,6 +114,8 @@ export default function FormularioProduto({ supabase, produto, categorias, categ
         temPontoCarne,
         podeVirarCombo,
         precoCombo: parsePrecoInput(precoCombo || '0'),
+        permiteSegundoHamburguer,
+        precoSegundoHamburguer: parsePrecoInput(precoSegundoHamburguer || '0'),
         imagem,
         ordem: produto?.ordem ?? 0,
       };
@@ -341,6 +349,35 @@ export default function FormularioProduto({ supabase, produto, categorias, categ
               value={precoCombo}
               onChange={(e) => setPrecoCombo(e.target.value)}
               placeholder="21,00"
+              className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
+            />
+          </div>
+        )}
+
+        <label className="flex items-center gap-2 text-sm font-bold text-sv-dark">
+          <input
+            type="checkbox"
+            checked={permiteSegundoHamburguer}
+            onChange={(e) => setPermiteSegundoHamburguer(e.target.checked)}
+          />
+          Aceita segundo hambúrguer
+        </label>
+        <p className="text-gray-400 text-[11px] font-medium -mt-3">
+          Marcado, o carrinho oferece acrescentar mais um hambúrguer simples dentro do mesmo lanche
+          pelo preço abaixo, em vez do preço cheio do produto.
+        </p>
+
+        {permiteSegundoHamburguer && (
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-black text-gray-400 uppercase tracking-widest">
+              Preço do segundo hambúrguer (R$)
+            </label>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={precoSegundoHamburguer}
+              onChange={(e) => setPrecoSegundoHamburguer(e.target.value)}
+              placeholder="18,00"
               className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
             />
           </div>

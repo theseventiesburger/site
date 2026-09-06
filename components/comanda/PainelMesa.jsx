@@ -101,6 +101,9 @@ export default function PainelMesa({ mesa, comandaInicial, produtos, categorias,
           podeVirarCombo: produto.pode_virar_combo ?? false,
           precoCombo: Number(produto.preco_combo) || 0,
           comboAtivo: false,
+          permiteSegundoHamburguer: produto.permite_segundo_hamburguer ?? false,
+          precoSegundoHamburguer: Number(produto.preco_segundo_hamburguer) || 0,
+          segundoHamburguerAtivo: false,
         },
       ];
     });
@@ -124,6 +127,10 @@ export default function PainelMesa({ mesa, comandaInicial, produtos, categorias,
 
   function atualizarCombo(idx, comboAtivo) {
     setItens((atual) => atual.map((item, i) => (i === idx ? { ...item, comboAtivo } : item)));
+  }
+
+  function atualizarSegundoHamburguer(idx, segundoHamburguerAtivo) {
+    setItens((atual) => atual.map((item, i) => (i === idx ? { ...item, segundoHamburguerAtivo } : item)));
   }
 
   function removerItem(idx) {
@@ -270,6 +277,7 @@ export default function PainelMesa({ mesa, comandaInicial, produtos, categorias,
             onPontoCarne={atualizarPontoCarne}
             onAdicionais={atualizarAdicionaisItem}
             onCombo={atualizarCombo}
+            onSegundoHamburguer={atualizarSegundoHamburguer}
             onRemover={removerItem}
           />
 

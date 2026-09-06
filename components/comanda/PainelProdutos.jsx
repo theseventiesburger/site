@@ -42,6 +42,11 @@ function CardProduto({ produto, onEditar, onToggleAtivo, onReceita }) {
                 Combo +{formatarBRL(produto.preco_combo)}
               </span>
             )}
+            {produto.permite_segundo_hamburguer && (
+              <span className="flex-shrink-0 bg-amber-100 text-amber-700 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
+                2º hambúrguer +{formatarBRL(produto.preco_segundo_hamburguer)}
+              </span>
+            )}
             {produto.produto_tamanhos?.length > 0 && (
               <span className="flex-shrink-0 bg-sv-dark/10 text-sv-dark text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
                 {produto.produto_tamanhos.length} tamanhos

@@ -38,7 +38,8 @@ function precoComAdicionais(item, tipoPedido) {
     0
   );
   const precoCombo = item.comboAtivo ? Number(item.precoCombo) || 0 : 0;
-  return Number(item.precoUnitario) + somaAdicionais + precoCombo;
+  const precoSegundoHamburguer = item.segundoHamburguerAtivo ? Number(item.precoSegundoHamburguer) || 0 : 0;
+  return Number(item.precoUnitario) + somaAdicionais + precoCombo + precoSegundoHamburguer;
 }
 
 // Nem todo produto recebe todo adicional (cerveja não recebe queijo, por
@@ -81,6 +82,7 @@ export default function CarrinhoComanda({
   onPontoCarne,
   onAdicionais,
   onCombo,
+  onSegundoHamburguer,
   onRemover,
   onCupomAplicado,
 }) {
@@ -274,6 +276,17 @@ export default function CarrinhoComanda({
                       onChange={(e) => onCombo(idx, e.target.checked)}
                     />
                     Virar combo (+{formatarBRL(item.precoCombo)}) — inclui fritas e bebida
+                  </label>
+                )}
+
+                {item.permiteSegundoHamburguer && (
+                  <label className="flex items-center gap-2 text-xs font-bold text-sv-dark bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    <input
+                      type="checkbox"
+                      checked={item.segundoHamburguerAtivo ?? false}
+                      onChange={(e) => onSegundoHamburguer(idx, e.target.checked)}
+                    />
+                    Segundo hambúrguer (+{formatarBRL(item.precoSegundoHamburguer)})
                   </label>
                 )}
 
