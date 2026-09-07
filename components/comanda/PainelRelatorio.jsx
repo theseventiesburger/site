@@ -1,6 +1,18 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  PieChart,
+  Pie,
+  Cell,
+} from 'recharts';
 import { criarClienteBrowser } from '@/lib/supabase/client';
 import { listarPedidosPeriodo } from '@/lib/comanda/relatorio';
 import {
@@ -9,40 +21,87 @@ import {
   formatarDataDigitada,
   dataDigitadaParaISO,
   isoParaDataDigitada,
-  dataHojeSP,
-  dataAtrasSP,
+  diaComercialAtual,
+  diaComercialAtras,
+  diaComercialDe,
+  limitesDiaComercial,
+  somarDiasISO,
+  horaDoDia,
 } from '@/lib/comanda/formato';
 import { TIPO_LABEL, STATUS_LABEL, STATUS_COR, FORMA_PAGAMENTO_LABEL } from '@/lib/comanda/constantes';
 
+const CHAVE_HORA_VIRADA = 'sv-relatorio-hora-virada';
+const CORES_GRAFICO = ['#0026E6', '#E51212', '#F5A623', '#22C55E', '#6366F1', '#EC4899', '#06B6D4', '#1A1A1A'];
+
 const FILTROS_RAPIDOS = [
-  { label: 'Hoje', calcular: () => ({ inicio: dataHojeSP(), fim: dataHojeSP() }) },
-  { label: 'Ontem', calcular: () => ({ inicio: dataAtrasSP(1), fim: dataAtrasSP(1) }) },
-  { label: '7 dias', calcular: () => ({ inicio: dataAtrasSP(6), fim: dataHojeSP() }) },
-  { label: '30 dias', calcular: () => ({ inicio: dataAtrasSP(29), fim: dataHojeSP() }) },
+  { chave: 'hoje', label: 'Hoje', calcular: (h) => ({ inicio: diaComercialAtual(h), fim: diaComercialAtual(h) }) },
+  { chave: 'ontem', label: 'Ontem', calcular: (h) => ({ inicio: diaComercialAtras(1, h), fim: diaComercialAtras(1, h) }) },
+  { chave: '7dias', label: '7 dias', calcular: (h) => ({ inicio: diaComercialAtras(6, h), fim: diaComercialAtual(h) }) },
+  { chave: '30dias', label: '30 dias', calcular: (h) => ({ inicio: diaComercialAtras(29, h), fim: diaComercialAtual(h) }) },
 ];
+
+// dd/mm a partir de "YYYY-MM-DD" — sem passar por Date/timezone, é só
+// recorte de string (mesmo motivo do somarDiasISO: evita o problema de
+// data pura formatada em fuso voltar um dia).
+function diaMesCurto(dataISO) {
+  return `${dataISO.slice(8, 10)}/${dataISO.slice(5, 7)}`;
+}
 
 export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
   const [supabase] = useState(() => criarClienteBrowser());
   const [pedidos, setPedidos] = useState(pedidosIniciais);
+  const [periodoAtivo, setPeriodoAtivo] = useState('hoje');
+  const [dataInicioNegocio, setDataInicioNegocio] = useState(dataInicial);
+  const [dataFimNegocio, setDataFimNegocio] = useState(dataInicial);
   const [textoInicio, setTextoInicio] = useState(isoParaDataDigitada(dataInicial));
   const [textoFim, setTextoFim] = useState(isoParaDataDigitada(dataInicial));
+  const [horaVirada, setHoraVirada] = useState(0);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState(null);
 
-  async function buscar(inicio, fim) {
+  async function buscar(inicioNegocio, fimNegocio, hv) {
     setCarregando(true);
     setErro(null);
     try {
-      const dados = await listarPedidosPeriodo(supabase, { inicio, fim });
+      const { inicio } = limitesDiaComercial(inicioNegocio, hv);
+      const { fim } = limitesDiaComercial(fimNegocio, hv);
+      const dados = await listarPedidosPeriodo(supabase, { desde: inicio, ate: fim });
       setPedidos(dados);
-      setTextoInicio(isoParaDataDigitada(inicio));
-      setTextoFim(isoParaDataDigitada(fim));
+      setDataInicioNegocio(inicioNegocio);
+      setDataFimNegocio(fimNegocio);
+      setTextoInicio(isoParaDataDigitada(inicioNegocio));
+      setTextoFim(isoParaDataDigitada(fimNegocio));
     } catch (err) {
       console.error(err);
       setErro('Não foi possível carregar o relatório. Tente novamente.');
     } finally {
       setCarregando(false);
     }
+  }
+
+  // A preferência de "virada do dia" mora no navegador (localStorage), não
+  // no banco — só existe depois de montar, então a carga inicial do
+  // servidor sempre assume virada à meia-noite e corrige aqui se precisar.
+  useEffect(() => {
+    let salvo = null;
+    try {
+      salvo = localStorage.getItem(CHAVE_HORA_VIRADA);
+    } catch {
+      // localStorage indisponível — só não persiste a preferência.
+    }
+    const valor = Number(salvo);
+    if (salvo !== null && Number.isInteger(valor) && valor >= 0 && valor <= 23 && valor !== 0) {
+      setHoraVirada(valor);
+      const { inicio, fim } = FILTROS_RAPIDOS[0].calcular(valor);
+      buscar(inicio, fim, valor);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function selecionarFiltroRapido(filtro) {
+    setPeriodoAtivo(filtro.chave);
+    const { inicio, fim } = filtro.calcular(horaVirada);
+    buscar(inicio, fim, horaVirada);
   }
 
   function aplicarPeriodoManual() {
@@ -56,11 +115,29 @@ export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
       setErro('A data inicial não pode ser depois da data final.');
       return;
     }
-    if (fim > dataHojeSP()) {
+    if (fim > diaComercialAtual(horaVirada)) {
       setErro('A data final não pode ser no futuro.');
       return;
     }
-    buscar(inicio, fim);
+    setPeriodoAtivo('manual');
+    buscar(inicio, fim, horaVirada);
+  }
+
+  function mudarHoraVirada(e) {
+    const novaHora = Number(e.target.value);
+    setHoraVirada(novaHora);
+    try {
+      localStorage.setItem(CHAVE_HORA_VIRADA, String(novaHora));
+    } catch {
+      // idem
+    }
+    if (periodoAtivo === 'manual') {
+      buscar(dataInicioNegocio, dataFimNegocio, novaHora);
+      return;
+    }
+    const filtro = FILTROS_RAPIDOS.find((f) => f.chave === periodoAtivo) ?? FILTROS_RAPIDOS[0];
+    const { inicio, fim } = filtro.calcular(novaHora);
+    buscar(inicio, fim, novaHora);
   }
 
   const resumo = useMemo(() => {
@@ -96,8 +173,37 @@ export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
       .sort((a, b) => b.total - a.total)
       .slice(0, 10);
 
-    return { validos, cancelados, totalVendido, ticketMedio, porTipo, porPagamento, rankingProdutos };
-  }, [pedidos]);
+    // Período de um dia comercial só → tendência por hora (mostra o
+    // movimento real, mesmo que a virada faça a madrugada aparecer depois
+    // da noite anterior). Mais de um dia → tendência por dia comercial.
+    const umDiaSo = dataInicioNegocio === dataFimNegocio;
+    let serieTemporal;
+    if (umDiaSo) {
+      const porHora = Array.from({ length: 24 }, (_, h) => ({ chave: h, rotulo: `${String(h).padStart(2, '0')}h`, total: 0 }));
+      for (const pedido of validos) {
+        porHora[horaDoDia(pedido.created_at)].total += Number(pedido.total);
+      }
+      serieTemporal = { titulo: 'Vendas por hora', pontos: porHora };
+    } else {
+      const porDia = new Map();
+      for (const pedido of validos) {
+        const dia = diaComercialDe(pedido.created_at, horaVirada);
+        porDia.set(dia, (porDia.get(dia) ?? 0) + Number(pedido.total));
+      }
+      const pontos = [];
+      let cursor = dataInicioNegocio;
+      while (cursor <= dataFimNegocio) {
+        pontos.push({ chave: cursor, rotulo: diaMesCurto(cursor), total: porDia.get(cursor) ?? 0 });
+        cursor = somarDiasISO(cursor, 1);
+      }
+      serieTemporal = { titulo: 'Vendas por dia', pontos };
+    }
+
+    return { validos, cancelados, totalVendido, ticketMedio, porTipo, porPagamento, rankingProdutos, serieTemporal };
+  }, [pedidos, dataInicioNegocio, dataFimNegocio, horaVirada]);
+
+  const semVendas = resumo.serieTemporal.pontos.every((p) => p.total === 0);
+  const intervaloEixo = resumo.serieTemporal.pontos.length > 12 ? Math.ceil(resumo.serieTemporal.pontos.length / 12) : 0;
 
   return (
     <div className="flex flex-col gap-6">
@@ -105,13 +211,14 @@ export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
         <div className="flex gap-2 flex-wrap">
           {FILTROS_RAPIDOS.map((filtro) => (
             <button
-              key={filtro.label}
+              key={filtro.chave}
               type="button"
-              onClick={() => {
-                const { inicio, fim } = filtro.calcular();
-                buscar(inicio, fim);
-              }}
-              className="px-4 py-2.5 rounded-xl border border-gray-200 text-xs font-black uppercase tracking-wider text-sv-dark hover:border-sv-blue hover:text-sv-blue transition-colors duration-150"
+              onClick={() => selecionarFiltroRapido(filtro)}
+              className={`px-4 py-2.5 rounded-xl border text-xs font-black uppercase tracking-wider transition-colors duration-150 ${
+                periodoAtivo === filtro.chave
+                  ? 'bg-sv-dark border-sv-dark text-white'
+                  : 'border-gray-200 text-sv-dark hover:border-sv-blue hover:text-sv-blue'
+              }`}
             >
               {filtro.label}
             </button>
@@ -152,7 +259,27 @@ export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
             {carregando ? 'Buscando...' : 'Filtrar'}
           </button>
         </div>
+
+        <div className="flex flex-col gap-1.5 ml-auto">
+          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Virada do dia às</label>
+          <select
+            value={horaVirada}
+            onChange={mudarHoraVirada}
+            className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm font-bold focus:outline-none focus:border-sv-blue"
+          >
+            {Array.from({ length: 24 }, (_, h) => (
+              <option key={h} value={h}>{String(h).padStart(2, '0')}:00</option>
+            ))}
+          </select>
+        </div>
       </div>
+
+      {horaVirada > 0 && (
+        <p className="text-gray-400 text-xs font-medium -mt-3 px-1">
+          Considerando o dia de {String(horaVirada).padStart(2, '0')}:00 até {String(horaVirada).padStart(2, '0')}:00 do
+          dia seguinte — pedido feito de madrugada antes disso conta como parte do dia anterior.
+        </p>
+      )}
 
       {erro && (
         <p className="text-sv-red text-xs font-bold bg-sv-red/5 border border-sv-red/20 rounded-xl px-4 py-3">
@@ -167,40 +294,50 @@ export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
         <CartaoResumo titulo="Cancelados" valor={resumo.cancelados} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5">
-          <h2 className="font-black text-sv-dark text-sm uppercase tracking-tight mb-4">Por tipo de pedido</h2>
-          <div className="flex flex-col gap-3">
-            {Object.keys(resumo.porTipo).length === 0 && (
-              <p className="text-gray-400 text-xs font-medium">Sem pedidos no período.</p>
-            )}
-            {Object.entries(resumo.porTipo).map(([tipo, dados]) => (
-              <LinhaResumo
-                key={tipo}
-                rotulo={TIPO_LABEL[tipo] ?? tipo}
-                quantidade={dados.quantidade}
-                total={dados.total}
-              />
-            ))}
+      <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5">
+        <h2 className="font-black text-sv-dark text-sm uppercase tracking-tight mb-4">{resumo.serieTemporal.titulo}</h2>
+        {semVendas ? (
+          <p className="text-gray-400 text-xs font-medium">Sem vendas no período.</p>
+        ) : (
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={resumo.serieTemporal.pontos} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                <XAxis
+                  dataKey="rotulo"
+                  interval={intervaloEixo}
+                  tick={{ fontSize: 11, fontWeight: 700, fill: '#6b7280' }}
+                  stroke="#e5e7eb"
+                />
+                <YAxis
+                  tick={{ fontSize: 10, fill: '#6b7280' }}
+                  stroke="#e5e7eb"
+                  tickFormatter={(v) => formatarBRL(v)}
+                  width={72}
+                />
+                <Tooltip
+                  formatter={(v) => formatarBRL(v)}
+                  labelStyle={{ fontWeight: 700, color: '#1A1A1A' }}
+                  contentStyle={{ borderRadius: 12, border: '1px solid #f0f0f0' }}
+                />
+                <Bar dataKey="total" fill="#0026E6" radius={[6, 6, 0, 0]} maxBarSize={48} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-        </div>
+        )}
+      </div>
 
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5">
-          <h2 className="font-black text-sv-dark text-sm uppercase tracking-tight mb-4">Por forma de pagamento</h2>
-          <div className="flex flex-col gap-3">
-            {Object.keys(resumo.porPagamento).length === 0 && (
-              <p className="text-gray-400 text-xs font-medium">Sem pedidos no período.</p>
-            )}
-            {Object.entries(resumo.porPagamento).map(([forma, dados]) => (
-              <LinhaResumo
-                key={forma}
-                rotulo={FORMA_PAGAMENTO_LABEL[forma] ?? 'Não informado'}
-                quantidade={dados.quantidade}
-                total={dados.total}
-              />
-            ))}
-          </div>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <PainelDistribuicao
+          titulo="Por tipo de pedido"
+          dados={resumo.porTipo}
+          rotulo={(chave) => TIPO_LABEL[chave] ?? chave}
+        />
+        <PainelDistribuicao
+          titulo="Por forma de pagamento"
+          dados={resumo.porPagamento}
+          rotulo={(chave) => FORMA_PAGAMENTO_LABEL[chave] ?? 'Não informado'}
+        />
       </div>
 
       <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5">
@@ -208,17 +345,40 @@ export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
         {resumo.rankingProdutos.length === 0 ? (
           <p className="text-gray-400 text-xs font-medium">Sem itens vendidos no período.</p>
         ) : (
-          <div className="flex flex-col gap-2">
-            {resumo.rankingProdutos.map((produto, i) => (
-              <div key={produto.nome} className="flex items-center justify-between gap-3 py-1.5">
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-gray-300 font-black text-xs w-4 flex-shrink-0">{i + 1}</span>
-                  <span className="font-bold text-sv-dark text-sm truncate">{produto.nome}</span>
-                  <span className="text-gray-400 text-xs font-bold flex-shrink-0">× {produto.quantidade}</span>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
+            <div style={{ height: Math.max(resumo.rankingProdutos.length * 34, 120) }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={resumo.rankingProdutos}
+                  layout="vertical"
+                  margin={{ top: 0, right: 16, left: 0, bottom: 0 }}
+                >
+                  <XAxis type="number" hide />
+                  <YAxis
+                    type="category"
+                    dataKey="nome"
+                    width={130}
+                    tick={{ fontSize: 10, fill: '#1A1A1A', fontWeight: 700 }}
+                    stroke="#e5e7eb"
+                  />
+                  <Tooltip formatter={(v) => formatarBRL(v)} contentStyle={{ borderRadius: 12, border: '1px solid #f0f0f0' }} />
+                  <Bar dataKey="total" fill="#0026E6" radius={[0, 6, 6, 0]} maxBarSize={18} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              {resumo.rankingProdutos.map((produto, i) => (
+                <div key={produto.nome} className="flex items-center justify-between gap-3 py-1.5">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-gray-300 font-black text-xs w-4 flex-shrink-0">{i + 1}</span>
+                    <span className="font-bold text-sv-dark text-sm truncate">{produto.nome}</span>
+                    <span className="text-gray-400 text-xs font-bold flex-shrink-0">× {produto.quantidade}</span>
+                  </div>
+                  <span className="font-black text-sv-dark text-sm flex-shrink-0">{formatarBRL(produto.total)}</span>
                 </div>
-                <span className="font-black text-sv-dark text-sm flex-shrink-0">{formatarBRL(produto.total)}</span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -273,13 +433,63 @@ function CartaoResumo({ titulo, valor }) {
   );
 }
 
-function LinhaResumo({ rotulo, quantidade, total }) {
+function LinhaResumo({ rotulo, quantidade, total, cor }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-sm font-bold text-sv-dark">
-        {rotulo} <span className="text-gray-400 font-medium">· {quantidade}</span>
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-sm font-bold text-sv-dark flex items-center gap-2 min-w-0">
+        <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: cor }} />
+        <span className="truncate">{rotulo}</span>
+        <span className="text-gray-400 font-medium flex-shrink-0">· {quantidade}</span>
       </span>
-      <span className="text-sm font-black text-sv-dark">{formatarBRL(total)}</span>
+      <span className="text-sm font-black text-sv-dark flex-shrink-0">{formatarBRL(total)}</span>
+    </div>
+  );
+}
+
+// Doughnut + legenda numérica lado a lado — usado tanto pra "tipo de
+// pedido" quanto "forma de pagamento", já que os dois são só {chave:
+// {quantidade, total}} agrupados.
+function PainelDistribuicao({ titulo, dados, rotulo }) {
+  const entradas = Object.entries(dados);
+  const dadosGrafico = entradas.map(([chave, valores], i) => ({
+    chave,
+    nome: rotulo(chave),
+    valor: valores.total,
+    cor: CORES_GRAFICO[i % CORES_GRAFICO.length],
+  }));
+
+  return (
+    <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5">
+      <h2 className="font-black text-sv-dark text-sm uppercase tracking-tight mb-4">{titulo}</h2>
+      {entradas.length === 0 ? (
+        <p className="text-gray-400 text-xs font-medium">Sem pedidos no período.</p>
+      ) : (
+        <div className="flex flex-col sm:flex-row items-center gap-4">
+          <div className="w-36 h-36 flex-shrink-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={dadosGrafico} dataKey="valor" nameKey="nome" innerRadius="60%" outerRadius="100%" paddingAngle={2}>
+                  {dadosGrafico.map((entrada) => (
+                    <Cell key={entrada.chave} fill={entrada.cor} stroke="none" />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(v) => formatarBRL(v)} contentStyle={{ borderRadius: 12, border: '1px solid #f0f0f0' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex flex-col gap-3 w-full min-w-0">
+            {entradas.map(([chave, valores], i) => (
+              <LinhaResumo
+                key={chave}
+                rotulo={rotulo(chave)}
+                quantidade={valores.quantidade}
+                total={valores.total}
+                cor={CORES_GRAFICO[i % CORES_GRAFICO.length]}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

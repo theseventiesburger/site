@@ -1,16 +1,21 @@
 import PainelRelatorio from "@/components/comanda/PainelRelatorio";
 import { criarClienteServidor } from "@/lib/supabase/server";
-import { dataHojeSP } from "@/lib/comanda/formato";
+import { dataHojeSP, limitesDiaComercial } from "@/lib/comanda/formato";
 
 export default async function RelatorioPage() {
   const supabase = await criarClienteServidor();
   const hoje = dataHojeSP();
+  // Carga inicial sempre com virada à meia-noite (comportamento padrão) —
+  // se o usuário já tiver uma virada customizada salva, o PainelRelatorio
+  // busca de novo assim que monta (a preferência mora no localStorage,
+  // que só existe no navegador).
+  const { inicio, fim } = limitesDiaComercial(hoje, 0);
 
   const { data: pedidos } = await supabase
     .from("pedidos")
     .select("*, itens_pedido(*, itens_pedido_adicionais(*))")
-    .gte("created_at", `${hoje}T00:00:00-03:00`)
-    .lte("created_at", `${hoje}T23:59:59.999-03:00`)
+    .gte("created_at", inicio)
+    .lt("created_at", fim)
     .order("created_at", { ascending: false });
 
   return (
