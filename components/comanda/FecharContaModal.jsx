@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { FORMAS_PAGAMENTO, FORMA_PAGAMENTO_LABEL } from '@/lib/comanda/constantes';
 import { formatarBRL, parsePrecoInput } from '@/lib/comanda/formato';
+import ReciboFechamento from '@/components/comanda/ReciboFechamento';
 
 const TAXA_SERVICO_PERCENTUAL = 0.10;
 
@@ -56,6 +57,15 @@ export default function FecharContaModal({ comanda, onFechar, onConfirmar }) {
   const desconto = parsePrecoInput(descontoInput || '0');
   const total = Math.max(0, subtotal + taxaServico - desconto);
 
+  // Mesmos valores da lista acima, só que já resolvidos pro cupom impresso
+  // (cortesia sai R$0,00 de verdade, não o valor riscado).
+  const linhasRecibo = itens.map((item) => ({
+    quantidade: item.quantidade,
+    nome: item.nome_produto,
+    cortesia: cortesiaIds.has(item.id),
+    valor: cortesiaIds.has(item.id) ? 0 : parsePrecoInput(valorInputItem(item)),
+  }));
+
   async function confirmar(e) {
     e.preventDefault();
     if (!formaPagamento) {
@@ -100,7 +110,8 @@ export default function FecharContaModal({ comanda, onFechar, onConfirmar }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-4 py-8 overflow-y-auto">
+    <>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-4 py-8 overflow-y-auto print:hidden">
       <form
         onSubmit={confirmar}
         className="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-6 md:p-8 flex flex-col gap-4 my-auto"
@@ -201,6 +212,14 @@ export default function FecharContaModal({ comanda, onFechar, onConfirmar }) {
           </p>
         )}
 
+        <button
+          type="button"
+          onClick={() => window.print()}
+          className="py-3 rounded-xl border border-gray-200 text-sv-dark font-black uppercase tracking-wider text-xs hover:border-sv-blue hover:text-sv-blue transition-colors duration-150"
+        >
+          🖨️ Imprimir cupom
+        </button>
+
         <div className="flex gap-3 mt-2">
           <button
             type="button"
@@ -219,5 +238,16 @@ export default function FecharContaModal({ comanda, onFechar, onConfirmar }) {
         </div>
       </form>
     </div>
+
+    <ReciboFechamento
+      mesaNumero={comanda.mesa_id}
+      linhas={linhasRecibo}
+      subtotal={subtotal}
+      taxaServico={taxaServico}
+      desconto={desconto}
+      total={total}
+      formaPagamento={formaPagamento}
+    />
+    </>
   );
 }
