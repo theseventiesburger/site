@@ -30,7 +30,8 @@ import {
 } from '@/lib/comanda/formato';
 import { TIPO_LABEL, STATUS_LABEL, STATUS_COR, FORMA_PAGAMENTO_LABEL } from '@/lib/comanda/constantes';
 
-const CHAVE_HORA_VIRADA = 'sv-relatorio-hora-virada';
+const CHAVE_HORA_ABERTURA = 'sv-relatorio-hora-abertura';
+const CHAVE_HORA_FECHAMENTO = 'sv-relatorio-hora-fechamento';
 const CORES_GRAFICO = ['#0026E6', '#E51212', '#F5A623', '#22C55E', '#6366F1', '#EC4899', '#06B6D4', '#1A1A1A'];
 
 const FILTROS_RAPIDOS = [
@@ -47,6 +48,21 @@ function diaMesCurto(dataISO) {
   return `${dataISO.slice(8, 10)}/${dataISO.slice(5, 7)}`;
 }
 
+// Sequência de horas do expediente, na ordem em que elas realmente
+// acontecem — de `abertura` até (sem incluir) `fechamento`, dando a volta
+// pela meia-noite quando fecha depois de abrir de novo (ex.: abre 18h,
+// fecha 2h → [18,19,...,23,0,1]). abertura === fechamento vira as 24h,
+// na ordem que já era o padrão antes desse controle existir.
+function horasDoExpediente(abertura, fechamento) {
+  const horas = [];
+  let hora = abertura;
+  do {
+    horas.push(hora);
+    hora = (hora + 1) % 24;
+  } while (hora !== fechamento);
+  return horas;
+}
+
 export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
   const [supabase] = useState(() => criarClienteBrowser());
   const [pedidos, setPedidos] = useState(pedidosIniciais);
@@ -55,7 +71,8 @@ export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
   const [dataFimNegocio, setDataFimNegocio] = useState(dataInicial);
   const [textoInicio, setTextoInicio] = useState(isoParaDataDigitada(dataInicial));
   const [textoFim, setTextoFim] = useState(isoParaDataDigitada(dataInicial));
-  const [horaVirada, setHoraVirada] = useState(0);
+  const [horaAbertura, setHoraAbertura] = useState(0);
+  const [horaFechamento, setHoraFechamento] = useState(0);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState(null);
 
@@ -79,29 +96,38 @@ export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
     }
   }
 
-  // A preferência de "virada do dia" mora no navegador (localStorage), não
-  // no banco — só existe depois de montar, então a carga inicial do
-  // servidor sempre assume virada à meia-noite e corrige aqui se precisar.
+  // A preferência de horário de expediente mora no navegador
+  // (localStorage), não no banco — só existe depois de montar, então a
+  // carga inicial do servidor sempre assume meia-noite a meia-noite e
+  // corrige aqui se precisar.
   useEffect(() => {
-    let salvo = null;
-    try {
-      salvo = localStorage.getItem(CHAVE_HORA_VIRADA);
-    } catch {
-      // localStorage indisponível — só não persiste a preferência.
+    function lido(chave) {
+      try {
+        return localStorage.getItem(chave);
+      } catch {
+        return null;
+      }
     }
-    const valor = Number(salvo);
-    if (salvo !== null && Number.isInteger(valor) && valor >= 0 && valor <= 23 && valor !== 0) {
-      setHoraVirada(valor);
-      const { inicio, fim } = FILTROS_RAPIDOS[0].calcular(valor);
-      buscar(inicio, fim, valor);
+    const validoOuNull = (v) => {
+      const n = Number(v);
+      return v !== null && Number.isInteger(n) && n >= 0 && n <= 23 ? n : null;
+    };
+
+    const abertura = validoOuNull(lido(CHAVE_HORA_ABERTURA));
+    const fechamento = validoOuNull(lido(CHAVE_HORA_FECHAMENTO));
+    if (fechamento !== null) setHoraFechamento(fechamento);
+    if (abertura !== null && abertura !== 0) {
+      setHoraAbertura(abertura);
+      const { inicio, fim } = FILTROS_RAPIDOS[0].calcular(abertura);
+      buscar(inicio, fim, abertura);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function selecionarFiltroRapido(filtro) {
     setPeriodoAtivo(filtro.chave);
-    const { inicio, fim } = filtro.calcular(horaVirada);
-    buscar(inicio, fim, horaVirada);
+    const { inicio, fim } = filtro.calcular(horaAbertura);
+    buscar(inicio, fim, horaAbertura);
   }
 
   function aplicarPeriodoManual() {
@@ -115,19 +141,19 @@ export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
       setErro('A data inicial não pode ser depois da data final.');
       return;
     }
-    if (fim > diaComercialAtual(horaVirada)) {
+    if (fim > diaComercialAtual(horaAbertura)) {
       setErro('A data final não pode ser no futuro.');
       return;
     }
     setPeriodoAtivo('manual');
-    buscar(inicio, fim, horaVirada);
+    buscar(inicio, fim, horaAbertura);
   }
 
-  function mudarHoraVirada(e) {
+  function mudarHoraAbertura(e) {
     const novaHora = Number(e.target.value);
-    setHoraVirada(novaHora);
+    setHoraAbertura(novaHora);
     try {
-      localStorage.setItem(CHAVE_HORA_VIRADA, String(novaHora));
+      localStorage.setItem(CHAVE_HORA_ABERTURA, String(novaHora));
     } catch {
       // idem
     }
@@ -138,6 +164,18 @@ export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
     const filtro = FILTROS_RAPIDOS.find((f) => f.chave === periodoAtivo) ?? FILTROS_RAPIDOS[0];
     const { inicio, fim } = filtro.calcular(novaHora);
     buscar(inicio, fim, novaHora);
+  }
+
+  // Fechamento só afeta a ordem das horas no gráfico "Vendas por hora" —
+  // não muda os limites da consulta, então não precisa buscar de novo.
+  function mudarHoraFechamento(e) {
+    const novaHora = Number(e.target.value);
+    setHoraFechamento(novaHora);
+    try {
+      localStorage.setItem(CHAVE_HORA_FECHAMENTO, String(novaHora));
+    } catch {
+      // idem
+    }
   }
 
   const resumo = useMemo(() => {
@@ -179,15 +217,21 @@ export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
     const umDiaSo = dataInicioNegocio === dataFimNegocio;
     let serieTemporal;
     if (umDiaSo) {
-      const porHora = Array.from({ length: 24 }, (_, h) => ({ chave: h, rotulo: `${String(h).padStart(2, '0')}h`, total: 0 }));
+      const somaPorHora = new Map();
       for (const pedido of validos) {
-        porHora[horaDoDia(pedido.created_at)].total += Number(pedido.total);
+        const h = horaDoDia(pedido.created_at);
+        somaPorHora.set(h, (somaPorHora.get(h) ?? 0) + Number(pedido.total));
       }
-      serieTemporal = { titulo: 'Vendas por hora', pontos: porHora };
+      const pontos = horasDoExpediente(horaAbertura, horaFechamento).map((h) => ({
+        chave: h,
+        rotulo: `${String(h).padStart(2, '0')}h`,
+        total: somaPorHora.get(h) ?? 0,
+      }));
+      serieTemporal = { titulo: 'Vendas por hora', pontos };
     } else {
       const porDia = new Map();
       for (const pedido of validos) {
-        const dia = diaComercialDe(pedido.created_at, horaVirada);
+        const dia = diaComercialDe(pedido.created_at, horaAbertura);
         porDia.set(dia, (porDia.get(dia) ?? 0) + Number(pedido.total));
       }
       const pontos = [];
@@ -200,7 +244,7 @@ export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
     }
 
     return { validos, cancelados, totalVendido, ticketMedio, porTipo, porPagamento, rankingProdutos, serieTemporal };
-  }, [pedidos, dataInicioNegocio, dataFimNegocio, horaVirada]);
+  }, [pedidos, dataInicioNegocio, dataFimNegocio, horaAbertura, horaFechamento]);
 
   const semVendas = resumo.serieTemporal.pontos.every((p) => p.total === 0);
   const intervaloEixo = resumo.serieTemporal.pontos.length > 12 ? Math.ceil(resumo.serieTemporal.pontos.length / 12) : 0;
@@ -260,24 +304,45 @@ export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
           </button>
         </div>
 
-        <div className="flex flex-col gap-1.5 ml-auto">
-          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Virada do dia às</label>
-          <select
-            value={horaVirada}
-            onChange={mudarHoraVirada}
-            className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm font-bold focus:outline-none focus:border-sv-blue"
-          >
-            {Array.from({ length: 24 }, (_, h) => (
-              <option key={h} value={h}>{String(h).padStart(2, '0')}:00</option>
-            ))}
-          </select>
+        <div className="flex items-end gap-3 ml-auto">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Abre às</label>
+            <select
+              value={horaAbertura}
+              onChange={mudarHoraAbertura}
+              className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm font-bold focus:outline-none focus:border-sv-blue"
+            >
+              {Array.from({ length: 24 }, (_, h) => (
+                <option key={h} value={h}>{String(h).padStart(2, '0')}:00</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Fecha às</label>
+            <select
+              value={horaFechamento}
+              onChange={mudarHoraFechamento}
+              className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm font-bold focus:outline-none focus:border-sv-blue"
+            >
+              {Array.from({ length: 24 }, (_, h) => (
+                <option key={h} value={h}>{String(h).padStart(2, '0')}:00</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
-      {horaVirada > 0 && (
+      {(horaAbertura > 0 || horaFechamento > 0) && (
         <p className="text-gray-400 text-xs font-medium -mt-3 px-1">
-          Considerando o dia de {String(horaVirada).padStart(2, '0')}:00 até {String(horaVirada).padStart(2, '0')}:00 do
-          dia seguinte — pedido feito de madrugada antes disso conta como parte do dia anterior.
+          {horaAbertura > 0 && (
+            <>
+              Considerando o dia comercial de {String(horaAbertura).padStart(2, '0')}:00 até{' '}
+              {String(horaAbertura).padStart(2, '0')}:00 do dia seguinte — pedido feito de madrugada antes disso
+              conta como parte do dia anterior.{' '}
+            </>
+          )}
+          Expediente de {String(horaAbertura).padStart(2, '0')}:00 às {String(horaFechamento).padStart(2, '0')}:00
+          pra ordenar o gráfico de vendas por hora.
         </p>
       )}
 
