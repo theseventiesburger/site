@@ -11,49 +11,29 @@ import FormularioReceita from '@/components/comanda/FormularioReceita';
 import ConfiguracaoCombo from '@/components/comanda/ConfiguracaoCombo';
 
 function CardProduto({ produto, onEditar, onToggleAtivo, onReceita }) {
+  const temSelo =
+    produto.preco_promocional ||
+    !produto.vai_para_cozinha ||
+    produto.pode_virar_combo ||
+    produto.permite_segundo_hamburguer ||
+    produto.produto_tamanhos?.length > 0;
+
   return (
     <div
-      className={`bg-white rounded-2xl shadow-md border p-4 flex gap-4 ${
+      className={`bg-white rounded-2xl shadow-md border p-5 flex gap-4 items-start ${
         produto.ativo ? 'border-gray-100' : 'border-gray-200 opacity-60'
       }`}
     >
-      <div className="w-20 h-20 relative rounded-xl overflow-hidden bg-[#F7F7F7] flex-shrink-0">
+      <div className="w-24 h-24 relative rounded-xl overflow-hidden bg-[#F7F7F7] flex-shrink-0">
         <Image src={produto.imagem} alt={produto.nome} fill className="object-contain" />
       </div>
 
-      <div className="flex-1 min-w-0 flex flex-col justify-between">
+      <div className="flex-1 min-w-0 flex flex-col gap-2.5">
         <div>
-          <div className="flex items-center gap-2">
-            <p className="font-black text-sv-dark text-sm uppercase tracking-tight truncate">
-              {produto.nome}
-            </p>
-            {produto.preco_promocional && (
-              <span className="flex-shrink-0 bg-sv-red/10 text-sv-red text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
-                Promo
-              </span>
-            )}
-            {!produto.vai_para_cozinha && (
-              <span className="flex-shrink-0 bg-sv-blue/10 text-sv-blue text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
-                Direto pra mesa
-              </span>
-            )}
-            {produto.pode_virar_combo && (
-              <span className="flex-shrink-0 bg-green-100 text-green-700 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
-                Combo +{formatarBRL(produto.preco_combo)}
-              </span>
-            )}
-            {produto.permite_segundo_hamburguer && (
-              <span className="flex-shrink-0 bg-amber-100 text-amber-700 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
-                2º hambúrguer +{formatarBRL(produto.preco_segundo_hamburguer)}
-              </span>
-            )}
-            {produto.produto_tamanhos?.length > 0 && (
-              <span className="flex-shrink-0 bg-sv-dark/10 text-sv-dark text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">
-                {produto.produto_tamanhos.length} tamanhos
-              </span>
-            )}
-          </div>
-          <p className="text-gray-400 text-xs font-bold">
+          <p className="font-black text-sv-dark text-sm uppercase tracking-tight leading-snug">
+            {produto.nome}
+          </p>
+          <p className="text-gray-400 text-xs font-bold mt-0.5">
             {produto.categorias?.nome ?? 'Sem categoria'} ·{' '}
             {produto.produto_tamanhos?.length > 0 ? (
               `A partir de ${formatarBRL(Math.min(...produto.produto_tamanhos.map((t) => Number(t.preco))))}`
@@ -68,7 +48,37 @@ function CardProduto({ produto, onEditar, onToggleAtivo, onReceita }) {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2">
+        {temSelo && (
+          <div className="flex flex-wrap gap-1.5">
+            {produto.preco_promocional && (
+              <span className="bg-sv-red/10 text-sv-red text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-full">
+                Promo
+              </span>
+            )}
+            {!produto.vai_para_cozinha && (
+              <span className="bg-sv-blue/10 text-sv-blue text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-full">
+                Direto pra mesa
+              </span>
+            )}
+            {produto.pode_virar_combo && (
+              <span className="bg-green-100 text-green-700 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-full">
+                Combo +{formatarBRL(produto.preco_combo)}
+              </span>
+            )}
+            {produto.permite_segundo_hamburguer && (
+              <span className="bg-amber-100 text-amber-700 text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-full">
+                2º hambúrguer +{formatarBRL(produto.preco_segundo_hamburguer)}
+              </span>
+            )}
+            {produto.produto_tamanhos?.length > 0 && (
+              <span className="bg-sv-dark/10 text-sv-dark text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-full">
+                {produto.produto_tamanhos.length} tamanhos
+              </span>
+            )}
+          </div>
+        )}
+
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <button
             type="button"
             onClick={() => onEditar(produto)}
@@ -210,7 +220,7 @@ export default function PainelProdutos({
               <div className="flex-1 h-px bg-gray-200" />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-start">
               {itens.map((produto) => (
                 <CardProduto
                   key={produto.id}
