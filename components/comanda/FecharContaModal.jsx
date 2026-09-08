@@ -60,14 +60,22 @@ export default function FecharContaModal({ comanda, onFechar, onConfirmar }) {
   const desconto = parsePrecoInput(descontoInput || '0');
   const total = Math.max(0, subtotal + taxaServico - desconto);
 
-  // Mesmos valores da lista acima, só que já resolvidos pro cupom impresso
-  // (cortesia sai R$0,00 de verdade, não o valor riscado).
-  const linhasRecibo = itens.map((item) => ({
-    quantidade: item.quantidade,
-    nome: item.nome_produto,
-    cortesia: cortesiaIds.has(item.id),
-    valor: cortesiaIds.has(item.id) ? 0 : parsePrecoInput(valorInputItem(item)),
-  }));
+  // Mesmos valores calculados acima, só que já resolvidos pro cupom impresso
+  // (cortesia sai R$0,00 de verdade, não o valor riscado) e agrupados por
+  // rodada — pedido cancelado inteiro (0 itens sobrando) nem aparece.
+  const rodadasRecibo = (comanda.pedidos ?? [])
+    .map((pedido) => ({
+      numero: pedido.numero,
+      itens: (pedido.itens_pedido ?? [])
+        .filter((item) => item.status !== 'cancelado')
+        .map((item) => ({
+          quantidade: item.quantidade,
+          nome: item.nome_produto,
+          cortesia: cortesiaIds.has(item.id),
+          valor: cortesiaIds.has(item.id) ? 0 : parsePrecoInput(valorInputItem(item)),
+        })),
+    }))
+    .filter((rodada) => rodada.itens.length > 0);
 
   async function confirmar(e) {
     e.preventDefault();
@@ -244,7 +252,11 @@ export default function FecharContaModal({ comanda, onFechar, onConfirmar }) {
 
     <ReciboFechamento
       mesaNumero={comanda.mesa_id}
-      linhas={linhasRecibo}
+      abertaEm={comanda.aberta_em}
+      rodadas={rodadasRecibo}
+      subtotal={subtotal}
+      taxaServico={taxaServico}
+      desconto={desconto}
       total={total}
     />
     </>

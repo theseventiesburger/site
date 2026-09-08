@@ -236,7 +236,7 @@ export default function PainelMesa({ mesa, comandaInicial, produtos, categorias,
   );
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 print:hidden">
       <div className="bg-white rounded-3xl shadow-md border border-gray-100 p-6 flex items-center justify-between gap-4 flex-wrap">
         <div>
           <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Conta aberta há {tempoDecorrido(comanda.aberta_em)}</p>
