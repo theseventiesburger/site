@@ -8,7 +8,7 @@ import FecharContaModal from '@/components/comanda/FecharContaModal';
 import BadgeStatus from '@/components/comanda/BadgeStatus';
 import { criarClienteBrowser } from '@/lib/supabase/client';
 import { atualizarStatusItemPedido, criarPedido } from '@/lib/comanda/pedidos';
-import { abrirComanda, buscarComandaAbertaPorMesa, fecharComanda } from '@/lib/comanda/comandas';
+import { abrirComanda, buscarComandaAbertaPorMesa, cancelarComanda, fecharComanda } from '@/lib/comanda/comandas';
 import { PONTO_CARNE_LABEL } from '@/lib/comanda/constantes';
 import { formatarBRL, tempoDecorrido } from '@/lib/comanda/formato';
 
@@ -200,6 +200,20 @@ export default function PainelMesa({ mesa, comandaInicial, produtos, categorias,
     router.push('/comanda/mesas');
   }
 
+  // Mesa vazia (nada lançado, ou tudo excluído) ou lançamento na mesa
+  // errada — libera sem passar pela escolha de forma de pagamento.
+  async function cancelarMesa() {
+    if (!window.confirm('Cancelar esta mesa inteira? Todos os itens lançados serão excluídos e a mesa fica livre de novo. Essa ação não pode ser desfeita.')) return;
+    setErro(null);
+    try {
+      await cancelarComanda(supabase, comanda.id);
+      router.push('/comanda/mesas');
+    } catch (err) {
+      console.error(err);
+      setErro('Não foi possível cancelar a mesa. Tente de novo.');
+    }
+  }
+
   if (!comanda) {
     return (
       <div className="bg-white rounded-3xl shadow-md border border-gray-100 p-10 flex flex-col items-center gap-4 text-center">
@@ -228,13 +242,22 @@ export default function PainelMesa({ mesa, comandaInicial, produtos, categorias,
           <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Conta aberta há {tempoDecorrido(comanda.aberta_em)}</p>
           <p className="text-3xl font-black text-sv-dark">{formatarBRL(comanda.total)}</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setContaAberta(true)}
-          className="bg-sv-dark text-white font-black px-6 py-3.5 rounded-xl uppercase tracking-wider text-xs hover:bg-sv-blue transition-colors duration-150"
-        >
-          Fechar comanda
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={cancelarMesa}
+            className="border border-gray-200 text-gray-400 font-black px-4 py-3.5 rounded-xl uppercase tracking-wider text-xs hover:border-sv-red hover:text-sv-red transition-colors duration-150"
+          >
+            Cancelar mesa
+          </button>
+          <button
+            type="button"
+            onClick={() => setContaAberta(true)}
+            className="bg-sv-dark text-white font-black px-6 py-3.5 rounded-xl uppercase tracking-wider text-xs hover:bg-sv-blue transition-colors duration-150"
+          >
+            Fechar comanda
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
