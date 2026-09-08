@@ -3,6 +3,7 @@ import LoginForm from "@/components/comanda/LoginForm";
 export default async function ComandaLoginPage({ searchParams }) {
   const params = await searchParams;
   const proximo = typeof params?.proximo === "string" ? params.proximo : "/comanda";
+  const semPermissao = params?.erro === "sem_permissao";
 
   return (
     <section className="w-full flex-1 flex items-center justify-center relative overflow-hidden bg-sv-dark px-6 py-16">
@@ -21,6 +22,12 @@ export default async function ComandaLoginPage({ searchParams }) {
             Entre com sua conta para lançar e acompanhar pedidos.
           </p>
         </div>
+
+        {semPermissao && (
+          <p className="text-sv-red text-sm font-bold bg-sv-red/10 border border-sv-red/20 rounded-xl px-4 py-3 text-center mb-4">
+            Essa conta não tem acesso à área da equipe.
+          </p>
+        )}
 
         <LoginForm proximo={proximo} />
       </div>
