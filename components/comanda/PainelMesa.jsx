@@ -7,7 +7,7 @@ import CarrinhoComanda from '@/components/comanda/CarrinhoComanda';
 import FecharContaModal from '@/components/comanda/FecharContaModal';
 import BadgeStatus from '@/components/comanda/BadgeStatus';
 import { criarClienteBrowser } from '@/lib/supabase/client';
-import { criarPedido } from '@/lib/comanda/pedidos';
+import { atualizarStatusItemPedido, criarPedido } from '@/lib/comanda/pedidos';
 import { abrirComanda, buscarComandaAbertaPorMesa, fecharComanda } from '@/lib/comanda/comandas';
 import { PONTO_CARNE_LABEL } from '@/lib/comanda/constantes';
 import { formatarBRL, tempoDecorrido } from '@/lib/comanda/formato';
@@ -179,6 +179,22 @@ export default function PainelMesa({ mesa, comandaInicial, produtos, categorias,
     }
   }
 
+  // Item já lançado que a cozinha avisou que não vai atender (acabou o
+  // insumo etc.) — marca como cancelado em vez de apagar, pra manter o
+  // histórico da rodada. Sai sozinho do total (ver migration 0043) e some
+  // da conta/cupom na hora de fechar.
+  async function excluirItem(itemId) {
+    if (!window.confirm('Excluir este item da conta? Essa ação não pode ser desfeita.')) return;
+    setErro(null);
+    try {
+      await atualizarStatusItemPedido(supabase, itemId, 'cancelado');
+      await atualizarComanda();
+    } catch (err) {
+      console.error(err);
+      setErro('Não foi possível excluir o item. Tente de novo.');
+    }
+  }
+
   async function confirmarFechamento(comandaId, payload) {
     await fecharComanda(supabase, comandaId, payload);
     router.push('/comanda/mesas');
@@ -236,28 +252,47 @@ export default function PainelMesa({ mesa, comandaInicial, produtos, categorias,
                 <BadgeStatus status={pedido.status} />
               </div>
               <ul className="flex flex-col gap-1.5">
-                {(pedido.itens_pedido ?? []).map((item) => (
-                  <li key={item.id} className="flex items-start justify-between gap-2 text-xs">
-                    <div className="min-w-0">
-                      <span className="font-black text-sv-dark">{item.quantidade}x</span>{' '}
-                      <span className="text-sv-dark font-medium">{item.nome_produto}</span>
-                      {item.ponto_carne && (
-                        <span className="block text-sv-red font-black pl-4 uppercase tracking-wide">
-                          🔥 {PONTO_CARNE_LABEL[item.ponto_carne] ?? item.ponto_carne}
+                {(pedido.itens_pedido ?? []).map((item) => {
+                  const cancelado = item.status === 'cancelado';
+                  return (
+                    <li key={item.id} className="flex items-start justify-between gap-2 text-xs">
+                      <div className={`min-w-0 ${cancelado ? 'opacity-50' : ''}`}>
+                        <span className={`font-black ${cancelado ? 'text-gray-400 line-through' : 'text-sv-dark'}`}>
+                          {item.quantidade}x
+                        </span>{' '}
+                        <span className={`font-medium ${cancelado ? 'text-gray-400 line-through' : 'text-sv-dark'}`}>
+                          {item.nome_produto}
                         </span>
-                      )}
-                      {(item.itens_pedido_adicionais ?? []).map((adicional) => (
-                        <span key={adicional.id} className="block text-sv-blue font-bold pl-4">
-                          + {adicional.nome_adicional}
-                        </span>
-                      ))}
-                      {item.observacao && (
-                        <span className="block text-gray-400 font-medium pl-4">— {item.observacao}</span>
-                      )}
-                    </div>
-                    <BadgeStatus status={item.status} />
-                  </li>
-                ))}
+                        {item.ponto_carne && (
+                          <span className="block text-sv-red font-black pl-4 uppercase tracking-wide">
+                            🔥 {PONTO_CARNE_LABEL[item.ponto_carne] ?? item.ponto_carne}
+                          </span>
+                        )}
+                        {(item.itens_pedido_adicionais ?? []).map((adicional) => (
+                          <span key={adicional.id} className="block text-sv-blue font-bold pl-4">
+                            + {adicional.nome_adicional}
+                          </span>
+                        ))}
+                        {item.observacao && (
+                          <span className="block text-gray-400 font-medium pl-4">— {item.observacao}</span>
+                        )}
+                      </div>
+                      <div className="flex-shrink-0 flex items-center gap-1.5">
+                        <BadgeStatus status={item.status} />
+                        {!cancelado && (
+                          <button
+                            type="button"
+                            onClick={() => excluirItem(item.id)}
+                            title="Excluir item"
+                            className="text-gray-300 hover:text-sv-red transition-colors duration-150"
+                          >
+                            🗑️
+                          </button>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}

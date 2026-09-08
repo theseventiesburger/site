@@ -12,7 +12,10 @@ const TAXA_SERVICO_PERCENTUAL = 0.10;
 // a última rodada.
 export default function FecharContaModal({ comanda, onFechar, onConfirmar }) {
   const itens = useMemo(
-    () => (comanda.pedidos ?? []).flatMap((pedido) => pedido.itens_pedido ?? []),
+    () =>
+      (comanda.pedidos ?? []).flatMap((pedido) =>
+        (pedido.itens_pedido ?? []).filter((item) => item.status !== 'cancelado')
+      ),
     [comanda.pedidos]
   );
 
@@ -242,11 +245,7 @@ export default function FecharContaModal({ comanda, onFechar, onConfirmar }) {
     <ReciboFechamento
       mesaNumero={comanda.mesa_id}
       linhas={linhasRecibo}
-      subtotal={subtotal}
-      taxaServico={taxaServico}
-      desconto={desconto}
       total={total}
-      formaPagamento={formaPagamento}
     />
     </>
   );
