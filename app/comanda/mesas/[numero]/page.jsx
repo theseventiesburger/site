@@ -27,7 +27,7 @@ export default async function MesaPage({ params }) {
 
   return (
     <section className="w-full max-w-6xl mx-auto px-6 py-10 flex-1">
-      <div className="mb-8">
+      <div className="mb-8 print:hidden">
         <span className="text-sv-blue text-xs font-black tracking-[0.3em] uppercase mb-2 block">
           Comanda Eletrônica
         </span>
