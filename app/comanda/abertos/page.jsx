@@ -1,15 +1,19 @@
 import PainelAbertos from "@/components/comanda/PainelAbertos";
+import { listarComandasAbertas } from "@/lib/comanda/comandas";
 import { criarClienteServidor } from "@/lib/supabase/server";
 
 export default async function PedidosAbertosPage() {
   const supabase = await criarClienteServidor();
-  const { data: pedidos } = await supabase
-    .from("pedidos")
-    .select("*, itens_pedido(*, itens_pedido_adicionais(*))")
-    .eq("status", "entregue")
-    .eq("pago", false)
-    .neq("tipo", "mesa")
-    .order("created_at", { ascending: true });
+  const [{ data: pedidos }, comandas] = await Promise.all([
+    supabase
+      .from("pedidos")
+      .select("*, itens_pedido(*, itens_pedido_adicionais(*))")
+      .eq("status", "entregue")
+      .eq("pago", false)
+      .neq("tipo", "mesa")
+      .order("created_at", { ascending: true }),
+    listarComandasAbertas(supabase),
+  ]);
 
   return (
     <section className="w-full max-w-5xl mx-auto px-6 py-10 flex-1">
@@ -21,11 +25,11 @@ export default async function PedidosAbertosPage() {
           Pedidos Abertos
         </h1>
         <p className="text-gray-400 text-sm font-medium mt-2">
-          Já saíram da cozinha, mas ainda esperam a confirmação do pagamento.
+          Mesas abertas e pedidos que já saíram da cozinha mas ainda esperam a confirmação do pagamento.
         </p>
       </div>
 
-      <PainelAbertos pedidosIniciais={pedidos ?? []} />
+      <PainelAbertos pedidosIniciais={pedidos ?? []} comandasIniciais={comandas} />
     </section>
   );
 }

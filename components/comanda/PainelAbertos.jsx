@@ -1,19 +1,26 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import CardComandaAberta from '@/components/comanda/CardComandaAberta';
 import CardPedidoAberto from '@/components/comanda/CardPedidoAberto';
 import EstadoVazio from '@/components/comanda/EstadoVazio';
+import FecharContaModal from '@/components/comanda/FecharContaModal';
+import FecharPedidoModal from '@/components/comanda/FecharPedidoModal';
 import { criarClienteBrowser } from '@/lib/supabase/client';
-import { buscarPedidoPorId, definirPagamentoPedido } from '@/lib/comanda/pedidos';
+import { buscarComandaPorId, fecharComanda } from '@/lib/comanda/comandas';
+import { buscarPedidoPorId, fecharPedido } from '@/lib/comanda/pedidos';
 
-export default function PainelAbertos({ pedidosIniciais }) {
+export default function PainelAbertos({ pedidosIniciais, comandasIniciais }) {
   const [supabase] = useState(() => criarClienteBrowser());
   const [pedidos, setPedidos] = useState(pedidosIniciais);
+  const [comandas, setComandas] = useState(comandasIniciais);
   const [conectado, setConectado] = useState(false);
-  const [erro, setErro] = useState(null);
+  const [pedidoFechando, setPedidoFechando] = useState(null);
+  const [comandaFechando, setComandaFechando] = useState(null);
 
   useEffect(() => {
-    let canal;
+    let canalPedidos;
+    let canalComandas;
     let ativo = true;
 
     async function conectar() {
@@ -22,7 +29,7 @@ export default function PainelAbertos({ pedidosIniciais }) {
       await supabase.auth.getSession();
       if (!ativo) return;
 
-      canal = supabase
+      canalPedidos = supabase
         .channel('pedidos-abertos')
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'pedidos' }, async (payload) => {
           const entrouAberto = payload.new.status === 'entregue' && !payload.new.pago && payload.new.tipo !== 'mesa';
@@ -36,32 +43,48 @@ export default function PainelAbertos({ pedidosIniciais }) {
           }
         })
         .subscribe((status) => setConectado(status === 'SUBSCRIBED'));
+
+      // Qualquer mudança em `comandas` cobre tanto abrir/fechar mesa quanto
+      // itens mudando (o total é recalculado ali por trigger a cada troca em
+      // itens_pedido) — mais simples reconsultar a comanda inteira do que
+      // tentar remendar item por item no estado local.
+      canalComandas = supabase
+        .channel('comandas-abertas')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'comandas' }, async (payload) => {
+          const id = payload.new?.id ?? payload.old?.id;
+          if (payload.eventType === 'DELETE' || payload.new?.status !== 'aberta') {
+            setComandas((atual) => atual.filter((c) => c.id !== id));
+            return;
+          }
+          const comandaCompleta = await buscarComandaPorId(supabase, id);
+          if (!comandaCompleta) return;
+          setComandas((atual) => [...atual.filter((c) => c.id !== comandaCompleta.id), comandaCompleta]);
+        })
+        .subscribe();
     }
 
     conectar();
 
     return () => {
       ativo = false;
-      if (canal) supabase.removeChannel(canal);
+      if (canalPedidos) supabase.removeChannel(canalPedidos);
+      if (canalComandas) supabase.removeChannel(canalComandas);
     };
   }, [supabase]);
 
-  async function confirmarPagamento(pedidoId, formaPagamento) {
-    const pedidoRemovido = pedidos.find((p) => p.id === pedidoId);
+  async function confirmarFechamentoPedido(pedidoId, payload) {
+    await fecharPedido(supabase, pedidoId, payload);
+    setPedidoFechando(null);
     setPedidos((atual) => atual.filter((p) => p.id !== pedidoId));
-    try {
-      await definirPagamentoPedido(supabase, pedidoId, formaPagamento);
-    } catch (err) {
-      console.error(err);
-      // Sem isso, um erro deixava o pedido sumir da lista sem o pagamento
-      // ter sido confirmado de verdade no banco.
-      if (pedidoRemovido) {
-        setPedidos((atual) => (atual.some((p) => p.id === pedidoId) ? atual : [...atual, pedidoRemovido]));
-      }
-      setErro('Não foi possível confirmar o pagamento. Tente de novo.');
-      setTimeout(() => setErro(null), 5000);
-    }
   }
+
+  async function confirmarFechamentoComanda(comandaId, payload) {
+    await fecharComanda(supabase, comandaId, payload);
+    setComandaFechando(null);
+    setComandas((atual) => atual.filter((c) => c.id !== comandaId));
+  }
+
+  const vazio = pedidos.length === 0 && comandas.length === 0;
 
   return (
     <div className="flex flex-col gap-6">
@@ -70,18 +93,31 @@ export default function PainelAbertos({ pedidosIniciais }) {
         {conectado ? 'Ao vivo' : 'Conectando...'}
       </div>
 
-      {erro && (
-        <p className="text-sv-red text-xs font-bold bg-sv-red/5 border border-sv-red/20 rounded-xl px-4 py-3">
-          ⚠ {erro}
-        </p>
-      )}
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {pedidos.length === 0 && <EstadoVazio mensagem="Nenhum pedido aguardando pagamento." />}
+        {vazio && <EstadoVazio mensagem="Nenhuma mesa aberta nem pedido aguardando pagamento." />}
+        {comandas.map((comanda) => (
+          <CardComandaAberta key={comanda.id} comanda={comanda} onFecharConta={setComandaFechando} />
+        ))}
         {pedidos.map((pedido) => (
-          <CardPedidoAberto key={pedido.id} pedido={pedido} onConfirmarPagamento={confirmarPagamento} />
+          <CardPedidoAberto key={pedido.id} pedido={pedido} onFecharPedido={setPedidoFechando} />
         ))}
       </div>
+
+      {pedidoFechando && (
+        <FecharPedidoModal
+          pedido={pedidoFechando}
+          onFechar={() => setPedidoFechando(null)}
+          onConfirmar={confirmarFechamentoPedido}
+        />
+      )}
+
+      {comandaFechando && (
+        <FecharContaModal
+          comanda={comandaFechando}
+          onFechar={() => setComandaFechando(null)}
+          onConfirmar={confirmarFechamentoComanda}
+        />
+      )}
     </div>
   );
 }
