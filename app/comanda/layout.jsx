@@ -4,6 +4,10 @@ import { criarClienteServidor } from "@/lib/supabase/server";
 
 export const metadata = {
   title: "Comanda — The Seventies Burger",
+  // O manifest do site (raiz) é pro cliente instalar o site como app; esse
+  // aqui é o da equipe (nome "Comanda", abre em /comanda) — sem isso os dois
+  // ficariam usando o mesmo manifest da raiz.
+  manifest: "/manifest-comanda.json",
 };
 
 export default async function ComandaLayout({ children }) {

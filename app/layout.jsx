@@ -1,6 +1,7 @@
 import "./globals.css";
 
 import { Poppins } from "next/font/google";
+import RegistrarServiceWorker from "@/components/site/RegistrarServiceWorker";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -20,6 +21,7 @@ export default function RootLayout({ children }) {
       className={`${poppins.className} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <RegistrarServiceWorker />
         {children}
       </body>
     </html>
