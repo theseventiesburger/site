@@ -14,7 +14,9 @@ import {
   Cell,
 } from 'recharts';
 import { criarClienteBrowser } from '@/lib/supabase/client';
+import ModalDetalhePedido from '@/components/comanda/ModalDetalhePedido';
 import { listarPedidosPeriodo } from '@/lib/comanda/relatorio';
+import { confirmarRecebimentoPedido } from '@/lib/comanda/pedidos';
 import {
   formatarBRL,
   formatarDataHora,
@@ -75,6 +77,22 @@ export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
   const [horaFechamento, setHoraFechamento] = useState(0);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState(null);
+  const [pedidoAberto, setPedidoAberto] = useState(null);
+
+  // Mesa quita a comanda inteira (todas as rodadas fiado da mesma conta),
+  // não só a linha que abriu o modal — reflete isso no estado local pra não
+  // precisar recarregar o período inteiro.
+  async function confirmarRecebimento(pedido, formaPagamento) {
+    await confirmarRecebimentoPedido(supabase, pedido, formaPagamento);
+    setPedidos((atual) =>
+      atual.map((p) =>
+        p.id === pedido.id || (pedido.comanda_id && p.comanda_id === pedido.comanda_id)
+          ? { ...p, forma_pagamento: formaPagamento, pago: true }
+          : p
+      )
+    );
+    setPedidoAberto(null);
+  }
 
   async function buscar(inicioNegocio, fimNegocio, hv) {
     setCarregando(true);
@@ -462,6 +480,7 @@ export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
                 <th className="py-2 pr-3">Status</th>
                 <th className="py-2 pr-3">Pagamento</th>
                 <th className="py-2 pr-3 text-right">Total</th>
+                <th className="py-2 pr-3" />
               </tr>
             </thead>
             <tbody>
@@ -492,12 +511,29 @@ export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
                     </div>
                   </td>
                   <td className="py-2.5 pr-3 text-right font-black text-sv-dark">{formatarBRL(pedido.total)}</td>
+                  <td className="py-2.5 pr-3 text-right">
+                    <button
+                      type="button"
+                      onClick={() => setPedidoAberto(pedido)}
+                      className="text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider text-gray-500 border border-gray-200 hover:border-sv-blue hover:text-sv-blue transition-colors duration-150"
+                    >
+                      Ver
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
       </div>
+
+      {pedidoAberto && (
+        <ModalDetalhePedido
+          pedido={pedidoAberto}
+          onFechar={() => setPedidoAberto(null)}
+          onConfirmarRecebimento={confirmarRecebimento}
+        />
+      )}
     </div>
   );
 }
