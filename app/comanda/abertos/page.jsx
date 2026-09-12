@@ -17,7 +17,7 @@ export default async function PedidosAbertosPage() {
 
   return (
     <section className="w-full max-w-5xl mx-auto px-6 py-10 flex-1">
-      <div className="mb-8">
+      <div className="mb-8 print:hidden">
         <span className="text-sv-blue text-xs font-black tracking-[0.3em] uppercase mb-2 block">
           Comanda Eletrônica
         </span>

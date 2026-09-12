@@ -87,7 +87,8 @@ export default function PainelAbertos({ pedidosIniciais, comandasIniciais }) {
   const vazio = pedidos.length === 0 && comandas.length === 0;
 
   return (
-    <div className="flex flex-col gap-6">
+    <>
+    <div className="flex flex-col gap-6 print:hidden">
       <div className="flex items-center gap-2 text-xs font-bold text-gray-400">
         <span className={`w-2 h-2 rounded-full ${conectado ? 'bg-green-500' : 'bg-gray-300'}`} />
         {conectado ? 'Ao vivo' : 'Conectando...'}
@@ -102,22 +103,23 @@ export default function PainelAbertos({ pedidosIniciais, comandasIniciais }) {
           <CardPedidoAberto key={pedido.id} pedido={pedido} onFecharPedido={setPedidoFechando} />
         ))}
       </div>
-
-      {pedidoFechando && (
-        <FecharPedidoModal
-          pedido={pedidoFechando}
-          onFechar={() => setPedidoFechando(null)}
-          onConfirmar={confirmarFechamentoPedido}
-        />
-      )}
-
-      {comandaFechando && (
-        <FecharContaModal
-          comanda={comandaFechando}
-          onFechar={() => setComandaFechando(null)}
-          onConfirmar={confirmarFechamentoComanda}
-        />
-      )}
     </div>
+
+    {pedidoFechando && (
+      <FecharPedidoModal
+        pedido={pedidoFechando}
+        onFechar={() => setPedidoFechando(null)}
+        onConfirmar={confirmarFechamentoPedido}
+      />
+    )}
+
+    {comandaFechando && (
+      <FecharContaModal
+        comanda={comandaFechando}
+        onFechar={() => setComandaFechando(null)}
+        onConfirmar={confirmarFechamentoComanda}
+      />
+    )}
+    </>
   );
 }
