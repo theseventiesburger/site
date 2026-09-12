@@ -1,6 +1,11 @@
 import CardapioInterativo from "@/components/CardapioInterativo";
 import { criarClienteServidor } from "@/lib/supabase/server";
 
+export const metadata = {
+  title: "Cardápio",
+  description: "Hambúrgueres artesanais, combos, porções e bebidas da The Seventies Burger. Veja o cardápio completo e peça pelo site, WhatsApp ou UaiRango.",
+};
+
 export default async function CardapioPage() {
   const supabase = await criarClienteServidor();
 

@@ -1,5 +1,10 @@
 import Image from 'next/image';
 
+export const metadata = {
+  title: "Contato",
+  description: "Endereço, telefone, horário de funcionamento e redes sociais da The Seventies Burger em São Lourenço - MG.",
+};
+
 const redes = [
   {
     nome: 'Instagram',

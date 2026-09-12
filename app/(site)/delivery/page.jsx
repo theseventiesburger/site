@@ -1,5 +1,10 @@
 import Image from 'next/image';
 
+export const metadata = {
+  title: "Delivery",
+  description: "Peça The Seventies Burger em casa pelo WhatsApp ou UaiRango. Veja como funciona a entrega.",
+};
+
 const passos = [
   {
     numero: '01',

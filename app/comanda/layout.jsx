@@ -3,7 +3,10 @@ import ComandaTopbar from "@/components/comanda/ComandaTopbar";
 import { criarClienteServidor } from "@/lib/supabase/server";
 
 export const metadata = {
-  title: "Comanda — The Seventies Burger",
+  // String simples (não `absolute`) de propósito: o title.template do
+  // layout raiz (app/layout.jsx) completa sozinho pra "Comanda — The
+  // Seventies Burger" — repetir o sufixo aqui duplicaria.
+  title: "Comanda",
   // O manifest do site (raiz) é pro cliente instalar o site como app; esse
   // aqui é o da equipe (nome "Comanda", abre em /comanda) — sem isso os dois
   // ficariam usando o mesmo manifest da raiz.
