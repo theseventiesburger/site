@@ -10,8 +10,6 @@ const LINKS = [
   { href: '/', label: 'Início' },
   { href: '/cupons', label: 'Cupons' },
   { href: '/cardapio', label: 'Cardápio' },
-  { href: '/appseventies', label: 'App' },
-  { href: '/clube', label: 'Clube' },
   { href: '/contato', label: 'Contato' },
 ];
 

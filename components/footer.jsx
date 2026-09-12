@@ -8,8 +8,6 @@ export default function Footer() {
     { label: "Início", href: "/" },
     { label: "Cupons", href: "/cupons" },
     { label: "Cardápio", href: "/cardapio" },
-    { label: "App", href: "/appseventies" },
-    { label: "Clube", href: "/clube" },
     { label: "Delivery", href: "/delivery" },
     { label: "Contato", href: "/contato" }
   ];
