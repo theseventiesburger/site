@@ -475,8 +475,21 @@ export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
                       {STATUS_LABEL[pedido.status] ?? pedido.status}
                     </span>
                   </td>
-                  <td className="py-2.5 pr-3 text-gray-600 font-medium">
-                    {FORMA_PAGAMENTO_LABEL[pedido.forma_pagamento] ?? 'Não informado'}
+                  <td className="py-2.5 pr-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-600 font-medium">
+                        {FORMA_PAGAMENTO_LABEL[pedido.forma_pagamento] ?? 'Não informado'}
+                      </span>
+                      {/* Forma de pagamento não diz se o dinheiro entrou de verdade — um
+                          fiado tem forma_pagamento preenchida mas ainda está pendente. */}
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                          pedido.pago ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                        }`}
+                      >
+                        {pedido.pago ? 'Pago' : 'Pendente'}
+                      </span>
+                    </div>
                   </td>
                   <td className="py-2.5 pr-3 text-right font-black text-sv-dark">{formatarBRL(pedido.total)}</td>
                 </tr>
