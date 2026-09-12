@@ -113,12 +113,17 @@ end;
 $$;
 
 -- ─── backfill: pedido já pago/fechado antes deste conserto, mas com item
--- preso em recebido/preparando/pronto.
+-- preso em recebido/preparando/pronto. Exclui pedido de mesa órfão de
+-- comanda (de antes da 0030 existir) — mesmo motivo do backfill da 0032:
+-- tocar nele dispara o recálculo de status, que esbarra na constraint
+-- comanda_obrigatoria (exige comanda_id pra tipo='mesa'), que essas linhas
+-- antigas não cumprem e nunca vão cumprir.
 update itens_pedido ip
 set status = 'entregue'
 where ip.status not in ('entregue', 'cancelado')
   and ip.pedido_id in (
     select p.id from pedidos p
     left join comandas c on c.id = p.comanda_id
-    where p.pago = true or c.status = 'fechada'
+    where (p.pago = true or c.status = 'fechada')
+      and (p.tipo <> 'mesa' or p.comanda_id is not null)
   );
