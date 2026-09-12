@@ -3,7 +3,7 @@ import BadgeTipo from '@/components/comanda/BadgeTipo';
 import { PROXIMO_STATUS, STATUS_LABEL, PONTO_CARNE_LABEL } from '@/lib/comanda/constantes';
 import { formatarBRL, formatarHora, tempoDecorrido, minutosDecorridos } from '@/lib/comanda/formato';
 
-export default function CardPedidoCozinha({ pedido, onAvancarItem, onCancelar, onTogglePago }) {
+export default function CardPedidoCozinha({ pedido, onAvancarItem, onCancelar }) {
   const itens = pedido.itens_pedido ?? [];
   // Na mesa, o garçom reconhece o pedido pelo número da mesa mais rápido
   // que pelo número do pedido — então é a mesa que fica em destaque.
@@ -100,18 +100,6 @@ export default function CardPedidoCozinha({ pedido, onAvancarItem, onCancelar, o
 
       <div className="flex items-center justify-between border-t border-gray-100 pt-3 gap-2">
         <span className="font-black text-sv-dark">{formatarBRL(pedido.total)}</span>
-
-        {pedido.tipo !== 'mesa' && (
-          <button
-            type="button"
-            onClick={() => onTogglePago(pedido.id, !pedido.pago)}
-            className={`text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider transition-colors duration-150 ${
-              pedido.pago ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-            }`}
-          >
-            {pedido.pago ? 'Pago' : 'Marcar pago'}
-          </button>
-        )}
       </div>
 
       {pedido.status !== 'cancelado' && pedido.status !== 'entregue' && (

@@ -5,7 +5,6 @@ import CardPedidoCozinha from '@/components/comanda/CardPedidoCozinha';
 import EstadoVazio from '@/components/comanda/EstadoVazio';
 import { criarClienteBrowser } from '@/lib/supabase/client';
 import {
-  atualizarPagamentoPedido,
   atualizarStatusItemPedido,
   atualizarStatusPedido,
   buscarPedidoPorId,
@@ -146,19 +145,6 @@ export default function PainelCozinha({ pedidosIniciais }) {
     }
   }
 
-  async function togglePago(pedidoId, pago) {
-    const pedido = pedidosRef.current.find((p) => p.id === pedidoId);
-    const pagoAnterior = pedido?.pago;
-    setPedidos((atual) => atual.map((p) => (p.id === pedidoId ? { ...p, pago } : p)));
-    try {
-      await atualizarPagamentoPedido(supabase, pedidoId, pago);
-    } catch (err) {
-      console.error(err);
-      setPedidos((atual) => atual.map((p) => (p.id === pedidoId ? { ...p, pago: pagoAnterior } : p)));
-      avisarErro('Não foi possível atualizar o pagamento. Tente de novo.');
-    }
-  }
-
   const pedidosAtivos = pedidos.filter((p) => p.status !== 'entregue' && p.status !== 'cancelado');
 
   return (
@@ -195,7 +181,6 @@ export default function PainelCozinha({ pedidosIniciais }) {
                     pedido={pedido}
                     onAvancarItem={avancarStatusItem}
                     onCancelar={cancelarPedido}
-                    onTogglePago={togglePago}
                   />
                 ))}
               </div>
