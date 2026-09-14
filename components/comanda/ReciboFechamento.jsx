@@ -10,6 +10,10 @@ export default function ReciboFechamento({ mesaNumero, abertaEm, rodadas, subtot
   return (
     <div className="hidden print:block w-[80mm] mx-auto p-2 text-black font-mono text-sm leading-snug">
       <div className="text-center mb-1">
+        {/* eslint-disable-next-line @next/next/no-img-element -- print-only,
+            next/image não faz sentido aqui (sem otimização/lazy-load na hora
+            de imprimir) */}
+        <img src="/logo.png" alt={RESTAURANTE.nome} className="w-[26mm] h-[26mm] object-contain mx-auto" />
         <p className="font-black text-lg uppercase">{RESTAURANTE.nome}</p>
       </div>
 
