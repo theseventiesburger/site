@@ -8,9 +8,9 @@ import { RESTAURANTE } from '@/lib/comanda/constantes';
 // por trás do modal) leva `print:hidden` em PainelMesa.
 export default function ReciboFechamento({ mesaNumero, abertaEm, rodadas, subtotal, taxaServico, desconto, total }) {
   return (
-    <div className="hidden print:block w-[80mm] mx-auto p-2 text-black font-mono text-[11px] leading-snug">
+    <div className="hidden print:block w-[80mm] mx-auto p-2 text-black font-mono text-sm leading-snug">
       <div className="text-center mb-1">
-        <p className="font-black text-sm uppercase">{RESTAURANTE.nome}</p>
+        <p className="font-black text-lg uppercase">{RESTAURANTE.nome}</p>
       </div>
 
       <div className="border-t border-dashed border-black my-1" />
@@ -57,7 +57,7 @@ export default function ReciboFechamento({ mesaNumero, abertaEm, rodadas, subtot
 
       <div className="border-t border-dashed border-black my-1" />
 
-      <div className="flex justify-between font-black text-sm">
+      <div className="flex justify-between font-black text-lg">
         <span>TOTAL</span>
         <span>{formatarBRL(total)}</span>
       </div>
