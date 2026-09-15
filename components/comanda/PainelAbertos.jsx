@@ -7,8 +7,8 @@ import EstadoVazio from '@/components/comanda/EstadoVazio';
 import FecharContaModal from '@/components/comanda/FecharContaModal';
 import FecharPedidoModal from '@/components/comanda/FecharPedidoModal';
 import { criarClienteBrowser } from '@/lib/supabase/client';
-import { buscarComandaPorId, fecharComanda } from '@/lib/comanda/comandas';
-import { buscarPedidoPorId, fecharPedido } from '@/lib/comanda/pedidos';
+import { buscarComandaPorId, cancelarComanda, fecharComanda } from '@/lib/comanda/comandas';
+import { atualizarStatusPedido, buscarPedidoPorId, fecharPedido } from '@/lib/comanda/pedidos';
 
 export default function PainelAbertos({ pedidosIniciais, comandasIniciais }) {
   const [supabase] = useState(() => criarClienteBrowser());
@@ -17,6 +17,12 @@ export default function PainelAbertos({ pedidosIniciais, comandasIniciais }) {
   const [conectado, setConectado] = useState(false);
   const [pedidoFechando, setPedidoFechando] = useState(null);
   const [comandaFechando, setComandaFechando] = useState(null);
+  const [erro, setErro] = useState(null);
+
+  function avisarErro(mensagem) {
+    setErro(mensagem);
+    setTimeout(() => setErro(null), 5000);
+  }
 
   useEffect(() => {
     let canalPedidos;
@@ -84,6 +90,31 @@ export default function PainelAbertos({ pedidosIniciais, comandasIniciais }) {
     setComandas((atual) => atual.filter((c) => c.id !== comandaId));
   }
 
+  // Cancelar aqui (em vez de só marcar como pago) é o que tira pedido de
+  // teste do relatório financeiro — igual "Cancelar rodada" já faz na
+  // Cozinha, mas pra pedido que já chegou em "entregue".
+  async function cancelarPedido(pedido) {
+    if (!window.confirm('Tem certeza que deseja cancelar este pedido? Essa ação não pode ser desfeita.')) return;
+    try {
+      await atualizarStatusPedido(supabase, pedido.id, 'cancelado');
+      setPedidos((atual) => atual.filter((p) => p.id !== pedido.id));
+    } catch (err) {
+      console.error(err);
+      avisarErro('Não foi possível cancelar o pedido. Tente de novo.');
+    }
+  }
+
+  async function cancelarMesaAberta(comanda) {
+    if (!window.confirm('Cancelar esta mesa inteira? Todos os itens lançados serão excluídos e a mesa fica livre de novo. Essa ação não pode ser desfeita.')) return;
+    try {
+      await cancelarComanda(supabase, comanda.id);
+      setComandas((atual) => atual.filter((c) => c.id !== comanda.id));
+    } catch (err) {
+      console.error(err);
+      avisarErro('Não foi possível cancelar a mesa. Tente de novo.');
+    }
+  }
+
   const vazio = pedidos.length === 0 && comandas.length === 0;
 
   return (
@@ -94,13 +125,29 @@ export default function PainelAbertos({ pedidosIniciais, comandasIniciais }) {
         {conectado ? 'Ao vivo' : 'Conectando...'}
       </div>
 
+      {erro && (
+        <p className="text-sv-red text-xs font-bold bg-sv-red/5 border border-sv-red/20 rounded-xl px-4 py-3">
+          {erro}
+        </p>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {vazio && <EstadoVazio mensagem="Nenhuma mesa aberta nem pedido aguardando pagamento." />}
         {comandas.map((comanda) => (
-          <CardComandaAberta key={comanda.id} comanda={comanda} onFecharConta={setComandaFechando} />
+          <CardComandaAberta
+            key={comanda.id}
+            comanda={comanda}
+            onFecharConta={setComandaFechando}
+            onCancelar={cancelarMesaAberta}
+          />
         ))}
         {pedidos.map((pedido) => (
-          <CardPedidoAberto key={pedido.id} pedido={pedido} onFecharPedido={setPedidoFechando} />
+          <CardPedidoAberto
+            key={pedido.id}
+            pedido={pedido}
+            onFecharPedido={setPedidoFechando}
+            onCancelar={cancelarPedido}
+          />
         ))}
       </div>
     </div>

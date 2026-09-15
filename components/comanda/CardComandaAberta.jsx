@@ -5,7 +5,7 @@ import { formatarBRL, tempoDecorrido } from '@/lib/comanda/formato';
 // Mesa aberta na tela de Pedidos Abertos — mesmos dados de PainelMesa, só
 // que resumidos (aqui é só pra decidir se fecha a conta, não pra lançar
 // itens novos).
-export default function CardComandaAberta({ comanda, onFecharConta }) {
+export default function CardComandaAberta({ comanda, onFecharConta, onCancelar }) {
   const itens = (comanda.pedidos ?? []).flatMap((pedido) =>
     (pedido.itens_pedido ?? []).filter((item) => item.status !== 'cancelado')
   );
@@ -44,13 +44,22 @@ export default function CardComandaAberta({ comanda, onFecharConta }) {
 
       <div className="flex items-center justify-between border-t border-gray-100 pt-3 gap-2">
         <span className="font-black text-sv-dark text-lg">{formatarBRL(comanda.total)}</span>
-        <button
-          type="button"
-          onClick={() => onFecharConta(comanda)}
-          className="bg-sv-dark text-white font-black px-4 py-2 rounded-xl uppercase tracking-wider text-[11px] hover:bg-sv-blue transition-colors duration-150"
-        >
-          Fechar conta
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onCancelar(comanda)}
+            className="text-gray-400 hover:text-sv-red font-black px-2.5 py-2 rounded-xl uppercase tracking-wider text-[11px] transition-colors duration-150"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={() => onFecharConta(comanda)}
+            className="bg-sv-dark text-white font-black px-4 py-2 rounded-xl uppercase tracking-wider text-[11px] hover:bg-sv-blue transition-colors duration-150"
+          >
+            Fechar conta
+          </button>
+        </div>
       </div>
     </div>
   );

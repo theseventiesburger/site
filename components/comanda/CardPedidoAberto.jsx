@@ -2,7 +2,7 @@ import BadgeTipo from '@/components/comanda/BadgeTipo';
 import { PONTO_CARNE_LABEL } from '@/lib/comanda/constantes';
 import { formatarBRL, formatarDataHora, tempoDecorrido } from '@/lib/comanda/formato';
 
-export default function CardPedidoAberto({ pedido, onFecharPedido }) {
+export default function CardPedidoAberto({ pedido, onFecharPedido, onCancelar }) {
   const itens = pedido.itens_pedido ?? [];
   const destaque = pedido.tipo === 'mesa' ? `Mesa ${pedido.mesa_id}` : `#${pedido.numero}`;
 
@@ -56,13 +56,22 @@ export default function CardPedidoAberto({ pedido, onFecharPedido }) {
 
       <div className="flex items-center justify-between border-t border-gray-100 pt-3 gap-2">
         <span className="font-black text-sv-dark text-lg">{formatarBRL(pedido.total)}</span>
-        <button
-          type="button"
-          onClick={() => onFecharPedido(pedido)}
-          className="bg-sv-dark text-white font-black px-4 py-2 rounded-xl uppercase tracking-wider text-[11px] hover:bg-sv-blue transition-colors duration-150"
-        >
-          Fechar pedido
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onCancelar(pedido)}
+            className="text-gray-400 hover:text-sv-red font-black px-2.5 py-2 rounded-xl uppercase tracking-wider text-[11px] transition-colors duration-150"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={() => onFecharPedido(pedido)}
+            className="bg-sv-dark text-white font-black px-4 py-2 rounded-xl uppercase tracking-wider text-[11px] hover:bg-sv-blue transition-colors duration-150"
+          >
+            Fechar pedido
+          </button>
+        </div>
       </div>
     </div>
   );
