@@ -117,6 +117,13 @@ export default function ComandaTopbar({ email, userId }) {
         </div>
 
         <div className="flex items-center gap-3 flex-shrink-0">
+          <Link
+            href="/comanda/abertos"
+            className="flex items-center gap-1.5 bg-sv-red text-white font-black px-3 py-2 rounded-lg uppercase tracking-wider text-[11px] hover:bg-sv-red/80 transition-colors duration-150 animate-pulse"
+          >
+            <span className="w-2 h-2 rounded-full bg-white flex-shrink-0" />
+            Pedidos Abertos
+          </Link>
           <NotificacoesPush userId={userId} />
           <span className="hidden sm:block text-gray-400 text-xs font-medium truncate max-w-[160px]">
             {email}
