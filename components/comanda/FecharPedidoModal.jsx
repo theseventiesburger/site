@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import ReciboPedidoAvulso from '@/components/comanda/ReciboPedidoAvulso';
 import { FORMAS_PAGAMENTO, FORMA_PAGAMENTO_LABEL } from '@/lib/comanda/constantes';
 import { formatarBRL, parsePrecoInput } from '@/lib/comanda/formato';
 
@@ -46,6 +47,15 @@ export default function FecharPedidoModal({ pedido, onFechar, onConfirmar }) {
   const desconto = parsePrecoInput(descontoInput || '0');
   const total = Math.max(0, subtotal + taxaEntrega - desconto);
 
+  // Mesmos valores calculados acima, só que já resolvidos pro cupom impresso
+  // (cortesia sai R$0,00 de verdade, não o valor riscado).
+  const linhasRecibo = itens.map((item) => ({
+    quantidade: item.quantidade,
+    nome: item.nome_produto,
+    cortesia: cortesiaIds.has(item.id),
+    valor: cortesiaIds.has(item.id) ? 0 : parsePrecoInput(valorInputItem(item)),
+  }));
+
   async function confirmar(e) {
     e.preventDefault();
     if (!formaPagamento) {
@@ -89,6 +99,7 @@ export default function FecharPedidoModal({ pedido, onFechar, onConfirmar }) {
   }
 
   return (
+    <>
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-4 py-8 overflow-y-auto print:hidden">
       <form
         onSubmit={confirmar}
@@ -185,6 +196,14 @@ export default function FecharPedidoModal({ pedido, onFechar, onConfirmar }) {
           </p>
         )}
 
+        <button
+          type="button"
+          onClick={() => window.print()}
+          className="py-3 rounded-xl border border-gray-200 text-sv-dark font-black uppercase tracking-wider text-xs hover:border-sv-blue hover:text-sv-blue transition-colors duration-150"
+        >
+          🖨️ Imprimir cupom
+        </button>
+
         <div className="flex gap-3 mt-2">
           <button
             type="button"
@@ -203,5 +222,15 @@ export default function FecharPedidoModal({ pedido, onFechar, onConfirmar }) {
         </div>
       </form>
     </div>
+
+    <ReciboPedidoAvulso
+      pedido={pedido}
+      linhas={linhasRecibo}
+      subtotal={subtotal}
+      taxaEntrega={taxaEntrega}
+      desconto={desconto}
+      total={total}
+    />
+    </>
   );
 }
