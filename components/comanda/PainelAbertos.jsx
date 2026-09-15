@@ -6,6 +6,7 @@ import CardPedidoAberto from '@/components/comanda/CardPedidoAberto';
 import EstadoVazio from '@/components/comanda/EstadoVazio';
 import FecharContaModal from '@/components/comanda/FecharContaModal';
 import FecharPedidoModal from '@/components/comanda/FecharPedidoModal';
+import ModalCancelarUairango from '@/components/comanda/ModalCancelarUairango';
 import { criarClienteBrowser } from '@/lib/supabase/client';
 import { buscarComandaPorId, cancelarComanda, fecharComanda } from '@/lib/comanda/comandas';
 import { atualizarStatusPedido, buscarPedidoPorId, fecharPedido } from '@/lib/comanda/pedidos';
@@ -17,6 +18,7 @@ export default function PainelAbertos({ pedidosIniciais, comandasIniciais }) {
   const [conectado, setConectado] = useState(false);
   const [pedidoFechando, setPedidoFechando] = useState(null);
   const [comandaFechando, setComandaFechando] = useState(null);
+  const [pedidoCancelandoUairango, setPedidoCancelandoUairango] = useState(null);
   const [erro, setErro] = useState(null);
 
   function avisarErro(mensagem) {
@@ -92,8 +94,19 @@ export default function PainelAbertos({ pedidosIniciais, comandasIniciais }) {
 
   // Cancelar aqui (em vez de só marcar como pago) é o que tira pedido de
   // teste do relatório financeiro — igual "Cancelar rodada" já faz na
-  // Cozinha, mas pra pedido que já chegou em "entregue".
-  async function cancelarPedido(pedido) {
+  // Cozinha, mas pra pedido que já chegou em "entregue". Pedido vindo do
+  // UaiRango não pode ser cancelado direto (regra deles: precisa consultar
+  // motivo e avisar a plataforma) — abre o modal específico em vez do
+  // confirm simples.
+  function cancelarPedido(pedido) {
+    if (pedido.uairango_order_id) {
+      setPedidoCancelandoUairango(pedido);
+      return;
+    }
+    cancelarPedidoDireto(pedido);
+  }
+
+  async function cancelarPedidoDireto(pedido) {
     if (!window.confirm('Tem certeza que deseja cancelar este pedido? Essa ação não pode ser desfeita.')) return;
     try {
       await atualizarStatusPedido(supabase, pedido.id, 'cancelado');
@@ -102,6 +115,11 @@ export default function PainelAbertos({ pedidosIniciais, comandasIniciais }) {
       console.error(err);
       avisarErro('Não foi possível cancelar o pedido. Tente de novo.');
     }
+  }
+
+  function pedidoUairangoCancelado(pedidoId) {
+    setPedidoCancelandoUairango(null);
+    setPedidos((atual) => atual.filter((p) => p.id !== pedidoId));
   }
 
   async function cancelarMesaAberta(comanda) {
@@ -165,6 +183,14 @@ export default function PainelAbertos({ pedidosIniciais, comandasIniciais }) {
         comanda={comandaFechando}
         onFechar={() => setComandaFechando(null)}
         onConfirmar={confirmarFechamentoComanda}
+      />
+    )}
+
+    {pedidoCancelandoUairango && (
+      <ModalCancelarUairango
+        pedido={pedidoCancelandoUairango}
+        onFechar={() => setPedidoCancelandoUairango(null)}
+        onCancelado={pedidoUairangoCancelado}
       />
     )}
     </>

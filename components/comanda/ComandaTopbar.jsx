@@ -18,6 +18,7 @@ const ITENS_MENU = [
       { href: '/comanda/novo/pdv', label: 'Novo PDV' },
       { href: '/comanda/abertos', label: 'Pedidos Abertos' },
       { href: '/comanda/whatsapp', label: 'WhatsApp' },
+      { href: '/comanda/uairango-loja', label: 'Loja no UaiRango' },
     ],
   },
   {

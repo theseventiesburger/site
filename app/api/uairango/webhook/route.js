@@ -61,6 +61,10 @@ async function processarEvento(supabaseAdmin, evento) {
       p_pago: dados.pago,
       p_observacoes: dados.observacoes,
       p_itens: dados.itens,
+      p_bandeira_cartao: dados.bandeiraCartao,
+      p_troco: dados.troco,
+      p_cupom_valor: dados.cupomValor,
+      p_cupom_responsavel: dados.cupomResponsavel,
     });
 
     // Aceitar o pedido direto (sem revisão manual) já significa confirmar
