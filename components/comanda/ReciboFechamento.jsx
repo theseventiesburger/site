@@ -15,6 +15,9 @@ export default function ReciboFechamento({ mesaNumero, abertaEm, rodadas, subtot
             de imprimir) */}
         <img src="/logo.png" alt={RESTAURANTE.nome} className="w-[26mm] h-[26mm] object-contain mx-auto" />
         <p className="font-black text-lg uppercase">{RESTAURANTE.nome}</p>
+        <p className="text-xs">{RESTAURANTE.endereco}</p>
+        <p className="text-xs">CNPJ {RESTAURANTE.cnpj}</p>
+        <p className="text-xs">{RESTAURANTE.telefone}</p>
       </div>
 
       <div className="border-t border-dashed border-black my-1" />
