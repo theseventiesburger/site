@@ -20,7 +20,7 @@ export default function ReciboFechamento({ mesaNumero, abertaEm, rodadas, subtot
         <p className="text-xs">{RESTAURANTE.telefone}</p>
       </div>
 
-      <div className="border-t border-dashed border-black my-1" />
+      <div className="border-t border-dashed border-black mt-2 mb-1" />
 
       <div className="flex justify-between">
         <span>Mesa {mesaNumero}</span>

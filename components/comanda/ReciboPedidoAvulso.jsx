@@ -19,7 +19,7 @@ export default function ReciboPedidoAvulso({ pedido, linhas, subtotal, taxaEntre
         <p className="text-xs">{RESTAURANTE.telefone}</p>
       </div>
 
-      <div className="border-t border-dashed border-black my-1" />
+      <div className="border-t border-dashed border-black mt-2 mb-1" />
 
       <div className="flex justify-between">
         <span>{TIPO_LABEL[pedido.tipo] ?? pedido.tipo} #{pedido.numero}</span>
