@@ -55,6 +55,9 @@ export default function FormularioProduto({ supabase, produto, categorias, categ
       .sort((a, b) => a.ordem - b.ordem)
       .map((t) => ({ chave: t.id, nome: t.nome, preco: String(t.preco).replace('.', ',') }))
   );
+  const [nfceNcm, setNfceNcm] = useState(produto?.nfce_ncm ?? '');
+  const [nfceCfop, setNfceCfop] = useState(produto?.nfce_cfop ?? '');
+  const [nfceCsosn, setNfceCsosn] = useState(produto?.nfce_csosn ?? '102');
   const [arquivoImagem, setArquivoImagem] = useState(null);
   const [previaImagem, setPreviaImagem] = useState(produto?.imagem ?? '/hb2.png');
   const [enviando, setEnviando] = useState(false);
@@ -116,6 +119,9 @@ export default function FormularioProduto({ supabase, produto, categorias, categ
         precoCombo: parsePrecoInput(precoCombo || '0'),
         permiteSegundoHamburguer,
         precoSegundoHamburguer: parsePrecoInput(precoSegundoHamburguer || '0'),
+        nfceNcm: nfceNcm.trim() || null,
+        nfceCfop: nfceCfop.trim() || null,
+        nfceCsosn: nfceCsosn.trim() || '102',
         imagem,
         ordem: produto?.ordem ?? 0,
       };
@@ -412,6 +418,45 @@ export default function FormularioProduto({ supabase, produto, categorias, categ
             </p>
           </div>
         )}
+
+        <div className="flex flex-col gap-2 pt-2 border-t border-gray-100">
+          <label className="text-xs font-black text-gray-400 uppercase tracking-widest">
+            Dados fiscais (NFC-e)
+          </label>
+          <p className="text-gray-400 text-[11px] font-medium -mt-1">
+            Preencha com o contador — sem NCM e CFOP a emissão de nota desse produto falha de propósito
+            em vez de mandar código fiscal chutado pra SEFAZ.
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">NCM</span>
+              <input
+                value={nfceNcm}
+                onChange={(e) => setNfceNcm(e.target.value)}
+                placeholder="21069090"
+                className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">CFOP</span>
+              <input
+                value={nfceCfop}
+                onChange={(e) => setNfceCfop(e.target.value)}
+                placeholder="5101"
+                className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">CSOSN</span>
+              <input
+                value={nfceCsosn}
+                onChange={(e) => setNfceCsosn(e.target.value)}
+                placeholder="102"
+                className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
+              />
+            </div>
+          </div>
+        </div>
 
         {erro && (
           <p className="text-sv-red text-xs font-bold bg-sv-red/5 border border-sv-red/20 rounded-xl px-4 py-3">
