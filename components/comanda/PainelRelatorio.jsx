@@ -94,20 +94,6 @@ export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
     setPedidoAberto(null);
   }
 
-  function nfceAtualizada(pedidoId, resultado) {
-    const patch = {
-      nfce_status: 'autorizada',
-      nfce_erro: null,
-      nfce_chave: resultado.chave_nfe,
-      nfce_numero: resultado.numero,
-      nfce_serie: resultado.serie,
-      nfce_danfe_url: resultado.caminho_danfe,
-      nfce_qrcode_url: resultado.qrcode_url,
-    };
-    setPedidos((atual) => atual.map((p) => (p.id === pedidoId ? { ...p, ...patch } : p)));
-    setPedidoAberto((atual) => (atual && atual.id === pedidoId ? { ...atual, ...patch } : atual));
-  }
-
   async function buscar(inicioNegocio, fimNegocio, hv) {
     setCarregando(true);
     setErro(null);
@@ -547,7 +533,6 @@ export default function PainelRelatorio({ pedidosIniciais, dataInicial }) {
           pedido={pedidoAberto}
           onFechar={() => setPedidoAberto(null)}
           onConfirmarRecebimento={confirmarRecebimento}
-          onNfceAtualizada={nfceAtualizada}
         />
       )}
     </div>

@@ -10,12 +10,10 @@ const FORMAS_RECEBIMENTO = FORMAS_PAGAMENTO.filter((f) => f !== 'fiado');
 
 // Ver os dados de um pedido já fechado (relatório) e, se ainda estiver
 // pendente (fiado), confirmar que o dinheiro finalmente entrou.
-export default function ModalDetalhePedido({ pedido, onFechar, onConfirmarRecebimento, onNfceAtualizada }) {
+export default function ModalDetalhePedido({ pedido, onFechar, onConfirmarRecebimento }) {
   const [formaPagamento, setFormaPagamento] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState(null);
-  const [emitindoNfce, setEmitindoNfce] = useState(false);
-  const [erroNfce, setErroNfce] = useState(null);
 
   const itens = (pedido.itens_pedido ?? []).filter((item) => item.status !== 'cancelado');
   const destaque = pedido.tipo === 'mesa' ? `Mesa ${pedido.mesa_id} — Pedido #${pedido.numero}` : `Pedido #${pedido.numero}`;
@@ -34,25 +32,6 @@ export default function ModalDetalhePedido({ pedido, onFechar, onConfirmarRecebi
       setErro('Não foi possível confirmar o recebimento. Tente de novo.');
     } finally {
       setEnviando(false);
-    }
-  }
-
-  async function emitirNfce() {
-    setEmitindoNfce(true);
-    setErroNfce(null);
-    try {
-      const resposta = await fetch('/api/nfce/emitir', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pedidoId: pedido.id }),
-      });
-      const dados = await resposta.json();
-      if (!resposta.ok || dados.erro) throw new Error(dados.erro || 'Falha ao emitir a nota.');
-      onNfceAtualizada?.(pedido.id, dados.resultado);
-    } catch (err) {
-      setErroNfce(err.message);
-    } finally {
-      setEmitindoNfce(false);
     }
   }
 
@@ -122,47 +101,6 @@ export default function ModalDetalhePedido({ pedido, onFechar, onConfirmarRecebi
           <p className="text-sv-red text-xs font-bold bg-sv-red/5 border border-sv-red/20 rounded-xl px-4 py-3">
             {erro}
           </p>
-        )}
-
-        {pedido.pago && (
-          <div className="flex flex-col gap-2 pt-2 border-t border-gray-100">
-            <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Nota Fiscal (NFC-e)</span>
-
-            {pedido.nfce_status === 'autorizada' ? (
-              <div className="text-green-700 text-xs font-bold bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex flex-col gap-1">
-                <span>Nota autorizada — nº {pedido.nfce_numero}/{pedido.nfce_serie}</span>
-                <div className="flex gap-3">
-                  {pedido.nfce_danfe_url && (
-                    <a href={pedido.nfce_danfe_url} target="_blank" rel="noreferrer" className="underline">DANFE</a>
-                  )}
-                  {pedido.nfce_qrcode_url && (
-                    <a href={pedido.nfce_qrcode_url} target="_blank" rel="noreferrer" className="underline">QR Code</a>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <>
-                {pedido.nfce_status === 'erro' && pedido.nfce_erro && (
-                  <p className="text-sv-red text-xs font-bold bg-sv-red/5 border border-sv-red/20 rounded-xl px-4 py-3">
-                    {pedido.nfce_erro}
-                  </p>
-                )}
-                {erroNfce && (
-                  <p className="text-sv-red text-xs font-bold bg-sv-red/5 border border-sv-red/20 rounded-xl px-4 py-3">
-                    {erroNfce}
-                  </p>
-                )}
-                <button
-                  type="button"
-                  onClick={emitirNfce}
-                  disabled={emitindoNfce}
-                  className="py-3 rounded-xl border border-gray-200 text-sv-dark font-black uppercase tracking-wider text-xs hover:border-sv-blue hover:text-sv-blue transition-colors duration-150 disabled:opacity-60"
-                >
-                  {emitindoNfce ? 'Emitindo...' : pedido.nfce_status === 'erro' ? 'Tentar emitir de novo' : 'Emitir Nota Fiscal'}
-                </button>
-              </>
-            )}
-          </div>
         )}
 
         <div className="flex gap-3 mt-2">
