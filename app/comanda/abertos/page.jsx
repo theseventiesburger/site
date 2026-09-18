@@ -11,6 +11,10 @@ export default async function PedidosAbertosPage() {
       .eq("status", "entregue")
       .eq("pago", false)
       .neq("tipo", "mesa")
+      // forma_pagamento pode ser null (staff ainda não escolheu) — .neq
+      // sozinho descartaria essas linhas também (NULL <> 'fiado' não é
+      // verdadeiro em SQL), por isso o .or explícito com is.null.
+      .or("forma_pagamento.is.null,forma_pagamento.neq.fiado")
       .order("created_at", { ascending: true }),
     listarComandasAbertas(supabase),
   ]);
@@ -26,6 +30,7 @@ export default async function PedidosAbertosPage() {
         </h1>
         <p className="text-gray-400 text-sm font-medium mt-2">
           Mesas abertas e pedidos que já saíram da cozinha mas ainda esperam a confirmação do pagamento.
+          Fiado tem tela própria em &quot;Fiados&quot;.
         </p>
       </div>
 

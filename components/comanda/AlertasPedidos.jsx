@@ -56,8 +56,12 @@ export default function AlertasPedidos({ cargo }) {
       canal = supabase
         .channel('alertas-pedidos')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pedidos' }, (payload) => {
-          // Pedido novo é o garçom avisando — só interessa à cozinha.
+          // Pedido novo é o garçom avisando — só interessa à cozinha. Item
+          // que nasce "entregue" (produto com vai_para_cozinha=false, na
+          // mesa) já sai direto pra conta sem passar pela cozinha — não é
+          // pedido feito pra alertar aqui (ver criar_pedido, migration 0032).
           if (cargo !== 'cozinha') return;
+          if (payload.new.status === 'entregue') return;
           const tipoLabel = TIPO_LABEL[payload.new.tipo] ?? payload.new.tipo;
           adicionarAlerta(`Novo pedido #${payload.new.numero} — ${tipoLabel}`);
         })

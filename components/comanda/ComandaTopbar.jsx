@@ -17,6 +17,7 @@ const ITENS_MENU = [
       { href: '/comanda/novo/delivery', label: 'Novo Delivery' },
       { href: '/comanda/novo/pdv', label: 'Novo PDV' },
       { href: '/comanda/abertos', label: 'Pedidos Abertos' },
+      { href: '/comanda/fiados', label: 'Fiados' },
       { href: '/comanda/whatsapp', label: 'WhatsApp' },
       { href: '/comanda/uairango-loja', label: 'UaiRango' },
     ],
