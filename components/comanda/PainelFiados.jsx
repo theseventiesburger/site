@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import CardFiado from '@/components/comanda/CardFiado';
 import EstadoVazio from '@/components/comanda/EstadoVazio';
 import { criarClienteBrowser } from '@/lib/supabase/client';
-import { listarFiados, agruparFiados } from '@/lib/comanda/fiados';
-import { confirmarRecebimentoPedido } from '@/lib/comanda/pedidos';
+import { listarFiados, agruparFiados, confirmarRecebimentoGrupo, atribuirClienteFiado } from '@/lib/comanda/fiados';
 import { formatarBRL } from '@/lib/comanda/formato';
 
 export default function PainelFiados({ pedidosIniciais }) {
@@ -50,8 +49,13 @@ export default function PainelFiados({ pedidosIniciais }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase]);
 
-  async function confirmar(pedido, formaPagamento) {
-    await confirmarRecebimentoPedido(supabase, pedido, formaPagamento);
+  async function confirmar(grupo, formaPagamento) {
+    await confirmarRecebimentoGrupo(supabase, grupo, formaPagamento);
+    await recarregar();
+  }
+
+  async function atribuirCliente(pedidoId, cliente) {
+    await atribuirClienteFiado(supabase, pedidoId, cliente);
     await recarregar();
   }
 
@@ -75,7 +79,13 @@ export default function PainelFiados({ pedidosIniciais }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {grupos.length === 0 && <EstadoVazio mensagem="Nenhum fiado em aberto." />}
         {grupos.map((grupo) => (
-          <CardFiado key={grupo.chave} grupo={grupo} onConfirmar={confirmar} />
+          <CardFiado
+            key={grupo.chave}
+            grupo={grupo}
+            supabase={supabase}
+            onConfirmar={confirmar}
+            onAtribuirCliente={atribuirCliente}
+          />
         ))}
       </div>
     </div>
