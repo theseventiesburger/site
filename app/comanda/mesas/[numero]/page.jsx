@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import PainelMesa from "@/components/comanda/PainelMesa";
 import { listarAdicionaisAtivos } from "@/lib/comanda/adicionais";
 import { buscarComandaAbertaPorMesa } from "@/lib/comanda/comandas";
+import { buscarComboConfig, opcoesBebidaCombo } from "@/lib/comanda/comboConfig";
 import { criarClienteServidor } from "@/lib/supabase/server";
 
 export default async function MesaPage({ params }) {
@@ -24,6 +25,7 @@ export default async function MesaPage({ params }) {
   if (!mesa) notFound();
 
   const adicionais = await listarAdicionaisAtivos(supabase);
+  const comboBebidas = opcoesBebidaCombo(produtos ?? [], await buscarComboConfig(supabase).catch(() => null));
 
   return (
     <section className="w-full max-w-6xl mx-auto px-6 py-10 flex-1">
@@ -42,6 +44,7 @@ export default async function MesaPage({ params }) {
         produtos={produtos ?? []}
         categorias={categorias ?? []}
         adicionais={adicionais}
+        comboBebidas={comboBebidas}
       />
     </section>
   );

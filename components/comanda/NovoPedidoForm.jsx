@@ -23,7 +23,7 @@ const CAMPOS_INICIAIS = {
   pdv: { clienteNome: '', formaPagamento: null },
 };
 
-export default function NovoPedidoForm({ tipo, produtos, adicionais, categorias, bairros }) {
+export default function NovoPedidoForm({ tipo, produtos, adicionais, categorias, bairros, comboBebidas }) {
   const router = useRouter();
   const [supabase] = useState(() => criarClienteBrowser());
   const [itens, setItens] = useState([]);
@@ -73,6 +73,7 @@ export default function NovoPedidoForm({ tipo, produtos, adicionais, categorias,
           podeVirarCombo: produto.pode_virar_combo ?? false,
           precoCombo: Number(produto.preco_combo) || 0,
           comboAtivo: false,
+          comboBebidaId: null,
           permiteSegundoHamburguer: produto.permite_segundo_hamburguer ?? false,
           precoSegundoHamburguer: Number(produto.preco_segundo_hamburguer) || 0,
           segundoHamburguerAtivo: false,
@@ -99,6 +100,10 @@ export default function NovoPedidoForm({ tipo, produtos, adicionais, categorias,
 
   function atualizarCombo(idx, comboAtivo) {
     setItens((atual) => atual.map((item, i) => (i === idx ? { ...item, comboAtivo } : item)));
+  }
+
+  function atualizarComboBebida(idx, comboBebidaId) {
+    setItens((atual) => atual.map((item, i) => (i === idx ? { ...item, comboBebidaId } : item)));
   }
 
   function atualizarSegundoHamburguer(idx, segundoHamburguerAtivo) {
@@ -212,6 +217,8 @@ export default function NovoPedidoForm({ tipo, produtos, adicionais, categorias,
           onPontoCarne={atualizarPontoCarne}
           onAdicionais={atualizarAdicionaisItem}
           onCombo={atualizarCombo}
+          onComboBebida={atualizarComboBebida}
+          comboBebidas={comboBebidas}
           onSegundoHamburguer={atualizarSegundoHamburguer}
           onRemover={removerItem}
           onCupomAplicado={setCupomCodigo}

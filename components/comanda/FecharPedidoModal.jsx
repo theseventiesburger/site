@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import ReciboPedidoAvulso from '@/components/comanda/ReciboPedidoAvulso';
+import CampoDesconto, { calcularDescontoFechamento } from '@/components/comanda/CampoDesconto';
 import { FORMAS_PAGAMENTO, FORMA_PAGAMENTO_LABEL } from '@/lib/comanda/constantes';
 import { formatarBRL, parsePrecoInput } from '@/lib/comanda/formato';
 
@@ -18,6 +19,7 @@ export default function FecharPedidoModal({ pedido, onFechar, onConfirmar }) {
   const [descontoInput, setDescontoInput] = useState(
     Number(pedido.desconto) > 0 ? String(pedido.desconto).replace('.', ',') : ''
   );
+  const [modoDesconto, setModoDesconto] = useState('valor');
   const [formaPagamento, setFormaPagamento] = useState(pedido.forma_pagamento ?? '');
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState(null);
@@ -44,7 +46,7 @@ export default function FecharPedidoModal({ pedido, onFechar, onConfirmar }) {
     return soma + parsePrecoInput(valorInputItem(item));
   }, 0);
   const taxaEntrega = Number(pedido.taxa_entrega) || 0;
-  const desconto = parsePrecoInput(descontoInput || '0');
+  const desconto = calcularDescontoFechamento(modoDesconto, descontoInput, subtotal);
   const total = Math.max(0, subtotal + taxaEntrega - desconto);
 
   // Mesmos valores calculados acima, só que já resolvidos pro cupom impresso
@@ -60,6 +62,10 @@ export default function FecharPedidoModal({ pedido, onFechar, onConfirmar }) {
     e.preventDefault();
     if (!formaPagamento) {
       setErro('Selecione a forma de pagamento.');
+      return;
+    }
+    if (modoDesconto === 'percentual' && parsePrecoInput(descontoInput || '0') > 100) {
+      setErro('O desconto não pode passar de 100%.');
       return;
     }
     if (desconto > subtotal + taxaEntrega) {
@@ -159,17 +165,13 @@ export default function FecharPedidoModal({ pedido, onFechar, onConfirmar }) {
           </div>
         )}
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Desconto (R$, opcional)</label>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={descontoInput}
-            onChange={(e) => setDescontoInput(e.target.value)}
-            placeholder="0,00"
-            className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
-          />
-        </div>
+        <CampoDesconto
+          modo={modoDesconto}
+          onModo={setModoDesconto}
+          entrada={descontoInput}
+          onEntrada={setDescontoInput}
+          baseItens={subtotal}
+        />
 
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Forma de pagamento</label>

@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { FORMAS_PAGAMENTO, FORMA_PAGAMENTO_LABEL } from '@/lib/comanda/constantes';
 import { formatarBRL, parsePrecoInput } from '@/lib/comanda/formato';
 import ReciboFechamento from '@/components/comanda/ReciboFechamento';
+import CampoDesconto, { calcularDescontoFechamento } from '@/components/comanda/CampoDesconto';
 
 const TAXA_SERVICO_PERCENTUAL = 0.10;
 
@@ -31,6 +32,7 @@ export default function FecharContaModal({ comanda, onFechar, onConfirmar }) {
   const [descontoInput, setDescontoInput] = useState(
     Number(comanda.desconto) > 0 ? String(comanda.desconto).replace('.', ',') : ''
   );
+  const [modoDesconto, setModoDesconto] = useState('valor');
   const [formaPagamento, setFormaPagamento] = useState(comanda.forma_pagamento ?? '');
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState(null);
@@ -57,7 +59,7 @@ export default function FecharContaModal({ comanda, onFechar, onConfirmar }) {
     return soma + parsePrecoInput(valorInputItem(item));
   }, 0);
   const taxaServico = taxaServicoAtiva ? Math.round(subtotal * TAXA_SERVICO_PERCENTUAL * 100) / 100 : 0;
-  const desconto = parsePrecoInput(descontoInput || '0');
+  const desconto = calcularDescontoFechamento(modoDesconto, descontoInput, subtotal);
   const total = Math.max(0, subtotal + taxaServico - desconto);
 
   // Mesmos valores calculados acima, só que já resolvidos pro cupom impresso
@@ -81,6 +83,10 @@ export default function FecharContaModal({ comanda, onFechar, onConfirmar }) {
     e.preventDefault();
     if (!formaPagamento) {
       setErro('Selecione a forma de pagamento.');
+      return;
+    }
+    if (modoDesconto === 'percentual' && parsePrecoInput(descontoInput || '0') > 100) {
+      setErro('O desconto não pode passar de 100%.');
       return;
     }
     if (desconto > subtotal + taxaServico) {
@@ -186,17 +192,13 @@ export default function FecharContaModal({ comanda, onFechar, onConfirmar }) {
           <span className="text-gray-400 font-black">{formatarBRL(taxaServico)}</span>
         </label>
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Desconto (R$, opcional)</label>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={descontoInput}
-            onChange={(e) => setDescontoInput(e.target.value)}
-            placeholder="0,00"
-            className="px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
-          />
-        </div>
+        <CampoDesconto
+          modo={modoDesconto}
+          onModo={setModoDesconto}
+          entrada={descontoInput}
+          onEntrada={setDescontoInput}
+          baseItens={subtotal}
+        />
 
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Forma de pagamento</label>

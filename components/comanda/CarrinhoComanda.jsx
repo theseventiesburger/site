@@ -82,6 +82,8 @@ export default function CarrinhoComanda({
   onPontoCarne,
   onAdicionais,
   onCombo,
+  onComboBebida,
+  comboBebidas,
   onSegundoHamburguer,
   onRemover,
   onCupomAplicado,
@@ -277,6 +279,18 @@ export default function CarrinhoComanda({
                     />
                     Virar combo (+{formatarBRL(item.precoCombo)}) — inclui fritas e bebida
                   </label>
+                )}
+
+                {item.podeVirarCombo && item.comboAtivo && comboBebidas?.bebidas?.length > 1 && (
+                  <select
+                    value={item.comboBebidaId ?? comboBebidas.padraoId}
+                    onChange={(e) => onComboBebida(idx, e.target.value === comboBebidas.padraoId ? null : e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-green-200 bg-green-50 text-xs font-bold text-sv-dark focus:outline-none focus:border-sv-blue"
+                  >
+                    {comboBebidas.bebidas.map((b) => (
+                      <option key={b.id} value={b.id}>Bebida do combo: {b.nome}</option>
+                    ))}
+                  </select>
                 )}
 
                 {item.permiteSegundoHamburguer && (

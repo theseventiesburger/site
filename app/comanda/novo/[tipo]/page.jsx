@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import NovoPedidoForm from "@/components/comanda/NovoPedidoForm";
 import { TIPOS_PEDIDO, TIPO_LABEL } from "@/lib/comanda/constantes";
 import { listarAdicionaisAtivos } from "@/lib/comanda/adicionais";
+import { buscarComboConfig, opcoesBebidaCombo } from "@/lib/comanda/comboConfig";
 import { criarClienteServidor } from "@/lib/supabase/server";
 
 export default async function NovoPedidoPage({ params }) {
@@ -24,6 +25,7 @@ export default async function NovoPedidoPage({ params }) {
   ]);
 
   const adicionais = await listarAdicionaisAtivos(supabase);
+  const comboBebidas = opcoesBebidaCombo(produtos ?? [], await buscarComboConfig(supabase).catch(() => null));
 
   return (
     <section className="w-full max-w-6xl mx-auto px-6 py-10 flex-1">
@@ -42,6 +44,7 @@ export default async function NovoPedidoPage({ params }) {
         adicionais={adicionais}
         categorias={categorias ?? []}
         bairros={bairros ?? []}
+        comboBebidas={comboBebidas}
       />
     </section>
   );
