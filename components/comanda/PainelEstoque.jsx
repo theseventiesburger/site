@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { criarClienteBrowser } from '@/lib/supabase/client';
 import { listarInsumos, alternarAtivoInsumo, registrarMovimento } from '@/lib/comanda/insumos';
 import { parsePrecoInput } from '@/lib/comanda/formato';
@@ -157,8 +157,53 @@ export default function PainelEstoque({ insumosIniciais }) {
     setInsumos(await listarInsumos(supabase));
   }
 
+  // Baixa automática de venda mexe em estoque_atual sem passar por nenhuma
+  // ação nesta tela — sem isso, o banner só atualizava depois de um F5.
+  useEffect(() => {
+    let canal;
+    let ativo = true;
+
+    async function conectar() {
+      await supabase.auth.getSession();
+      if (!ativo) return;
+
+      canal = supabase
+        .channel('estoque-insumos')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'insumos' }, () => {
+          if (ativo) recarregar();
+        })
+        .subscribe();
+    }
+
+    conectar();
+
+    return () => {
+      ativo = false;
+      if (canal) supabase.removeChannel(canal);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supabase]);
+
+  const insumosBaixos = insumos.filter(
+    (i) => i.ativo && Number(i.estoque_minimo) > 0 && Number(i.estoque_atual) <= Number(i.estoque_minimo)
+  );
+
   return (
     <div className="flex flex-col gap-6">
+      {insumosBaixos.length > 0 && (
+        <div className="bg-sv-red/5 border-2 border-sv-red rounded-2xl px-5 py-4 flex items-start gap-3">
+          <span className="text-xl flex-shrink-0">⚠️</span>
+          <div>
+            <p className="font-black text-sv-red text-sm uppercase tracking-wide">
+              {insumosBaixos.length === 1 ? '1 insumo no mínimo ou abaixo' : `${insumosBaixos.length} insumos no mínimo ou abaixo`}
+            </p>
+            <p className="text-sv-red/80 text-xs font-medium mt-1">
+              {insumosBaixos.map((i) => i.nome).join(', ')}
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <p className="text-gray-500 text-sm font-medium">{insumos.length} insumos cadastrados</p>
         <button
