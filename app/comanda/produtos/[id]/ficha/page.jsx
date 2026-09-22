@@ -8,8 +8,16 @@ export default async function FichaProdutoPage({ params }) {
   const supabase = await criarClienteServidor();
 
   const [{ data: produto }, { data: receita }] = await Promise.all([
-    supabase.from("produtos").select("*, categorias(id, nome, emoji)").eq("id", id).maybeSingle(),
-    supabase.from("receita_itens").select("*, insumos(nome, unidade)").eq("produto_id", id).order("created_at", { ascending: true }),
+    supabase
+      .from("produtos")
+      .select("*, categorias(id, nome, emoji), produto_tamanhos(id, nome, ordem)")
+      .eq("id", id)
+      .maybeSingle(),
+    supabase
+      .from("receita_itens")
+      .select("*, insumos(nome, unidade)")
+      .eq("produto_id", id)
+      .order("created_at", { ascending: true }),
   ]);
 
   if (!produto) notFound();

@@ -7,7 +7,7 @@ export default async function FichasProdutosPage() {
 
   const { data: produtos } = await supabase
     .from("produtos")
-    .select("*, categorias(id, nome, emoji)")
+    .select("*, categorias(id, nome, emoji), produto_tamanhos(id, nome, ordem)")
     .order("ordem", { ascending: true });
 
   const produtoIds = (produtos ?? []).map((p) => p.id);

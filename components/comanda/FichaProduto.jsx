@@ -9,8 +9,57 @@ const CATEGORIA_LABEL = {
   sobremesas: 'Sobremesas',
 };
 
+// Agrupa a ficha técnica: "Padrão" (produto_tamanho_id nulo) primeiro,
+// depois uma seção por tamanho que tiver ficha própria — só aparece a
+// seção de um tamanho se ele realmente tiver alguma linha cadastrada
+// (senão ele usa a Padrão na baixa de estoque, não precisa repetir aqui).
+function agruparReceitaPorTamanho(receita, tamanhos) {
+  const padrao = receita.filter((r) => !r.produto_tamanho_id);
+  const porTamanho = tamanhos
+    .map((tamanho) => ({
+      tamanho,
+      itens: receita.filter((r) => r.produto_tamanho_id === tamanho.id),
+    }))
+    .filter((grupo) => grupo.itens.length > 0);
+
+  return { padrao, porTamanho };
+}
+
+function TabelaReceita({ receita }) {
+  if (receita.length === 0) {
+    return (
+      <p className="text-gray-400 text-xs font-medium italic">
+        Nenhum insumo vinculado no cadastro — sem ficha técnica registrada.
+      </p>
+    );
+  }
+
+  return (
+    <table className="w-full text-sm">
+      <thead>
+        <tr className="text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-200">
+          <th className="py-2 pr-3">Insumo</th>
+          <th className="py-2 text-right">Consumo por unidade</th>
+        </tr>
+      </thead>
+      <tbody>
+        {receita.map((r) => (
+          <tr key={r.id} className="border-b border-gray-100 last:border-0">
+            <td className="py-2.5 pr-3 font-bold text-sv-dark">{r.insumos?.nome}</td>
+            <td className="py-2.5 text-right text-gray-600 font-medium">{r.quantidade} {r.insumos?.unidade}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
 export default function FichaProduto({ produto, receita = [] }) {
   const categoriaNome = produto.categorias?.nome ?? CATEGORIA_LABEL[produto.categoria] ?? null;
+  const { padrao: receitaPadrao, porTamanho } = agruparReceitaPorTamanho(
+    receita,
+    produto.produto_tamanhos ?? []
+  );
 
   return (
     <div className="w-full max-w-[210mm] mx-auto bg-white print:mx-0 print:max-w-none break-after-page">
@@ -80,31 +129,22 @@ export default function FichaProduto({ produto, receita = [] }) {
         </div>
 
         {/* ── Ficha técnica ────────────────────────────────────────────── */}
-        <div className="px-8 py-6">
-          <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Ficha Técnica</p>
-
-          {receita.length > 0 ? (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-200">
-                  <th className="py-2 pr-3">Insumo</th>
-                  <th className="py-2 text-right">Consumo por unidade</th>
-                </tr>
-              </thead>
-              <tbody>
-                {receita.map((r) => (
-                  <tr key={r.id} className="border-b border-gray-100 last:border-0">
-                    <td className="py-2.5 pr-3 font-bold text-sv-dark">{r.insumos?.nome}</td>
-                    <td className="py-2.5 text-right text-gray-600 font-medium">{r.quantidade} {r.insumos?.unidade}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p className="text-gray-400 text-xs font-medium italic">
-              Nenhum insumo vinculado no cadastro — sem ficha técnica registrada.
+        <div className="px-8 py-6 flex flex-col gap-5">
+          <div>
+            <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">
+              {porTamanho.length > 0 ? 'Ficha Técnica — Padrão' : 'Ficha Técnica'}
             </p>
-          )}
+            <TabelaReceita receita={receitaPadrao} />
+          </div>
+
+          {porTamanho.map(({ tamanho, itens }) => (
+            <div key={tamanho.id}>
+              <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">
+                Ficha Técnica — {tamanho.nome}
+              </p>
+              <TabelaReceita receita={itens} />
+            </div>
+          ))}
         </div>
 
         <div className="flex items-center gap-2 px-8 pb-4">

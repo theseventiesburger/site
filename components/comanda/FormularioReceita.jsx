@@ -6,8 +6,12 @@ import { parsePrecoInput } from '@/lib/comanda/formato';
 
 // tipo: 'produto' | 'adicional' — ficha técnica de quanto de cada insumo
 // esse item consome por unidade vendida. A baixa automática no estoque usa
-// exatamente essas linhas quando o pedido é criado.
-export default function FormularioReceita({ supabase, tipo, itemId, itemNome, insumos, onFechar }) {
+// exatamente essas linhas quando o pedido é criado. Produto com tamanhos
+// (ex: Nuggets 10un/20un) ganha um seletor pra montar uma ficha diferente
+// por tamanho — sem escolher nenhum, é a ficha "padrão" do produto, usada
+// quando o tamanho vendido não tem ficha própria (ver migration 0056).
+export default function FormularioReceita({ supabase, tipo, itemId, itemNome, insumos, tamanhos = [], onFechar }) {
+  const [tamanhoId, setTamanhoId] = useState(null);
   const [receita, setReceita] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [insumoId, setInsumoId] = useState(insumos[0]?.id ?? '');
@@ -17,16 +21,17 @@ export default function FormularioReceita({ supabase, tipo, itemId, itemNome, in
   async function recarregar() {
     setCarregando(true);
     try {
-      setReceita(await listarReceita(supabase, tipo, itemId));
+      setReceita(await listarReceita(supabase, tipo, itemId, tamanhoId));
     } finally {
       setCarregando(false);
     }
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     recarregar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [itemId]);
+  }, [itemId, tamanhoId]);
 
   async function adicionar(e) {
     e.preventDefault();
@@ -34,10 +39,13 @@ export default function FormularioReceita({ supabase, tipo, itemId, itemNome, in
 
     setErro(null);
     try {
-      await adicionarItemReceita(supabase, tipo, itemId, {
-        insumoId,
-        quantidade: parsePrecoInput(quantidade),
-      });
+      await adicionarItemReceita(
+        supabase,
+        tipo,
+        itemId,
+        { insumoId, quantidade: parsePrecoInput(quantidade) },
+        tamanhoId
+      );
       setQuantidade('');
       await recarregar();
     } catch (err) {
@@ -63,6 +71,27 @@ export default function FormularioReceita({ supabase, tipo, itemId, itemNome, in
           <h2 className="text-xl font-black text-sv-dark uppercase tracking-tight">Ficha técnica</h2>
           <p className="text-gray-500 text-sm font-medium mt-1">{itemNome}</p>
         </div>
+
+        {tamanhos.length > 0 && (
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+              Ficha de
+            </label>
+            <select
+              value={tamanhoId ?? ''}
+              onChange={(e) => setTamanhoId(e.target.value || null)}
+              className="px-3 py-2.5 rounded-lg border border-gray-200 text-sm font-medium focus:outline-none focus:border-sv-blue"
+            >
+              <option value="">Padrão (qualquer tamanho sem ficha própria)</option>
+              {tamanhos.map((t) => (
+                <option key={t.id} value={t.id}>{t.nome}</option>
+              ))}
+            </select>
+            <p className="text-gray-400 text-[11px] font-medium">
+              Sem ficha própria pro tamanho vendido, a baixa de estoque usa a Padrão.
+            </p>
+          </div>
+        )}
 
         {carregando ? (
           <p className="text-gray-400 text-sm font-medium py-4 text-center">Carregando...</p>

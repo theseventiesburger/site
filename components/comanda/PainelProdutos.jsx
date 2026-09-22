@@ -253,6 +253,7 @@ export default function PainelProdutos({
           itemId={produtoComReceita.id}
           itemNome={produtoComReceita.nome}
           insumos={insumos}
+          tamanhos={produtoComReceita.produto_tamanhos ?? []}
           onFechar={() => setProdutoComReceita(null)}
         />
       )}
