@@ -66,19 +66,44 @@ export default function PainelMesa({ mesa, comandaInicial, produtos, categorias,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase, comanda?.id, mesa.numero]);
 
+  // Item de categoria gratuita marcado "padrão" (ex: pão tradicional) — sem
+  // pré-seleção, ele nunca vira itens_pedido_adicionais e a ficha técnica
+  // dele nunca debita nada, já que "nenhuma troca" não grava linha alguma.
+  function adicionaisPadraoPara(produto) {
+    const categoriasPermitidas = (produto.produto_categorias_adicionais ?? []).map(
+      (v) => v.categoria_adicional_id
+    );
+    return adicionais.filter(
+      (a) =>
+        a.padrao &&
+        a.ativo &&
+        a.categoria_id &&
+        categoriasPermitidas.includes(a.categoria_id) &&
+        (a.categorias_adicionais?.gratuita_tipos ?? []).includes('mesa')
+    );
+  }
+
+  function ehSelecaoSoPadrao(lista, padroes) {
+    if (lista.length !== padroes.length) return false;
+    const idsPadrao = new Set(padroes.map((p) => p.id));
+    return lista.every((a) => idsPadrao.has(a.id));
+  }
+
   function adicionarProduto(produto, adicionaisSelecionados = [], tamanho = null) {
+    const padroes = adicionaisPadraoPara(produto);
+    const veioVazio = adicionaisSelecionados.length === 0;
+
     setItens((atual) => {
-      const existente =
-        adicionaisSelecionados.length === 0
-          ? atual.find(
-              (i) =>
-                i.produtoId === produto.id &&
-                (i.tamanhoId ?? null) === (tamanho?.id ?? null) &&
-                !i.observacao &&
-                !i.pontoCarne &&
-                i.adicionaisSelecionados.length === 0
-            )
-          : null;
+      const existente = veioVazio
+        ? atual.find(
+            (i) =>
+              i.produtoId === produto.id &&
+              (i.tamanhoId ?? null) === (tamanho?.id ?? null) &&
+              !i.observacao &&
+              !i.pontoCarne &&
+              ehSelecaoSoPadrao(i.adicionaisSelecionados, padroes)
+          )
+        : null;
 
       if (existente) {
         return atual.map((i) => (i === existente ? { ...i, quantidade: i.quantidade + 1 } : i));
@@ -93,7 +118,7 @@ export default function PainelMesa({ mesa, comandaInicial, produtos, categorias,
           quantidade: 1,
           observacao: '',
           pontoCarne: '',
-          adicionaisSelecionados,
+          adicionaisSelecionados: veioVazio ? padroes : adicionaisSelecionados,
           categoriasAdicionaisPermitidas: (produto.produto_categorias_adicionais ?? []).map(
             (v) => v.categoria_adicional_id
           ),

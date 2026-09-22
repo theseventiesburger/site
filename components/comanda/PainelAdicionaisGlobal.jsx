@@ -16,10 +16,18 @@ export default function PainelAdicionaisGlobal({ adicionaisIniciais, categoriasI
   const [nomeEdicao, setNomeEdicao] = useState('');
   const [precoEdicao, setPrecoEdicao] = useState('');
   const [categoriaEdicao, setCategoriaEdicao] = useState('');
+  const [padraoEdicao, setPadraoEdicao] = useState(false);
   const [novoNome, setNovoNome] = useState('');
   const [novoPreco, setNovoPreco] = useState('');
   const [novaCategoria, setNovaCategoria] = useState('');
+  const [novoPadrao, setNovoPadrao] = useState(false);
   const [erro, setErro] = useState(null);
+
+  function mensagemErro(err) {
+    return err?.message?.includes('adicionais_categoria_padrao_unq')
+      ? 'Já existe um padrão nessa categoria — desmarque o outro primeiro.'
+      : 'Não foi possível salvar.';
+  }
 
   const grupos = useMemo(() => {
     const porCategoria = new Map(categorias.map((c) => [c.id, { categoria: c, itens: [] }]));
@@ -42,15 +50,21 @@ export default function PainelAdicionaisGlobal({ adicionaisIniciais, categoriasI
     if (!novoNome || !novoPreco) return;
 
     try {
-      await criarAdicional(supabase, { nome: novoNome, preco: parsePrecoInput(novoPreco), categoriaId: novaCategoria || null });
+      await criarAdicional(supabase, {
+        nome: novoNome,
+        preco: parsePrecoInput(novoPreco),
+        categoriaId: novaCategoria || null,
+        padrao: novoPadrao,
+      });
       setNovoNome('');
       setNovoPreco('');
       setNovaCategoria('');
+      setNovoPadrao(false);
       setErro(null);
       await recarregar();
     } catch (err) {
       console.error(err);
-      setErro('Não foi possível adicionar.');
+      setErro(mensagemErro(err));
     }
   }
 
@@ -59,6 +73,7 @@ export default function PainelAdicionaisGlobal({ adicionaisIniciais, categoriasI
     setNomeEdicao(adicional.nome);
     setPrecoEdicao(adicional.preco);
     setCategoriaEdicao(adicional.categoria_id ?? '');
+    setPadraoEdicao(adicional.padrao ?? false);
   }
 
   async function salvarEdicao(id) {
@@ -67,12 +82,14 @@ export default function PainelAdicionaisGlobal({ adicionaisIniciais, categoriasI
         nome: nomeEdicao,
         preco: parsePrecoInput(precoEdicao),
         categoriaId: categoriaEdicao || null,
+        padrao: padraoEdicao,
       });
       setEmEdicaoId(null);
+      setErro(null);
       await recarregar();
     } catch (err) {
       console.error(err);
-      setErro('Não foi possível salvar.');
+      setErro(mensagemErro(err));
     }
   }
 
@@ -130,6 +147,10 @@ export default function PainelAdicionaisGlobal({ adicionaisIniciais, categoriasI
                       <option key={c.id} value={c.id}>{c.emoji ? `${c.emoji} ` : ''}{c.nome}</option>
                     ))}
                   </select>
+                  <label className="flex items-center gap-1.5 text-[10px] font-black text-gray-500 whitespace-nowrap">
+                    <input type="checkbox" checked={padraoEdicao} onChange={(e) => setPadraoEdicao(e.target.checked)} />
+                    Padrão
+                  </label>
                   <button
                     type="button"
                     onClick={() => salvarEdicao(adicional.id)}
@@ -140,7 +161,14 @@ export default function PainelAdicionaisGlobal({ adicionaisIniciais, categoriasI
                 </>
               ) : (
                 <>
-                  <span className="flex-1 font-bold text-sv-dark text-sm truncate">{adicional.nome}</span>
+                  <span className="flex-1 font-bold text-sv-dark text-sm truncate">
+                    {adicional.nome}
+                    {adicional.padrao && (
+                      <span className="ml-2 px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 text-[9px] font-black uppercase tracking-wider align-middle">
+                        Padrão
+                      </span>
+                    )}
+                  </span>
                   <span className="font-black text-sv-dark text-sm">{formatarBRL(adicional.preco)}</span>
                   <button
                     type="button"
@@ -201,6 +229,10 @@ export default function PainelAdicionaisGlobal({ adicionaisIniciais, categoriasI
             <option key={c.id} value={c.id}>{c.emoji ? `${c.emoji} ` : ''}{c.nome}</option>
           ))}
         </select>
+        <label className="flex items-center gap-1.5 text-[10px] font-black text-gray-500 whitespace-nowrap">
+          <input type="checkbox" checked={novoPadrao} onChange={(e) => setNovoPadrao(e.target.checked)} />
+          Padrão da categoria
+        </label>
         <button
           type="submit"
           className="bg-sv-blue hover:bg-sv-red text-white text-xs font-black uppercase px-4 py-2.5 rounded-lg transition-colors duration-150"
@@ -208,6 +240,10 @@ export default function PainelAdicionaisGlobal({ adicionaisIniciais, categoriasI
           + Adicionar
         </button>
       </form>
+      <p className="text-gray-400 text-[11px] font-medium -mt-2">
+        &quot;Padrão&quot; entra pré-selecionado ao montar o pedido (ex: o pão tradicional do hambúrguer) — sem
+        isso, um item só conta no estoque quando alguém escolhe ele explicitamente na troca.
+      </p>
 
       {erro && (
         <p className="text-sv-red text-xs font-bold bg-sv-red/5 border border-sv-red/20 rounded-xl px-4 py-3">
