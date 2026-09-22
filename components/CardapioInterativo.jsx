@@ -213,7 +213,11 @@ export default function CardapioInterativo({ produtos, categorias = [] }) {
           })}
         </div>
 
-        <div className="w-full h-px bg-gray-200 mt-6 mb-10" />
+        <p className="text-gray-400 text-[11px] font-medium text-center mt-6">
+          📷 Imagens meramente ilustrativas — alguns produtos ainda não têm foto autoral.
+        </p>
+
+        <div className="w-full h-px bg-gray-200 mt-4 mb-10" />
 
         {categoriaAtiva === 'todos' && (
           <p className="text-gray-400 text-sm font-medium mb-10 -mt-4">
