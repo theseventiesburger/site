@@ -1,5 +1,6 @@
 import BadgeStatus from '@/components/comanda/BadgeStatus';
 import BadgeTipo from '@/components/comanda/BadgeTipo';
+import DetalhesPagamentoUairango from '@/components/comanda/DetalhesPagamentoUairango';
 import { PROXIMO_STATUS, STATUS_LABEL, PONTO_CARNE_LABEL } from '@/lib/comanda/constantes';
 import { formatarBRL, formatarHora, tempoDecorrido, minutosDecorridos } from '@/lib/comanda/formato';
 
@@ -49,6 +50,8 @@ export default function CardPedidoCozinha({ pedido, onAvancarItem, onCancelar })
       {pedido.tipo === 'delivery' && pedido.endereco && (
         <p className="text-xs text-gray-500 font-medium leading-relaxed">{pedido.endereco}</p>
       )}
+
+      <DetalhesPagamentoUairango pedido={pedido} />
 
       {/* Cada item libera sozinho — a batata pode ficar pronta antes do
           hambúrguer, sem esperar a rodada inteira. */}

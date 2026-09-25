@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { FORMAS_PAGAMENTO, FORMA_PAGAMENTO_LABEL, TIPO_LABEL, PONTO_CARNE_LABEL } from '@/lib/comanda/constantes';
+import DetalhesPagamentoUairango from '@/components/comanda/DetalhesPagamentoUairango';
 import { formatarBRL, formatarDataHora } from '@/lib/comanda/formato';
 
 // Só faz sentido oferecer forma de pagamento de verdade aqui — reabrir um
@@ -43,6 +44,8 @@ export default function ModalDetalhePedido({ pedido, onFechar, onConfirmarRecebi
           <h2 className="text-xl font-black text-sv-dark uppercase tracking-tight">{destaque}</h2>
           <p className="text-xs text-gray-400 font-bold">{formatarDataHora(pedido.created_at)}</p>
         </div>
+
+        <DetalhesPagamentoUairango pedido={pedido} />
 
         <ul className="flex flex-col gap-2 max-h-[220px] overflow-y-auto pr-1">
           {itens.map((item) => (

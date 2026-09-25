@@ -1,4 +1,5 @@
 import BadgeTipo from '@/components/comanda/BadgeTipo';
+import DetalhesPagamentoUairango from '@/components/comanda/DetalhesPagamentoUairango';
 import { PONTO_CARNE_LABEL } from '@/lib/comanda/constantes';
 import { formatarBRL, formatarDataHora, tempoDecorrido } from '@/lib/comanda/formato';
 
@@ -35,22 +36,7 @@ export default function CardPedidoAberto({ pedido, onFecharPedido, onCancelar })
         <p className="text-xs text-gray-500 font-medium leading-relaxed">{pedido.endereco}</p>
       )}
 
-      {(pedido.uairango_bandeira_cartao || pedido.uairango_troco > 0 || pedido.uairango_cupom_valor > 0) && (
-        <div className="flex flex-col gap-0.5 text-xs font-bold">
-          {pedido.uairango_bandeira_cartao && (
-            <span className="text-sv-dark">💳 {pedido.uairango_bandeira_cartao}</span>
-          )}
-          {pedido.uairango_troco > 0 && (
-            <span className="text-sv-red">💵 Levar troco pra {formatarBRL(pedido.uairango_troco)}</span>
-          )}
-          {pedido.uairango_cupom_valor > 0 && (
-            <span className="text-sv-blue">
-              🎫 Cupom {formatarBRL(pedido.uairango_cupom_valor)}
-              {pedido.uairango_cupom_responsavel ? ` (${pedido.uairango_cupom_responsavel})` : ''}
-            </span>
-          )}
-        </div>
-      )}
+      <DetalhesPagamentoUairango pedido={pedido} />
 
       <ul className="flex flex-col gap-1.5 border-t border-gray-100 pt-3">
         {itens.map((item) => (
