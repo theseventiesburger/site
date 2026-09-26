@@ -28,7 +28,8 @@ export default function PainelCatalogoUairango() {
       <div>
         <h2 className="font-black text-sv-dark text-sm uppercase tracking-tight">Cardápio</h2>
         <p className="text-gray-500 text-xs font-medium mt-1">
-          Envia categorias e produtos ativos pro catálogo do UaiRango. Adicionais não são sincronizados ainda.
+          Envia categorias, produtos e adicionais (como complementos) pro catálogo do UaiRango. Depois disso, editar o
+          preço ou ativar/desativar um produto ou adicional aqui na Comanda já atualiza lá sozinho.
         </p>
       </div>
 
@@ -50,7 +51,8 @@ export default function PainelCatalogoUairango() {
       {resultado && (
         <div className="text-xs font-bold bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex flex-col gap-1">
           <span className="text-green-700">
-            {resultado.categoriasCriadas} categoria(s) nova(s), {resultado.itensSincronizados} produto(s) sincronizado(s).
+            {resultado.categoriasCriadas} categoria(s) nova(s), {resultado.itensSincronizados} produto(s) sincronizado(s),{' '}
+            {resultado.itensComComplementos ?? 0} com complementos criados.
           </span>
           {resultado.erros?.length > 0 && (
             <ul className="text-sv-red list-disc pl-4">

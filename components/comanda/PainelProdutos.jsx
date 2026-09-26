@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { criarClienteBrowser } from '@/lib/supabase/client';
 import { listarTodosProdutos, alternarAtivoProduto } from '@/lib/comanda/produtos';
 import { formatarBRL } from '@/lib/comanda/formato';
+import { avisarUairangoProduto } from '@/lib/comanda/uairangoSync';
 import FormularioProduto from '@/components/comanda/FormularioProduto';
 import FormularioReceita from '@/components/comanda/FormularioReceita';
 import ConfiguracaoCombo from '@/components/comanda/ConfiguracaoCombo';
@@ -169,6 +170,7 @@ export default function PainelProdutos({
     setErro(null);
     try {
       await alternarAtivoProduto(supabase, produto.id, !produto.ativo);
+      avisarUairangoProduto(produto.id);
     } catch (err) {
       console.error(err);
       setProdutos((atual) =>

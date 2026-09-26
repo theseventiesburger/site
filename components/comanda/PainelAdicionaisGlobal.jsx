@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { formatarBRL, parsePrecoInput } from '@/lib/comanda/formato';
 import { criarAdicional, atualizarAdicional, alternarAtivoAdicional, listarTodosAdicionais } from '@/lib/comanda/adicionais';
 import { criarClienteBrowser } from '@/lib/supabase/client';
+import { avisarUairangoAdicional } from '@/lib/comanda/uairangoSync';
 import PainelCategoriasAdicionais from '@/components/comanda/PainelCategoriasAdicionais';
 import FormularioReceita from '@/components/comanda/FormularioReceita';
 
@@ -84,6 +85,7 @@ export default function PainelAdicionaisGlobal({ adicionaisIniciais, categoriasI
         categoriaId: categoriaEdicao || null,
         padrao: padraoEdicao,
       });
+      avisarUairangoAdicional(id);
       setEmEdicaoId(null);
       setErro(null);
       await recarregar();
@@ -98,6 +100,7 @@ export default function PainelAdicionaisGlobal({ adicionaisIniciais, categoriasI
     setErro(null);
     try {
       await alternarAtivoAdicional(supabase, adicional.id, !adicional.ativo);
+      avisarUairangoAdicional(adicional.id);
     } catch (err) {
       console.error(err);
       setAdicionais((atual) => atual.map((a) => (a.id === adicional.id ? { ...a, ativo: adicional.ativo } : a)));

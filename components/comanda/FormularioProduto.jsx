@@ -10,6 +10,7 @@ import {
   definirTamanhosProduto,
 } from '@/lib/comanda/produtos';
 import { parsePrecoInput } from '@/lib/comanda/formato';
+import { avisarUairangoProduto } from '@/lib/comanda/uairangoSync';
 
 function alternarId(lista, id) {
   return lista.includes(id) ? lista.filter((i) => i !== id) : [...lista, id];
@@ -133,6 +134,7 @@ export default function FormularioProduto({ supabase, produto, categorias, categ
         tamanhosPreenchidos.map((t) => ({ nome: t.nome.trim(), preco: parsePrecoInput(t.preco) }))
       );
 
+      avisarUairangoProduto(produtoId);
       onSalvo();
     } catch (err) {
       console.error(err);

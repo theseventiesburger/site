@@ -2,6 +2,10 @@ import { createClient } from '@supabase/supabase-js';
 import { exigirStaff } from '@/lib/comanda/authApi';
 import { sincronizarCardapioUairango } from '@/lib/uairango/sincronizarCardapio';
 
+// A sincronização completa cria um grupo de complementos por produto (~100
+// chamadas), então precisa de mais tempo que o padrão da função.
+export const maxDuration = 300;
+
 export async function POST() {
   const staff = await exigirStaff();
   if (!staff) return new Response('Unauthorized', { status: 401 });
