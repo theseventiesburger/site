@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import CardPedidoCozinha from '@/components/comanda/CardPedidoCozinha';
 import EstadoVazio from '@/components/comanda/EstadoVazio';
+import ModalCancelarUairango from '@/components/comanda/ModalCancelarUairango';
 import { criarClienteBrowser } from '@/lib/supabase/client';
 import {
   atualizarStatusItemPedido,
@@ -25,6 +26,7 @@ export default function PainelCozinha({ pedidosIniciais }) {
   const [pedidos, setPedidos] = useState(pedidosIniciais);
   const [conectado, setConectado] = useState(false);
   const [erro, setErro] = useState(null);
+  const [pedidoCancelandoUairango, setPedidoCancelandoUairango] = useState(null);
   const [, forcarAtualizacaoRelogio] = useState(0);
 
   function avisarErro(mensagem) {
@@ -132,8 +134,21 @@ export default function PainelCozinha({ pedidosIniciais }) {
     }
   }
 
+  // Pedido do UaiRango só pode ser cancelado enquanto não saiu pra entrega, e
+  // a plataforma exige consultar o motivo e ser avisada — por isso abre o
+  // modal específico (a Cozinha é o único lugar onde o cancelamento ainda é
+  // possível; em Pedidos Abertos o pedido já foi despachado).
+  function pedidoUairangoCancelado(pedidoId) {
+    setPedidoCancelandoUairango(null);
+    setPedidos((atual) => atual.map((p) => (p.id === pedidoId ? { ...p, status: 'cancelado' } : p)));
+  }
+
   async function cancelarPedido(pedidoId) {
     const pedido = pedidosRef.current.find((p) => p.id === pedidoId);
+    if (pedido?.uairango_order_id) {
+      setPedidoCancelandoUairango(pedido);
+      return;
+    }
     const statusAnterior = pedido?.status;
     setPedidos((atual) => atual.map((p) => (p.id === pedidoId ? { ...p, status: 'cancelado' } : p)));
     try {
@@ -188,6 +203,14 @@ export default function PainelCozinha({ pedidosIniciais }) {
           );
         })}
       </div>
+
+      {pedidoCancelandoUairango && (
+        <ModalCancelarUairango
+          pedido={pedidoCancelandoUairango}
+          onFechar={() => setPedidoCancelandoUairango(null)}
+          onCancelado={pedidoUairangoCancelado}
+        />
+      )}
     </div>
   );
 }
